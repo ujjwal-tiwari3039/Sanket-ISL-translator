@@ -29,11 +29,14 @@ def scrape_isl(word, download_dir="Raw_Videos"):
     
     # Start Stealth Browser using undetected_chromedriver directly
     options = uc.ChromeOptions()
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-gpu')
+    
     driver = uc.Chrome(
-        driver_executable_path="/home/samash/chromedriver",
         browser_executable_path="/opt/brave-bin/brave",
-        user_data_dir="/tmp/brave_scraper",
-        options=options
+        options=options,
+        headless=False
     )
     
     try:
