@@ -16,7 +16,7 @@ function App() {
   const [isQuestion, setIsQuestion] = useState(false);
   const [debugInfo, setDebugInfo] = useState("Waiting for landmarks...");
   
-  const actions = ['hello', 'thanks', 'iloveyou'];
+  const [actionsList, setActionsList] = useState([]);
   const sequenceLength = 30;
 
   // Refs for logic loop
@@ -43,6 +43,21 @@ function App() {
 
     const loadModels = async () => {
       try {
+        console.log("Loading labels...");
+        try {
+          const labelsRes = await fetch('/models/labels.json');
+          if (labelsRes.ok) {
+            const labelsMap = await labelsRes.json();
+            const numLabels = Object.keys(labelsMap).length;
+            const loadedActions = Array.from({length: numLabels}, (_, i) => labelsMap[i]);
+            setActionsList(loadedActions);
+          } else {
+            console.warn("Could not load labels.json");
+          }
+        } catch (e) {
+          console.warn("Could not load labels.json", e);
+        }
+
         console.log("Loading TFJS model...");
         tfModelRef.current = await tf.loadLayersModel('/models/model.json');
         
@@ -201,8 +216,8 @@ function App() {
              
              setConfidence(maxScore * 100);
              
-             if (maxScore > 0.70) {
-                let action = actions[classIndex];
+             if (maxScore > 0.70 && actionsList.length > 0) {
+                let action = actionsList[classIndex];
                 if (questionFlag) action += "?";
                 setCurrentSign(action);
                 
@@ -213,12 +228,27 @@ function App() {
                   sentenceRef.current = curSentence;
                   setSentence(curSentence);
                   
-                  // Mock LLM Assembly
-                  const s = curSentence.join(" ");
-                  if (s.includes("help?")) setLlmSentence("Do you need some help?");
-                  else if (s.includes("hello") && s.includes("thanks")) setLlmSentence("Hello, and thank you.");
-                  else if (s.includes("iloveyou")) setLlmSentence("I love you.");
-                  else setLlmSentence("...");
+                  // Call Backend for LLM Assembly (Streaming)
+                  setLlmSentence("");
+                  fetch('http://localhost:3001/api/assemble', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sequence: curSentence })
+                  }).then(async response => {
+                    if (!response.body) return;
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder('utf-8');
+                    let assembled = "";
+                    while (true) {
+                      const { done, value } = await reader.read();
+                      if (done) break;
+                      assembled += decoder.decode(value, { stream: true });
+                      setLlmSentence(assembled);
+                    }
+                  }).catch(err => {
+                    console.error("LLM Error:", err);
+                    setLlmSentence("Error generating sentence.");
+                  });
                 }
              }
           }
