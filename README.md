@@ -1,75 +1,75 @@
-# AI Sign Language Translator (Dynamic Sequence Model)
+# SignAI: Real-Time Sign Language Translation Pipeline
 
-## 📌 Case Study & Overview
+## 📌 Case Study & Engineering Overview
 
-This project goes beyond traditional static alphabet (A-Z) classification by implementing **Dynamic Sign Language Recognition**. Recognizing that real sign language relies on sequential motion and non-manual features (like facial expressions), this system uses a Long Short-Term Memory (LSTM) network over a sequence of spatial landmarks extracted via MediaPipe. 
+This project was built to tackle the challenges of **Dynamic Sign Language Recognition**. Unlike traditional static alphabet (A-Z) classifiers that only recognize hand shapes, real sign language relies on sequential motion, speed, and non-manual features like facial expressions. 
 
-Furthermore, this system integrates **Large Language Models (LLMs)** to handle the linguistic complexity of stitching isolated signs into grammatically correct sentences, mirroring the actual grammatical structure of sign languages which often do not map 1:1 to English.
+We built an end-to-end pipeline that captures video, extracts skeletal structures, evaluates temporal dynamics via an LSTM, and semantically stitches the predictions using a Large Language Model (LLM).
 
-### 🎯 Niche: Emergency & Medical Phrases
-Instead of trying to capture a saturated general dictionary, this project specifically targets high-leverage **Emergency and Medical Phrases** (e.g., "Help", "Pain", "Medicine", "Doctor", "Thank You"). This focus ensures high accuracy in scenarios where communication barriers have the most critical impact.
-
----
-
-## 🚀 Key Differentiators
-
-1. **Sequential Data (LSTM over CNNs)** 
-   - Most beginner projects use a single-frame CNN to classify static hand shapes. This project feeds 30-frame sequences of 1,692 keypoints into an LSTM, allowing it to understand the temporal dynamics of signs.
-2. **LLM Sentence Assembly**
-   - Sign languages lack words like "is", "the", and "are". Predicting `[Pain] [Stomach] [Help]` is passed to the Gemini API, which outputs: *"I have stomach pain and need help."* This auto-corrects and smooths the output into natural language.
-3. **Non-Manual Features (NMFs)**
-   - The model actively tracks all 478 facial landmarks. We implemented heuristics to detect raised eyebrows, a standard NMF used to indicate a question. For example, `[Help]` + `[Raised Eyebrows]` = *"Do you need help?"*
+### 🎯 Objective & Niche
+Our goal was to create a robust, extensible pipeline for Indian Sign Language (ISL), combining the **INCLUDE dataset** (76 classes, 1000+ videos) with custom gap-filling recordings. The UI was designed specifically for legibility and real-time inference without blocking the main camera thread.
 
 ---
 
-## 🧠 Architecture & Pipeline
+## 🚀 Key Engineering Decisions & Differentiators
 
-### 1. Keypoint Extraction Pipeline (`phase1`)
-We use Google's MediaPipe Tasks API to extract comprehensive keypoints per frame:
-- **Pose:** 33 points (x, y, z, visibility)
-- **Face:** 478 points (x, y, z)
-- **Hands:** 21 points per hand (x, y, z)
-Totaling **1,692 features** per frame.
+### 1. Nose-Relative Spatial Normalization
+To make the model invariant to where the signer is standing on camera, all 1,692 features (Pose, Face, and Hands) extracted by MediaPipe are **normalized relative to the nose landmark** (Index 0). This prevents the LSTM from memorizing the signer's absolute screen position and instead forces it to learn the relative motion of the joints.
 
-### 2. Deep Learning Model (`phase2`)
-A standard dense network struggles with temporal data. We utilized a multi-layer LSTM:
-- **Input:** `(30 frames, 1692 keypoints)`
-- **Hidden Layers:** LSTM(64) -> LSTM(128) -> LSTM(64) -> Dense(64)
-- **Output:** Softmax activation across the vocabulary size.
+### 2. Temporal Sequence Modeling (LSTM) 
+A standard dense network struggles with motion over time. We utilized a multi-layer Long Short-Term Memory (LSTM) network:
+- **Input Shape:** `(30 frames, 1,692 keypoints)`
+- **Architecture:** `LSTM(64) -> Dropout(0.2) -> LSTM(128) -> Dropout(0.2) -> LSTM(64) -> Dense(64) -> Output(76)`
+- **Training Strategy:** Implemented `compute_class_weight` to counter the class imbalance of the INCLUDE dataset, alongside coordinate jitter data augmentation.
 
-### 3. Inference & Contextualization (`phase3`)
-- A rolling window of the last 30 frames is continuously fed into the LSTM.
-- A confidence threshold filters out noise.
-- Every N predictions are sent to an LLM (Gemini) in a background thread to generate the final semantic sentence without blocking the webcam feed.
+### 3. Non-Manual Features (NMFs) Heuristic
+Sign languages rely heavily on the face. Our frontend actively tracks the MediaPipe face mesh (478 points). We implemented a geometric heuristic to measure the vertical distance between the eyebrows and the eyes. **When a significant spike is detected, the system appends a `?` to the prediction**, signaling a question to the LLM.
+
+### 4. Asynchronous LLM Semantic Assembly
+Translating a sequence of signs into English isn't a 1:1 mapping (e.g. `[What] [Time] [Now?]` -> *"What time is it right now?"*).
+We pass the raw detected signs to Gemini via a chunked streaming local backend (`Express.js`). We use a 10-prediction agreement buffer to prevent the UI from flickering, triggering the async LLM fetch only when the prediction stabilizes.
 
 ---
 
-## 📊 Dataset & Limitations
+## 🧠 Architecture Stack
 
-**Data Collection:**
-Data was self-collected (30 sequences of 30 frames per sign) to bootstrap the prototype. We also built an automated web scraper (`phase1_6`) to aggregate high-quality ISL (Indian Sign Language) dictionary videos for transfer learning.
+* **Feature Extraction:** `MediaPipe Tasks Vision` (WebAssembly/TFJS in frontend, Python during dataset building)
+* **Model Training:** `TensorFlow 2.15` (Python / Docker)
+* **Web Inference:** `TensorFlow.js` (Running the exported Keras model directly in the browser)
+* **Frontend UI:** `React / Vite` (Brutalist, high-contrast dashboard)
+* **Backend Proxy:** `Express / @google/genai` (For secure LLM API calls and streaming responses)
 
-**Current Limitations (Acknowledged for Future Work):**
-- **Isolated Gestures:** The model currently struggles with continuous, fluid signing (co-articulation). The LLM helps mitigate this, but a sliding-window temporal segmentation approach is needed.
-- **Lighting & Viewpoint Variance:** The model was trained in static lighting from a frontal webcam angle. Accuracy drops significantly in profile views.
+---
+
+## 📊 Dataset & Evaluation
+
+**Data Sources:**
+- **INCLUDE Dataset (`islmodel/ProcessedData_vivit`)**: 1,166 isolated videos spanning 76 word classes.
+- **Custom Recordings**: A Python gap-filling tool allows users to record their own missing words and directly save them as `.npy` sequences.
+
+**Evaluation:**
+Check `/models/eval/` for the generated `classification_report.txt` and `confusion_matrix.png`. The confusion matrix highlights which morphologically similar signs the model occasionally mixes up.
 
 ---
 
 ## 💻 Getting Started
 
-1. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   pip install tensorflow mediapipe google-generativeai undetected-chromedriver
-   ```
-2. **Train the Model:**
-   ```bash
-   python phase2_train_lstm.py
-   ```
-3. **Run Real-Time Inference:**
-   ```bash
-   # Add your Gemini API key in the script first
-   python phase3_realtime_inference.py
-   ```
+### 1. Setup Backend (LLM Proxy)
+```bash
+cd backend
+npm install
+cp .env.example .env
+# Add your GEMINI_API_KEY to .env
+npm start
+```
+*Runs on http://localhost:3001*
 
-*(Upcoming: TensorFlow.js Web Demo deployment for in-browser testing)*
+### 2. Setup Frontend (Web App)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+*Runs on http://localhost:5173*
+
+*(Note: If you wish to retrain the model on new signs, run `bash train_in_docker.sh` from the root directory to utilize the Python pipeline and auto-export the new `action.h5` to the `frontend/public/models` directory.)*
