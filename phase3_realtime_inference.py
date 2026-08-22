@@ -12,7 +12,11 @@ import threading
 # IMPORTANT: Replace with your actual Gemini API key when running locally
 # genai.configure(api_key="YOUR_GEMINI_API_KEY")
 
-actions = np.array(['hello', 'thanks', 'iloveyou'])
+actions = np.array([
+    "sleep", "time", "late", "good", "easy", "sister", 
+    "brother", "water", "walk", "teach", "apple", "snake", 
+    "laptop", "tree", "hello", "thanks"
+])
 sequence_length = 30
 model_path = 'models/action.h5'
 

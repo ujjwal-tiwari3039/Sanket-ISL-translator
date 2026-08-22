@@ -8,8 +8,11 @@ from tensorflow.keras.callbacks import TensorBoard
 
 # --- 1. CONFIGURATION ---
 DATA_PATH = os.path.join('MP_Data')
-actions = np.array(['hello', 'thanks', 'iloveyou'])
-no_sequences = 30
+actions = np.array([
+    "sleep", "time", "late", "good", "easy", "sister", 
+    "brother", "water", "walk", "teach", "apple", "snake", 
+    "laptop", "tree", "hello", "thanks"
+])
 sequence_length = 30
 
 # Create a label map for the actions
@@ -47,17 +50,23 @@ def normalize_keypoints(res):
 print("Loading data from MP_Data...")
 sequences, labels = [], []
 for action in actions:
+    action_path = os.path.join(DATA_PATH, action)
+    if not os.path.exists(action_path):
+        continue
+        
+    # Dynamically find how many sequences exist for this word
+    no_sequences = len(os.listdir(action_path))
+    
     for sequence in range(no_sequences):
         window = []
         for frame_num in range(sequence_length):
             try:
-                res = np.load(os.path.join(DATA_PATH, action, str(sequence), "{}.npy".format(frame_num)))
+                res = np.load(os.path.join(action_path, str(sequence), "{}.npy".format(frame_num)))
                 res = normalize_keypoints(res)
                 window.append(res)
             except FileNotFoundError:
-                # If a frame is missing (unlikely if data collection finished, but safe to handle)
                 print(f"Warning: Missing data for {action} sequence {sequence} frame {frame_num}")
-                window.append(np.zeros(1692)) # 1692 is the sum of pose, face, lh, rh keypoints
+                window.append(np.zeros(1692)) # Pad missing frames
         sequences.append(window)
         labels.append(label_map[action])
 

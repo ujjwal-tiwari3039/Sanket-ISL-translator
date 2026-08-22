@@ -16,7 +16,11 @@ function App() {
   const [isQuestion, setIsQuestion] = useState(false);
   const [debugInfo, setDebugInfo] = useState("Waiting for landmarks...");
   
-  const actions = ['hello', 'thanks', 'iloveyou'];
+  const actions = [
+    "sleep", "time", "late", "good", "easy", "sister", 
+    "brother", "water", "walk", "teach", "apple", "snake", 
+    "laptop", "tree", "hello", "thanks"
+  ];
   const sequenceLength = 30;
 
   // Refs for logic loop
