@@ -12,11 +12,14 @@ import threading
 # IMPORTANT: Replace with your actual Gemini API key when running locally
 # genai.configure(api_key="YOUR_GEMINI_API_KEY")
 
-actions = np.array([
-    "sleep", "time", "late", "good", "easy", "sister", 
-    "brother", "water", "walk", "teach", "apple", "snake", 
-    "laptop", "tree", "hello", "thanks"
-])
+import json
+try:
+    with open('models/labels.json', 'r') as f:
+        label_map = json.load(f)
+    actions = np.array([label_map[str(i)] for i in range(len(label_map))])
+except FileNotFoundError:
+    print("models/labels.json not found. Please train the model first.")
+    actions = np.array([])
 sequence_length = 30
 model_path = 'models/action.h5'
 

@@ -102,6 +102,11 @@ os.makedirs('models', exist_ok=True)
 model.save('models/action.h5')
 print("Model saved to models/action.h5")
 
+import json
+with open('models/labels.json', 'w') as f:
+    json.dump({str(i): action for i, action in enumerate(actions)}, f)
+print("Labels saved to models/labels.json")
+
 # --- 6. EVALUATE ---
 from sklearn.metrics import multilabel_confusion_matrix, accuracy_score
 yhat = model.predict(X_test)
