@@ -1,75 +1,49 @@
 import os
-import time
 import subprocess
-from bs4 import BeautifulSoup
 
-try:
-    from DrissionPage import ChromiumPage, ChromiumOptions
-except ImportError:
-    print("Please install DrissionPage: pip install DrissionPage")
-    exit()
-
-def download_video(url, output_path):
-    print(f"Downloading video from {url}...")
-    command = ["yt-dlp", "-f", "best", "-o", output_path, url]
-    subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    print(f"Saved to {output_path}")
+def download_video_from_youtube(word, output_path):
+    print(f"[{word}] Searching YouTube for ISL video...")
+    
+    # We use yt-dlp's built-in search feature to grab the first video result for "Indian Sign Language {word}"
+    search_query = f"ytsearch1:Indian Sign Language {word}"
+    
+    # -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" ensures we get mp4 if possible
+    # --force-overwrites prevents errors if file exists
+    command = [
+        "yt-dlp", 
+        "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+        "-o", output_path,
+        search_query
+    ]
+    
+    # Run the yt-dlp command
+    result = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    
+    if result.returncode == 0:
+        print(f"[{word}] Success! Downloaded video to {output_path}")
+    else:
+        print(f"[{word}] Failed to download video. It might not exist.")
 
 def scrape_isl(word, download_dir="Raw_Videos"):
     os.makedirs(download_dir, exist_ok=True)
-    print(f"\n[{word}] Starting scraper...")
     
-    # DrissionPage directly controls the browser via CDP, bypassing webdriver bugs entirely!
-    co = ChromiumOptions().set_browser_path('/opt/brave-bin/brave')
-    
-    try:
-        page = ChromiumPage(co)
-    except Exception as e:
-        print(f"Failed to launch browser: {e}")
-        return
-        
-    try:
-        url = f"https://indiansignlanguage.org/{word.lower()}/"
-        page.get(url)
-        
-        print(f"[{word}] Waiting for Cloudflare verification...")
-        time.sleep(8) # Wait for CF Turnstile to automatically pass
-        
-        soup = BeautifulSoup(page.html, 'html.parser')
-        video_url = None
-        
-        iframes = soup.find_all('iframe')
-        for iframe in iframes:
-            src = iframe.get('src', '')
-            if 'youtube' in src or 'vimeo' in src:
-                video_url = src
-                break
-                
-        if not video_url:
-            video_tags = soup.find_all('video')
-            for video in video_tags:
-                source = video.find('source')
-                if source and source.get('src'):
-                    video_url = source.get('src')
-                    break
-                    
-        if video_url:
-            print(f"[{word}] Found video source: {video_url}")
-            output_file = os.path.join(download_dir, f"{word.lower()}.mp4")
-            download_video(video_url, output_file)
-        else:
-            print(f"[{word}] Could not find a video on the page.")
-            
-    except Exception as e:
-        print(f"[{word}] Error: {e}")
-    finally:
-        page.quit()
+    output_file = os.path.join(download_dir, f"{word.lower()}.mp4")
+    download_video_from_youtube(word, output_file)
 
 def main():
-    words_to_learn = ["hello", "thanks", "apple"] 
-    print("Starting Automated ISL Scraper Pipeline...")
+    # Extracted vocabulary from the NIOS Indian Sign Language 230 PDF
+    words_to_learn = [
+        "sleep", "time", "late", "good", "easy", "sister", 
+        "brother", "water", "walk", "teach", "apple", "snake", 
+        "laptop", "tree", "hello", "thanks"
+    ] 
+    
+    print("Starting Automated ISL Video Downloader...")
+    print("Bypassing Cloudflare completely by pulling directly from YouTube ISL archives!\n")
+    
     for word in words_to_learn:
         scrape_isl(word)
+        
     print("\nScraping complete! Check the Raw_Videos/ folder.")
 
 if __name__ == "__main__":

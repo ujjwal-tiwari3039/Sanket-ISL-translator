@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+
+# Application specific
+Logs/
+Raw_Videos/
+MP_Data/
+downloaded_files/
+uploads/
+
+# IDEs
+.idea/
+.vscode/
+
+# Build and Temp
+build/
+dist/
+*.egg-info/
+*.lock
+*.mp4
+*.webm
+*.pdf
+/reference/
