@@ -1,27 +1,26 @@
 import cv2
 import numpy as np
 import os
-import time
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
 # --- 1. SET UP THE DATASET PARAMETERS ---
-DATA_PATH = os.path.join('MP_Data') 
-# Signs we want to train the model to recognize
-actions = np.array(['hello', 'thanks', 'iloveyou'])
-# Thirty videos worth of data per sign
-no_sequences = 30
-# Videos are going to be 30 frames in length
-sequence_length = 30
+DATA_PATH = os.path.join('MP_Data')
+
+# 15 Gap-filling words
+actions = np.array([
+    'yes', 'no', 'please', 'sorry', 'who', 
+    'what', 'where', 'why', 'how', 'stop', 
+    'help', 'now', 'later', 'name', 'friend'
+])
+no_sequences = 15 # 15 takes per word
+sequence_length = 30 # 30 frames per video
 
 # Create the folder structure
-for action in actions: 
+for action in actions:
     for sequence in range(no_sequences):
-        try: 
-            os.makedirs(os.path.join(DATA_PATH, action, str(sequence)))
-        except:
-            pass
+        os.makedirs(os.path.join(DATA_PATH, action, str(sequence)), exist_ok=True)
 
 # --- 2. SETUP MEDIAPIPE ---
 BaseOptions = mp.tasks.BaseOptions
@@ -69,48 +68,60 @@ def main():
     for action in actions:
         # Loop through sequences aka videos
         for sequence in range(no_sequences):
-            # Loop through video length aka sequence length
-            for frame_num in range(sequence_length):
-
+            # Show a prep screen before starting the recording
+            while True:
                 ret, frame = cap.read()
-                if not ret:
+                if not ret: break
+                
+                # Flip frame horizontally for selfie view
+                frame = cv2.flip(frame, 1)
+                
+                cv2.putText(frame, f"SIGN: {action.upper()}", (120, 200), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 0), 3)
+                cv2.putText(frame, f"Take {sequence+1}/{no_sequences}", (120, 250), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
+                cv2.putText(frame, "Press 'r' to record this take (or 's' to skip word)", (50, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                
+                cv2.imshow('Recording Helper', frame)
+                
+                key = cv2.waitKey(10) & 0xFF
+                if key == ord('r'):
                     break
+                elif key == ord('s'):
+                    break
+            
+            if key == ord('s'):
+                break # Move to next action
+                
+            # Recording frames
+            for frame_num in range(sequence_length):
+                ret, frame = cap.read()
+                if not ret: break
+                
+                frame = cv2.flip(frame, 1)
 
-                # Convert to mediapipe Image
                 rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
 
-                # Detections
                 pose_result = pose_landmarker.detect(mp_image)
                 hand_result = hand_landmarker.detect(mp_image)
                 face_result = face_landmarker.detect(mp_image)
                 
-                # Apply wait logic for the FIRST frame of every sequence to give you time to reset
-                if frame_num == 0: 
-                    cv2.putText(frame, 'STARTING COLLECTION', (120,200), 
-                               cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255, 0), 4, cv2.LINE_AA)
-                    cv2.putText(frame, f'Collecting frames for {action} Video Number {sequence}', (15,12), 
-                               cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
-                    
-                    cv2.imshow('Phase 1.5 - Data Collection', frame)
-                    cv2.waitKey(2000) # Wait 2 seconds before starting to record the 30 frames
-                else: 
-                    cv2.putText(frame, f'Collecting frames for {action} Video Number {sequence}', (15,12), 
-                               cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
-                    
-                    cv2.imshow('Phase 1.5 - Data Collection', frame)
+                cv2.putText(frame, f"RECORDING: {action.upper()} ({sequence+1}/{no_sequences})", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+                cv2.putText(frame, f"Frame {frame_num+1}/{sequence_length}", (20, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
                 
-                # Extract and SAVE the keypoints
+                # Draw simple progress bar
+                progress = int((frame_num + 1) / sequence_length * 600)
+                cv2.rectangle(frame, (20, 430), (20 + progress, 450), (0, 255, 0), -1)
+                
+                cv2.imshow('Recording Helper', frame)
+                cv2.waitKey(30) # Delay slightly to make the 30 frames represent roughly 1 second of video
+                
                 keypoints = extract_keypoints(pose_result, hand_result, face_result)
                 npy_path = os.path.join(DATA_PATH, action, str(sequence), str(frame_num))
                 np.save(npy_path, keypoints)
 
-                if cv2.waitKey(10) & 0xFF == ord('q'):
-                    break
-                    
     cap.release()
     cv2.destroyAllWindows()
-    print("Data collection complete! You now have a mini dataset.")
+    print("Data collection complete!")
 
 if __name__ == '__main__':
     main()
