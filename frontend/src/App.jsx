@@ -218,7 +218,11 @@ function App() {
              
              setConfidence(maxScore * 100);
              
-             if (maxScore > 0.70 && actionsList.length > 0) {
+             // Check if hands are present; if not, force idle
+             if (handRes.landmarks.length === 0) {
+                setCurrentSign("Waiting...");
+                predictionsBufferRef.current = [];
+             } else if (maxScore > 0.70 && actionsList.length > 0) {
                 let action = actionsList[classIndex];
                 if (questionFlag) action += "?";
                 
