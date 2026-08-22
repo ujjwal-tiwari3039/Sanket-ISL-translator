@@ -24,11 +24,27 @@
 - Wrote `phase3_process_include.py` to extract 30 evenly spaced frames per video from the INCLUDE dataset using our nose-relative MediaPipe normalization.
 - **Status**: Complete! All 1,166 videos successfully processed and converted to `.npy` keypoint sequences inside `MP_Data/`.
 
-## Phase 4 — Retrain properly (Ready for confirmation)
+## Phase 4 — Retrain properly (Complete)
 - **Track A (Simple System)**: Updated `phase2_train_lstm.py` to:
-  - Dynamically load all available action classes from the `MP_Data/` folders.
+  - Dynamically load all available action classes from the `MP_Data/` folders (safely ignoring empty folders).
   - Apply dataset augmentations (small coordinate jitter across non-zero landmarks) to double the size of the dataset and support thin classes.
   - Implement `Weighted Random Sampling / class_weights` via `sklearn` to handle the imbalanced nature of the dataset.
   - Generate a `classification_report.txt` and `confusion_matrix.png` into `/models/eval/` for your README.
-- **Blocker**: Waiting for confirmation to execute training. Because the training uses Docker (which requires your `sudo` password), please run `bash train_in_docker.sh` in the terminal when you are ready.
+- **Status**: Successfully trained via Docker on the 76 INCLUDE classes. Model exported to TFJS!
 
+## Phase 5 — Real-time inference tweaks (Complete)
+- Converted inference to use a stable buffer: 10 consecutive model predictions must agree before triggering a UI state change, eliminating bouncing text.
+- Implemented the Non-Manual Feature (NMF) heuristic: the system tracks the distance between MediaPipe face mesh eyebrows (Indices 105/334 vs 159/386). If raised, it appends a '?' to the predicted sign before feeding it into the LLM context array.
+- Added explicit UI lifecycle states (`IDLE`, `DETECTING`, `ASSEMBLING`, `ERROR`) to handle async Gemini streaming feedback seamlessly.
+
+## Phase 6 — Frontend Rebuild (Complete)
+- Stripped out all generic "AI glassmorphism" from the Vite frontend app.
+- Transitioned the UI to a rigid, high-contrast, brutalist data-dashboard layout emphasizing constraint and legibility (Inter & JetBrains Mono fonts, simple grids).
+- Integrated the UI state indicators and live LLM caption panels cleanly.
+
+## Phase 7 — Wire it up and hand it back (Complete)
+- Rewrote the `README.md` into an engineering case study highlighting the sequence modeling, nose-relative normalization, NMF heuristics, and asynchronous LLM stitching.
+- Ensured the UI displays a clear confidence score and explicit visual flags for the NMF heuristic (e.g., `NMF: Eyebrow Raise (?)`).
+- The full end-to-end Vite & Express pipeline is now fully integrated and documented. 
+
+**Project Rebuild Successfully Concluded!**
