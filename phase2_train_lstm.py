@@ -15,15 +15,23 @@ import json
 DATA_PATH = os.path.join('MP_Data')
 sequence_length = 30
 
-# Dynamically find all classes in MP_Data
-actions = np.array([d for d in os.listdir(DATA_PATH) if os.path.isdir(os.path.join(DATA_PATH, d))])
-actions.sort()
-print(f"Found {len(actions)} classes: {actions}")
+# Dynamically find all classes in MP_Data that actually have data
+all_dirs = [d for d in os.listdir(DATA_PATH) if os.path.isdir(os.path.join(DATA_PATH, d))]
+valid_actions = []
+for d in all_dirs:
+    # Check if there's at least one sequence (a folder containing .npy files)
+    seqs = [s for s in os.listdir(os.path.join(DATA_PATH, d)) if s.isdigit()]
+    if len(seqs) > 0:
+        valid_actions.append(d)
+        
+actions = np.array(sorted(valid_actions))
+print(f"Found {len(actions)} classes with data: {actions}")
 
 label_map = {label: num for num, label in enumerate(actions)}
 
 # Save labels.json early
 os.makedirs('models', exist_ok=True)
+import json
 with open('models/labels.json', 'w') as f:
     json.dump({str(i): action for i, action in enumerate(actions)}, f)
 print("Labels saved to models/labels.json")
@@ -52,8 +60,6 @@ def augment_sequence(sequence):
     """Add small coordinate jitter"""
     aug_seq = sequence.copy()
     noise = np.random.normal(0, 0.005, aug_seq.shape)
-    
-    # Don't add noise to visibility or zeros
     mask = aug_seq != 0
     aug_seq[mask] += noise[mask]
     return aug_seq
@@ -86,15 +92,22 @@ for action in actions:
 X = np.array(sequences)
 y = to_categorical(labels).astype(int)
 
-# Split the data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, stratify=labels)
+# Split the data - safely fallback to non-stratified if counts are too low
+try:
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, stratify=labels)
+except ValueError:
+    print("Warning: Could not stratify split due to low class counts. Splitting randomly.")
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1)
 print(f"Training data shape: {X_train.shape}")
 print(f"Testing data shape: {X_test.shape}")
 
 # Compute class weights
 y_train_classes = np.argmax(y_train, axis=1)
 class_weights = compute_class_weight('balanced', classes=np.unique(y_train_classes), y=y_train_classes)
-class_weight_dict = dict(enumerate(class_weights))
+# Map unique classes to their weight
+class_weight_dict = {cls: weight for cls, weight in zip(np.unique(y_train_classes), class_weights)}
+# Ensure all classes from 0 to len(actions)-1 have a weight (fallback to 1.0 if not in train set)
+class_weight_dict = {i: class_weight_dict.get(i, 1.0) for i in range(len(actions))}
 
 # --- 3. BUILD AND COMPILE MODEL ---
 log_dir = os.path.join('Logs')
@@ -128,13 +141,13 @@ yhat = model.predict(X_test)
 ytrue = np.argmax(y_test, axis=1)
 yhat_classes = np.argmax(yhat, axis=1)
 
-report = classification_report(ytrue, yhat_classes, target_names=actions)
+report = classification_report(ytrue, yhat_classes, target_names=actions, labels=np.arange(len(actions)), zero_division=0)
 print(report)
 
 with open('models/eval/classification_report.txt', 'w') as f:
     f.write(report)
 
-cm = confusion_matrix(ytrue, yhat_classes)
+cm = confusion_matrix(ytrue, yhat_classes, labels=np.arange(len(actions)))
 plt.figure(figsize=(20, 20))
 sns.heatmap(cm, annot=False, fmt='d', xticklabels=actions, yticklabels=actions)
 plt.ylabel('Actual')
