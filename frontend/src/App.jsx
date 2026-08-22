@@ -161,6 +161,9 @@ function App() {
     return Array.from(result); // Convert to JS array for TF tensor creation
   };
 
+  const [uiState, setUiState] = useState("IDLE"); // IDLE, DETECTING, ASSEMBLING, ERROR
+  const predictionsBufferRef = useRef([]);
+
   useEffect(() => {
     if (!isStreaming || !modelsLoaded) return;
     
@@ -182,7 +185,6 @@ function App() {
           const handRes = l.hand.detectForVideo(video, startTimeMs);
           const faceRes = l.face.detectForVideo(video, startTimeMs);
           
-          // NMF Heuristic: Raised Eyebrows (Indices 105 & 334 vs 159 & 386)
           let questionFlag = false;
           if (faceRes.faceLandmarks && faceRes.faceLandmarks.length > 0) {
             const fLm = faceRes.faceLandmarks[0];
@@ -196,7 +198,6 @@ function App() {
           setIsQuestion(questionFlag);
 
           const keypoints = extractKeypoints(poseRes, handRes, faceRes);
-          // DEBUG STATE
           setDebugInfo(`Pose: ${poseRes.landmarks.length > 0} | Face: ${faceRes.faceLandmarks.length > 0} | Hands: ${handRes.landmarks.length}`);
           
           sequenceRef.current.push(keypoints);
@@ -205,6 +206,7 @@ function App() {
           }
 
           if (sequenceRef.current.length === sequenceLength) {
+             setUiState("DETECTING");
              const inputTensor = tf.tensor3d([sequenceRef.current], [1, sequenceLength, 1692]);
              const prediction = tfModelRef.current.predict(inputTensor);
              const scores = await prediction.data();
@@ -216,44 +218,70 @@ function App() {
              
              setConfidence(maxScore * 100);
              
-             if (maxScore > 0.70 && actionsList.length > 0) {
+             // Check if hands are present; if not, force idle
+             if (handRes.landmarks.length === 0) {
+                setCurrentSign("Waiting...");
+                predictionsBufferRef.current = [];
+             } else if (maxScore > 0.70 && actionsList.length > 0) {
                 let action = actionsList[classIndex];
                 if (questionFlag) action += "?";
+                
+                // Add to predictions buffer
+                predictionsBufferRef.current.push(action);
+                if (predictionsBufferRef.current.length > 10) {
+                  predictionsBufferRef.current.shift();
+                }
+                
+                // Check if last 10 predictions agree
+                const allAgree = predictionsBufferRef.current.length === 10 && 
+                                 predictionsBufferRef.current.every(val => val === predictionsBufferRef.current[0]);
+                                 
                 setCurrentSign(action);
                 
-                let curSentence = [...sentenceRef.current];
-                if (curSentence.length === 0 || curSentence[curSentence.length - 1] !== action) {
-                  curSentence.push(action);
-                  if (curSentence.length > 5) curSentence.shift();
-                  sentenceRef.current = curSentence;
-                  setSentence(curSentence);
-                  
-                  // Call Backend for LLM Assembly (Streaming)
-                  setLlmSentence("");
-                  fetch('http://localhost:3001/api/assemble', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sequence: curSentence })
-                  }).then(async response => {
-                    if (!response.body) return;
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder('utf-8');
-                    let assembled = "";
-                    while (true) {
-                      const { done, value } = await reader.read();
-                      if (done) break;
-                      assembled += decoder.decode(value, { stream: true });
-                      setLlmSentence(assembled);
-                    }
-                  }).catch(err => {
-                    console.error("LLM Error:", err);
-                    setLlmSentence("Error generating sentence.");
-                  });
+                if (allAgree) {
+                  let curSentence = [...sentenceRef.current];
+                  if (curSentence.length === 0 || curSentence[curSentence.length - 1] !== action) {
+                    curSentence.push(action);
+                    if (curSentence.length > 5) curSentence.shift();
+                    sentenceRef.current = curSentence;
+                    setSentence(curSentence);
+                    
+                    // Trigger LLM
+                    setUiState("ASSEMBLING");
+                    setLlmSentence("");
+                    fetch('http://localhost:3001/api/assemble', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ sequence: curSentence })
+                    }).then(async response => {
+                      if (!response.body) return;
+                      const reader = response.body.getReader();
+                      const decoder = new TextDecoder('utf-8');
+                      let assembled = "";
+                      while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        assembled += decoder.decode(value, { stream: true });
+                        setLlmSentence(assembled);
+                      }
+                      setUiState("IDLE");
+                    }).catch(err => {
+                      console.error("LLM Error:", err);
+                      setLlmSentence("Error generating sentence.");
+                      setUiState("ERROR");
+                    });
+                  }
                 }
+             } else {
+                 // Low confidence, reset buffer
+                 predictionsBufferRef.current = [];
              }
+          } else {
+              setUiState("IDLE");
           }
         } catch(e) {
           console.error(e);
+          setUiState("ERROR");
         }
       }
       isPredictingRef.current = false;
@@ -262,19 +290,23 @@ function App() {
 
     detectAndPredict();
     return () => cancelAnimationFrame(animationFrameId);
-  }, [isStreaming, modelsLoaded]);
+  }, [isStreaming, modelsLoaded, actionsList]);
 
   return (
     <div className="app-container">
       <header>
         <div className="logo-container">
           <h1>SignAI</h1>
-          <p>Dynamic Sign Language Translation Engine</p>
+          <p>Real-time Translation Pipeline</p>
+        </div>
+        <div className={`ui-state-badge ${uiState.toLowerCase()}`}>
+          <div className="ui-state-indicator"></div>
+          {uiState}
         </div>
       </header>
 
       <main className="main-content">
-        <section className="glass-panel video-section">
+        <section className="video-section">
           <div className="video-container">
             <video 
               ref={videoRef} 
@@ -287,23 +319,17 @@ function App() {
               }}
             />
             <canvas className="canvas-overlay" />
-            
-            <div className="status-badge">
-              <div className={`status-indicator ${(isStreaming && modelsLoaded) ? 'active' : ''}`}></div>
-              {(isStreaming && modelsLoaded) ? 'Live Inference Active' : 'Loading Models...'}
-            </div>
           </div>
           
-          <p className="info-text">
-            <strong>DEBUG:</strong> {debugInfo}<br/>
-            LSTM sequence modeling running over MediaPipe Hand & Face landmarks. 
-            <strong> 1,692 features per frame.</strong>
-          </p>
+          <div className="info-text">
+            <span>[DEBUG] {debugInfo}</span>
+            <span>FEAT: 1692</span>
+          </div>
         </section>
 
         <section className="controls-panel">
-          <div className="glass-panel translation-box">
-            <h3>Raw Sign Detection</h3>
+          <div className="data-panel">
+            <h3>Raw Prediction</h3>
             <div className="translation-text">
               {currentSign.toUpperCase()}
             </div>
@@ -314,31 +340,28 @@ function App() {
                 style={{ width: `${confidence}%` }}
               ></div>
             </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.3rem', textAlign: 'right' }}>
-              Conf: {confidence.toFixed(1)}%
+            <div className="conf-label">
+              CONFIDENCE: {confidence.toFixed(1)}%
             </div>
 
             {isQuestion && (
               <div className="question-indicator">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
-                NMF Detected: Raised Eyebrows (Question)
+                NMF: Eyebrow Raise (?)
               </div>
             )}
           </div>
 
-          <div className="glass-panel translation-box">
+          <div className="data-panel">
              <h3>Sequence Context</h3>
-             <div className="translation-text" style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>
-               {sentence.join(" → ") || "..."}
+             <div className="sequence-text">
+               {sentence.length > 0 ? sentence.join(" → ") : "..."}
              </div>
           </div>
 
-          <div className="glass-panel translation-box llm-output">
-            <h3>LLM Semantic Assembly</h3>
+          <div className="data-panel llm-output">
+            <h3>LLM Assembly</h3>
             <div className="llm-text">
-              "{llmSentence}"
+              {llmSentence || "Waiting for context..."}
             </div>
           </div>
           
@@ -346,8 +369,9 @@ function App() {
               setSentence([]);
               sentenceRef.current = [];
               setCurrentSign("Waiting...");
+              setUiState("IDLE");
           }}>
-            Clear Context
+            [ Clear Context ]
           </button>
         </section>
       </main>
