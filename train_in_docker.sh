@@ -11,6 +11,7 @@ sudo docker run --rm -v "$(pwd):/app" -w /app python:3.11-slim bash -c "
   
   echo 'Converting model to TensorFlow.js...' &&
   tensorflowjs_converter --input_format keras models/action.h5 frontend/public/models &&
+  cp models/labels.json frontend/public/models/labels.json &&
   
   echo '✅ Model trained and exported successfully!'
 "
