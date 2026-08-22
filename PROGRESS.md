@@ -22,12 +22,13 @@
 - Per the integration strategy, the sentence-level dataset should be set aside for a future sequence-to-sequence model.
 - Discovered the `INCLUDE` dataset (`islmodel/ProcessedData_vivit`) thanks to your pointer! It has 76 word classes with hundreds of isolated `.MOV` videos.
 - Wrote `phase3_process_include.py` to extract 30 evenly spaced frames per video from the INCLUDE dataset using our nose-relative MediaPipe normalization.
-- **Status**: The dataset is currently being processed into `MP_Data/` in the background.
+- **Status**: Complete! All 1,166 videos successfully processed and converted to `.npy` keypoint sequences inside `MP_Data/`.
 
-## Phase 4 — Retrain properly (In Progress)
-- **Track A (Simple System)**: Updated `phase2_train_lstm.py` (which will be run once data processing finishes) to:
+## Phase 4 — Retrain properly (Ready for confirmation)
+- **Track A (Simple System)**: Updated `phase2_train_lstm.py` to:
   - Dynamically load all available action classes from the `MP_Data/` folders.
   - Apply dataset augmentations (small coordinate jitter across non-zero landmarks) to double the size of the dataset and support thin classes.
   - Implement `Weighted Random Sampling / class_weights` via `sklearn` to handle the imbalanced nature of the dataset.
   - Generate a `classification_report.txt` and `confusion_matrix.png` into `/models/eval/` for your README.
+- **Blocker**: Waiting for confirmation to execute training. Because the training uses Docker (which requires your `sudo` password), please run `bash train_in_docker.sh` in the terminal when you are ready.
 
