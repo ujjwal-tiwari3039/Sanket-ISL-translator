@@ -39,7 +39,7 @@ app.post('/api/assemble', async (req, res) => {
     res.setHeader('Transfer-Encoding', 'chunked');
 
     const responseStream = await ai.models.generateContentStream({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3.6-flash',
       contents: prompt,
     });
 

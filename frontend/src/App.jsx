@@ -265,7 +265,7 @@ function App() {
       if (isPredictingRef.current) return;
       
       const now = performance.now();
-      if (now - lastFrameTimeMs < 66) {
+      if (now - lastFrameTimeMs < 100) { // 10 fps to match 33 frames = 3.3 seconds
          animationFrameId = requestAnimationFrame(detectAndPredict);
          return;
       }
@@ -356,37 +356,42 @@ function App() {
                 setCurrentSign(action);
                 
                 if (majoritySign) {
-                  let curSentence = [...sentenceRef.current];
-                  if (curSentence.length === 0 || curSentence[curSentence.length - 1] !== majoritySign) {
-                    curSentence.push(majoritySign);
-                    if (curSentence.length > 5) curSentence.shift();
-                    sentenceRef.current = curSentence;
-                    setSentence(curSentence);
-                    
-                    // Trigger LLM
-                    setUiState("ASSEMBLING");
-                    setLlmSentence("");
-                    fetch('http://localhost:3001/api/assemble', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ sequence: curSentence })
-                    }).then(async response => {
-                      if (!response.body) return;
-                      const reader = response.body.getReader();
-                      const decoder = new TextDecoder('utf-8');
-                      let assembled = "";
-                      while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        assembled += decoder.decode(value, { stream: true });
-                        setLlmSentence(assembled);
-                      }
-                      setUiState("IDLE");
-                    }).catch(err => {
-                      console.error("LLM Error:", err);
-                      setLlmSentence("Error generating sentence.");
-                      setUiState("ERROR");
-                    });
+                  if (majoritySign === "idle") {
+                    setCurrentSign("idle...");
+                    // We don't add idle to the sentence.
+                  } else {
+                    let curSentence = [...sentenceRef.current];
+                    if (curSentence.length === 0 || curSentence[curSentence.length - 1] !== majoritySign) {
+                      curSentence.push(majoritySign);
+                      if (curSentence.length > 5) curSentence.shift();
+                      sentenceRef.current = curSentence;
+                      setSentence(curSentence);
+                      
+                      // Trigger LLM
+                      setUiState("ASSEMBLING");
+                      setLlmSentence("");
+                      fetch('http://localhost:3001/api/assemble', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sequence: curSentence })
+                      }).then(async response => {
+                        if (!response.body) return;
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder('utf-8');
+                        let assembled = "";
+                        while (true) {
+                          const { done, value } = await reader.read();
+                          if (done) break;
+                          assembled += decoder.decode(value, { stream: true });
+                          setLlmSentence(assembled);
+                        }
+                        setUiState("IDLE");
+                      }).catch(err => {
+                        console.error("LLM Error:", err);
+                        setLlmSentence("Error generating sentence.");
+                        setUiState("ERROR");
+                      });
+                    }
                   }
                 }
              } else {
@@ -449,6 +454,94 @@ function App() {
               />
               Show Face Mesh
             </label>
+            <button 
+              onClick={async () => {
+                const testVideos = [
+                  "bad_MVI_5162.MOV", "clothing_MVI_4896.MOV", "cow_MVI_3075.MOV", 
+                  "deaf_MVI_9851.MOV", "flat_MVI_9624.MOV", "happy_MVI_5263.MOV", 
+                  "light_MVI_9714.MOV", "sick_MVI_9444.MOV", "year_MVI_4637.MOV", "young_MVI_9429.MOV"
+                ];
+                let correct = 0;
+                
+                isPredictingRef.current = true; // PAUSE LIVE INFERENCE LOOP
+                
+                const v = videoRef.current;
+                v.srcObject = null; // stop webcam
+                
+                for (const vid of testVideos) {
+                  const trueClass = vid.split('_')[0];
+                  setDebugInfo(`TESTING: ${vid} (expecting ${trueClass})`);
+                  
+                  v.src = `/test_videos/${vid}`;
+                  v.loop = false;
+                  sequenceRef.current = [];
+                  predictionsBufferRef.current = [];
+                  setCurrentSign("Testing...");
+                  
+                  // Wait for metadata to load duration
+                  await new Promise(r => {
+                     if (v.readyState >= 1) r();
+                     else v.onloadedmetadata = r;
+                  });
+                  
+                  const step = v.duration / 30;
+                  const l = landmarkersRef.current;
+                  
+                  // Manually seek and extract exactly 30 frames to perfectly mimic training data
+                  for (let i = 0; i < 30; i++) {
+                    v.currentTime = i * step;
+                    await new Promise(r => {
+                      v.onseeked = r;
+                    });
+                    
+                    const startTimeMs = performance.now();
+                    const poseRes = l.pose.detectForVideo(v, startTimeMs);
+                    const handRes = l.hand.detectForVideo(v, startTimeMs);
+                    const faceRes = l.face.detectForVideo(v, startTimeMs);
+                    
+                    const keypoints = extractKeypoints(poseRes, handRes, faceRes);
+                    sequenceRef.current.push(keypoints);
+                  }
+                  
+                  // Now force a prediction on this perfect 30-frame buffer
+                  const inputTensor = tf.tensor3d([sequenceRef.current], [1, 30, 258]);
+                  const prediction = tfModelRef.current.predict(inputTensor);
+                  const scores = await prediction.data();
+                  inputTensor.dispose();
+                  prediction.dispose();
+                  
+                  const maxScore = Math.max(...scores);
+                  const classIndex = scores.indexOf(maxScore);
+                  const predictedClass = actionsList[classIndex];
+                  
+                  console.log(`[DEBUG] Final sequence length for ${vid}: ${sequenceRef.current.length} | Confidence: ${maxScore.toFixed(2)}`);
+                  
+                  // If confidence is somewhat decent, consider it the prediction
+                  let majoritySign = null;
+                  if (maxScore > 0.40) {
+                     majoritySign = predictedClass;
+                  }
+                  
+                  const predicted = majoritySign ? majoritySign.replace('?', '') : 'none';
+                  if (predicted === trueClass) correct++;
+                  console.log(`[TEST] ${vid} | Expected: ${trueClass} | Got: ${predicted} | ${predicted === trueClass ? 'PASS' : 'FAIL'}`);
+                }
+                
+                setDebugInfo(`TEST COMPLETE: ${correct}/${testVideos.length} correct. Check console for details.`);
+                
+                // Restore webcam
+                navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+                  v.src = "";
+                  v.srcObject = stream;
+                  v.play();
+                  isPredictingRef.current = false;
+                  detectAndPredict();
+                });
+              }}
+              style={{ marginLeft: 'auto', padding: '0.2rem 0.5rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+            >
+              Run Sanity Test
+            </button>
           </div>
         </section>
 
