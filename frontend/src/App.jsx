@@ -15,11 +15,13 @@ function App() {
   const [llmSentence, setLlmSentence] = useState("...");
   const [isQuestion, setIsQuestion] = useState(false);
   const [debugInfo, setDebugInfo] = useState("Waiting for landmarks...");
+  const [showFaceMesh, setShowFaceMesh] = useState(false);
   
   const [actionsList, setActionsList] = useState([]);
   const sequenceLength = 30;
 
   // Refs for logic loop
+  const canvasRef = useRef(null);
   const sequenceRef = useRef([]);
   const sentenceRef = useRef([]);
   const tfModelRef = useRef(null);
@@ -74,7 +76,10 @@ function App() {
         const handLandmarker = await HandLandmarker.createFromOptions(vision, {
           baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task" },
           runningMode: "VIDEO",
-          numHands: 2
+          numHands: 2,
+          minHandDetectionConfidence: 0.4,
+          minHandPresenceConfidence: 0.4,
+          minTrackingConfidence: 0.4
         });
         
         const faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
@@ -183,13 +188,84 @@ function App() {
     
     let animationFrameId;
     let lastVideoTime = -1;
-
     let lastFrameTimeMs = 0;
+
+    const drawLandmarks = (handRes, faceRes) => {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      if (!canvas || !video) return;
+      
+      const ctx = canvas.getContext('2d');
+      if (canvas.width !== video.videoWidth) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+      }
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const w = canvas.width;
+      const h = canvas.height;
+      
+      // Face Mesh Toggle
+      if (showFaceMesh && faceRes && faceRes.faceLandmarks) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.beginPath();
+        for (const face of faceRes.faceLandmarks) {
+          for (const pt of face) {
+            ctx.rect(pt.x * w, pt.y * h, 1, 1);
+          }
+        }
+        ctx.fill();
+      }
+      
+      // Hands (Instagram-filter style overlay)
+      if (handRes && handRes.landmarks) {
+        const connections = {
+          thumb: [[1, 2], [2, 3], [3, 4]],
+          index: [[5, 6], [6, 7], [7, 8]],
+          middle: [[9, 10], [10, 11], [11, 12]],
+          ring: [[13, 14], [14, 15], [15, 16]],
+          pinky: [[17, 18], [18, 19], [19, 20]],
+          palm: [[0, 1], [0, 5], [0, 17], [5, 9], [9, 13], [13, 17]]
+        };
+        const colors = {
+          thumb: '#ef4444', index: '#f59e0b', middle: '#10b981', 
+          ring: '#3b82f6', pinky: '#8b5cf6', palm: '#9ca3af'
+        };
+
+        const drawSegment = (landmarks, segment, color) => {
+           ctx.strokeStyle = color;
+           ctx.lineWidth = 2;
+           ctx.beginPath();
+           for (const [i, j] of segment) {
+             ctx.moveTo(landmarks[i].x * w, landmarks[i].y * h);
+             ctx.lineTo(landmarks[j].x * w, landmarks[j].y * h);
+           }
+           ctx.stroke();
+        };
+
+        for (const landmarks of handRes.landmarks) {
+          for (const [part, lines] of Object.entries(connections)) {
+            drawSegment(landmarks, lines, colors[part]);
+          }
+          
+          // Draw points with Z-depth mapping (closer = bigger/brighter)
+          for (const pt of landmarks) {
+            const zOpacity = Math.min(1.0, Math.max(0.2, 1 - (pt.z * 5))); 
+            const r = Math.max(2, 6 * zOpacity);
+            ctx.fillStyle = `rgba(255, 255, 255, ${zOpacity})`;
+            ctx.beginPath();
+            ctx.arc(pt.x * w, pt.y * h, r, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+        }
+      }
+    };
+
     const detectAndPredict = async () => {
       if (isPredictingRef.current) return;
       
       const now = performance.now();
-      if (now - lastFrameTimeMs < 66) {
+      if (now - lastFrameTimeMs < 100) { // 10 fps to match 33 frames = 3.3 seconds
          animationFrameId = requestAnimationFrame(detectAndPredict);
          return;
       }
@@ -219,6 +295,9 @@ function App() {
             }
           }
           setIsQuestion(questionFlag);
+          
+          // Draw the overlay
+          drawLandmarks(handRes, faceRes);
 
           const keypoints = extractKeypoints(poseRes, handRes, faceRes);
           setDebugInfo(`Pose: ${poseRes.landmarks.length > 0} | Face: ${faceRes.faceLandmarks.length > 0} | Hands: ${handRes.landmarks.length}`);
@@ -249,54 +328,70 @@ function App() {
                 let action = actionsList[classIndex];
                 if (questionFlag) action += "?";
                 
+                // Calculate average hand presence confidence
+                let handConf = 0;
+                handRes.handednesses.forEach(h => handConf += h[0].score);
+                handConf /= handRes.handednesses.length;
+
                 // Add to predictions buffer for rolling vote
-                predictionsBufferRef.current.push(action);
+                predictionsBufferRef.current.push({ sign: action, weight: handConf });
                 if (predictionsBufferRef.current.length > 5) {
                   predictionsBufferRef.current.shift();
                 }
                 
-                // Rolling majority vote (needs 4 out of 5)
+                // Rolling majority vote weighted by hand confidence
                 const counts = {};
-                predictionsBufferRef.current.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
+                let totalWeight = 0;
+                predictionsBufferRef.current.forEach(v => { 
+                  counts[v.sign] = (counts[v.sign] || 0) + v.weight; 
+                  totalWeight += v.weight;
+                });
+                
                 let majoritySign = null;
-                for (const [sign, count] of Object.entries(counts)) {
-                    if (count >= 4) majoritySign = sign;
+                for (const [sign, weight] of Object.entries(counts)) {
+                    // Require >60% of the total weighted buffer
+                    if (weight > (totalWeight * 0.6)) majoritySign = sign;
                 }
                                  
                 setCurrentSign(action);
                 
                 if (majoritySign) {
-                  let curSentence = [...sentenceRef.current];
-                  if (curSentence.length === 0 || curSentence[curSentence.length - 1] !== majoritySign) {
-                    curSentence.push(majoritySign);
-                    if (curSentence.length > 5) curSentence.shift();
-                    sentenceRef.current = curSentence;
-                    setSentence(curSentence);
-                    
-                    // Trigger LLM
-                    setUiState("ASSEMBLING");
-                    setLlmSentence("");
-                    fetch('http://localhost:3001/api/assemble', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ sequence: curSentence })
-                    }).then(async response => {
-                      if (!response.body) return;
-                      const reader = response.body.getReader();
-                      const decoder = new TextDecoder('utf-8');
-                      let assembled = "";
-                      while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        assembled += decoder.decode(value, { stream: true });
-                        setLlmSentence(assembled);
-                      }
-                      setUiState("IDLE");
-                    }).catch(err => {
-                      console.error("LLM Error:", err);
-                      setLlmSentence("Error generating sentence.");
-                      setUiState("ERROR");
-                    });
+                  if (majoritySign === "idle") {
+                    setCurrentSign("idle...");
+                    // We don't add idle to the sentence.
+                  } else {
+                    let curSentence = [...sentenceRef.current];
+                    if (curSentence.length === 0 || curSentence[curSentence.length - 1] !== majoritySign) {
+                      curSentence.push(majoritySign);
+                      if (curSentence.length > 5) curSentence.shift();
+                      sentenceRef.current = curSentence;
+                      setSentence(curSentence);
+                      
+                      // Trigger LLM
+                      setUiState("ASSEMBLING");
+                      setLlmSentence("");
+                      fetch('http://localhost:3001/api/assemble', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sequence: curSentence })
+                      }).then(async response => {
+                        if (!response.body) return;
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder('utf-8');
+                        let assembled = "";
+                        while (true) {
+                          const { done, value } = await reader.read();
+                          if (done) break;
+                          assembled += decoder.decode(value, { stream: true });
+                          setLlmSentence(assembled);
+                        }
+                        setUiState("IDLE");
+                      }).catch(err => {
+                        console.error("LLM Error:", err);
+                        setLlmSentence("Error generating sentence.");
+                        setUiState("ERROR");
+                      });
+                    }
                   }
                 }
              } else {
@@ -345,12 +440,108 @@ function App() {
                 e.target.height = e.target.videoHeight;
               }}
             />
-            <canvas className="canvas-overlay" />
+            <canvas ref={canvasRef} className="canvas-overlay" />
           </div>
           
           <div className="info-text">
             <span>[DEBUG] {debugInfo}</span>
-            <span>FEAT: 1692</span>
+            <span>FEAT: 258</span>
+            <label style={{ marginLeft: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <input 
+                type="checkbox" 
+                checked={showFaceMesh} 
+                onChange={(e) => setShowFaceMesh(e.target.checked)} 
+              />
+              Show Face Mesh
+            </label>
+            <button 
+              onClick={async () => {
+                const testVideos = [
+                  "bad_MVI_5162.MOV", "clothing_MVI_4896.MOV", "cow_MVI_3075.MOV", 
+                  "deaf_MVI_9851.MOV", "flat_MVI_9624.MOV", "happy_MVI_5263.MOV", 
+                  "light_MVI_9714.MOV", "sick_MVI_9444.MOV", "year_MVI_4637.MOV", "young_MVI_9429.MOV"
+                ];
+                let correct = 0;
+                
+                isPredictingRef.current = true; // PAUSE LIVE INFERENCE LOOP
+                
+                const v = videoRef.current;
+                v.srcObject = null; // stop webcam
+                
+                for (const vid of testVideos) {
+                  const trueClass = vid.split('_')[0];
+                  setDebugInfo(`TESTING: ${vid} (expecting ${trueClass})`);
+                  
+                  v.src = `/test_videos/${vid}`;
+                  v.loop = false;
+                  sequenceRef.current = [];
+                  predictionsBufferRef.current = [];
+                  setCurrentSign("Testing...");
+                  
+                  // Wait for metadata to load duration
+                  await new Promise(r => {
+                     if (v.readyState >= 1) r();
+                     else v.onloadedmetadata = r;
+                  });
+                  
+                  const step = v.duration / 30;
+                  const l = landmarkersRef.current;
+                  
+                  // Manually seek and extract exactly 30 frames to perfectly mimic training data
+                  for (let i = 0; i < 30; i++) {
+                    v.currentTime = i * step;
+                    await new Promise(r => {
+                      v.onseeked = r;
+                    });
+                    
+                    const startTimeMs = performance.now();
+                    const poseRes = l.pose.detectForVideo(v, startTimeMs);
+                    const handRes = l.hand.detectForVideo(v, startTimeMs);
+                    const faceRes = l.face.detectForVideo(v, startTimeMs);
+                    
+                    const keypoints = extractKeypoints(poseRes, handRes, faceRes);
+                    sequenceRef.current.push(keypoints);
+                  }
+                  
+                  // Now force a prediction on this perfect 30-frame buffer
+                  const inputTensor = tf.tensor3d([sequenceRef.current], [1, 30, 258]);
+                  const prediction = tfModelRef.current.predict(inputTensor);
+                  const scores = await prediction.data();
+                  inputTensor.dispose();
+                  prediction.dispose();
+                  
+                  const maxScore = Math.max(...scores);
+                  const classIndex = scores.indexOf(maxScore);
+                  const predictedClass = actionsList[classIndex];
+                  
+                  console.log(`[DEBUG] Final sequence length for ${vid}: ${sequenceRef.current.length} | Confidence: ${maxScore.toFixed(2)}`);
+                  
+                  // If confidence is somewhat decent, consider it the prediction
+                  let majoritySign = null;
+                  if (maxScore > 0.40) {
+                     majoritySign = predictedClass;
+                  }
+                  
+                  const predicted = majoritySign ? majoritySign.replace('?', '') : 'none';
+                  if (predicted === trueClass) correct++;
+                  console.log(`[TEST] ${vid} | Expected: ${trueClass} | Got: ${predicted} | ${predicted === trueClass ? 'PASS' : 'FAIL'}`);
+                }
+                
+                setDebugInfo(`TEST COMPLETE: ${correct}/${testVideos.length} correct. Check console for details.`);
+                
+                // Restore webcam
+                navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+                  v.src = "";
+                  v.srcObject = stream;
+                  v.play();
+                  isPredictingRef.current = false;
+                  detectAndPredict();
+                });
+              }}
+              style={{ marginLeft: 'auto', padding: '0.2rem 0.5rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+            >
+              Run Sanity Test
+            </button>
           </div>
         </section>
 

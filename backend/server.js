@@ -14,6 +14,10 @@ if (process.env.GEMINI_API_KEY) {
   ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 }
 
+app.get('/', (req, res) => {
+  res.send('SignAI Backend Proxy is running and listening for POST requests on /api/assemble.');
+});
+
 app.post('/api/assemble', async (req, res) => {
   const { sequence } = req.body;
   if (!sequence || !Array.isArray(sequence)) {
@@ -35,7 +39,7 @@ app.post('/api/assemble', async (req, res) => {
     res.setHeader('Transfer-Encoding', 'chunked');
 
     const responseStream = await ai.models.generateContentStream({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: prompt,
     });
 
@@ -46,7 +50,7 @@ app.post('/api/assemble', async (req, res) => {
 
   } catch (error) {
     console.error('Gemini error:', error);
-    res.status(500).json({ error: 'Failed to generate sentence' });
+    res.status(500).json({ error: `Failed to generate sentence: ${error.message}` });
   }
 });
 
