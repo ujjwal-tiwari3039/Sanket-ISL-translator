@@ -128,37 +128,51 @@ function App() {
     result.set(lh, pose.length + face.length);
     result.set(rh, pose.length + face.length + lh.length);
     
-    // Normalize coordinates relative to nose (pose[0], pose[1]) to be invariant to camera distance
+    // Normalize coordinates relative to nose and scale by shoulder width
     if (result[0] !== 0 || result[1] !== 0) {
       const noseX = result[0];
       const noseY = result[1];
       
+      const lShoulderX = result[11 * 4];
+      const lShoulderY = result[11 * 4 + 1];
+      const rShoulderX = result[12 * 4];
+      const rShoulderY = result[12 * 4 + 1];
+      
+      const shoulderWidth = Math.sqrt(Math.pow(lShoulderX - rShoulderX, 2) + Math.pow(lShoulderY - rShoulderY, 2));
+      const scale = shoulderWidth > 0.01 ? shoulderWidth : 1.0;
+      
       // Pose
       for (let i = 0; i < 132; i += 4) {
         if (result[i] !== 0 || result[i+1] !== 0) {
-          result[i] -= noseX;
-          result[i+1] -= noseY;
+          result[i] = (result[i] - noseX) / scale;
+          result[i+1] = (result[i+1] - noseY) / scale;
         }
       }
       
       // Face
       for (let i = 132; i < 1566; i += 3) {
         if (result[i] !== 0 || result[i+1] !== 0) {
-          result[i] -= noseX;
-          result[i+1] -= noseY;
+          result[i] = (result[i] - noseX) / scale;
+          result[i+1] = (result[i+1] - noseY) / scale;
         }
       }
       
       // Hands
       for (let i = 1566; i < 1692; i += 3) {
         if (result[i] !== 0 || result[i+1] !== 0) {
-          result[i] -= noseX;
-          result[i+1] -= noseY;
+          result[i] = (result[i] - noseX) / scale;
+          result[i+1] = (result[i+1] - noseY) / scale;
         }
       }
     }
     
-    return Array.from(result); // Convert to JS array for TF tensor creation
+    // Trim out Face landmarks (1434 features) to prevent LSTM from keying on noise
+    // Pose: 0-132, Hands: 1566-1692 -> Total 258 features
+    const finalResult = new Float32Array(258);
+    finalResult.set(result.slice(0, 132), 0);
+    finalResult.set(result.slice(1566, 1692), 132);
+    
+    return Array.from(finalResult); // Convert to JS array for TF tensor creation
   };
 
   const [uiState, setUiState] = useState("IDLE"); // IDLE, DETECTING, ASSEMBLING, ERROR
@@ -170,13 +184,22 @@ function App() {
     let animationFrameId;
     let lastVideoTime = -1;
 
+    let lastFrameTimeMs = 0;
     const detectAndPredict = async () => {
       if (isPredictingRef.current) return;
+      
+      const now = performance.now();
+      if (now - lastFrameTimeMs < 66) {
+         animationFrameId = requestAnimationFrame(detectAndPredict);
+         return;
+      }
+      
       isPredictingRef.current = true;
 
       const video = videoRef.current;
       if (video && video.readyState >= 2 && video.currentTime !== lastVideoTime) {
         lastVideoTime = video.currentTime;
+        lastFrameTimeMs = now;
         const startTimeMs = performance.now();
         
         try {
@@ -207,7 +230,7 @@ function App() {
 
           if (sequenceRef.current.length === sequenceLength) {
              setUiState("DETECTING");
-             const inputTensor = tf.tensor3d([sequenceRef.current], [1, sequenceLength, 1692]);
+             const inputTensor = tf.tensor3d([sequenceRef.current], [1, sequenceLength, 258]);
              const prediction = tfModelRef.current.predict(inputTensor);
              const scores = await prediction.data();
              inputTensor.dispose();
@@ -226,22 +249,26 @@ function App() {
                 let action = actionsList[classIndex];
                 if (questionFlag) action += "?";
                 
-                // Add to predictions buffer
+                // Add to predictions buffer for rolling vote
                 predictionsBufferRef.current.push(action);
-                if (predictionsBufferRef.current.length > 10) {
+                if (predictionsBufferRef.current.length > 5) {
                   predictionsBufferRef.current.shift();
                 }
                 
-                // Check if last 10 predictions agree
-                const allAgree = predictionsBufferRef.current.length === 10 && 
-                                 predictionsBufferRef.current.every(val => val === predictionsBufferRef.current[0]);
+                // Rolling majority vote (needs 4 out of 5)
+                const counts = {};
+                predictionsBufferRef.current.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
+                let majoritySign = null;
+                for (const [sign, count] of Object.entries(counts)) {
+                    if (count >= 4) majoritySign = sign;
+                }
                                  
                 setCurrentSign(action);
                 
-                if (allAgree) {
+                if (majoritySign) {
                   let curSentence = [...sentenceRef.current];
-                  if (curSentence.length === 0 || curSentence[curSentence.length - 1] !== action) {
-                    curSentence.push(action);
+                  if (curSentence.length === 0 || curSentence[curSentence.length - 1] !== majoritySign) {
+                    curSentence.push(majoritySign);
                     if (curSentence.length > 5) curSentence.shift();
                     sentenceRef.current = curSentence;
                     setSentence(curSentence);
