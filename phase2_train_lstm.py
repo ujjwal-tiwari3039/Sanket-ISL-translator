@@ -38,23 +38,35 @@ print("Labels saved to models/labels.json")
 
 def normalize_keypoints(res):
     if res[0] == 0 and res[1] == 0:
-        return res
+        # If no pose, return trimmed zeros
+        return np.zeros(258)
+        
     nose_x = res[0]
     nose_y = res[1]
     
+    # Calculate shoulder width for scale normalization (landmarks 11 and 12)
+    l_shoulder_x, l_shoulder_y = res[11*4], res[11*4+1]
+    r_shoulder_x, r_shoulder_y = res[12*4], res[12*4+1]
+    shoulder_width = np.sqrt((l_shoulder_x - r_shoulder_x)**2 + (l_shoulder_y - r_shoulder_y)**2)
+    # Avoid division by zero
+    scale = shoulder_width if shoulder_width > 0.01 else 1.0
+    
     for i in range(0, 132, 4):
         if res[i] != 0 or res[i+1] != 0:
-            res[i] -= nose_x
-            res[i+1] -= nose_y
+            res[i] = (res[i] - nose_x) / scale
+            res[i+1] = (res[i+1] - nose_y) / scale
     for i in range(132, 1566, 3):
         if res[i] != 0 or res[i+1] != 0:
-            res[i] -= nose_x
-            res[i+1] -= nose_y
+            res[i] = (res[i] - nose_x) / scale
+            res[i+1] = (res[i+1] - nose_y) / scale
     for i in range(1566, 1692, 3):
         if res[i] != 0 or res[i+1] != 0:
-            res[i] -= nose_x
-            res[i+1] -= nose_y
-    return res
+            res[i] = (res[i] - nose_x) / scale
+            res[i+1] = (res[i+1] - nose_y) / scale
+            
+    # Trim out Face landmarks (1434 features) to prevent LSTM from keying on noise
+    # Pose: 0-132, Hands: 1566-1692 -> Total 258 features
+    return np.concatenate([res[:132], res[1566:]])
 
 def augment_sequence(sequence):
     """Add small coordinate jitter"""
@@ -80,7 +92,7 @@ for action in actions:
                 res = normalize_keypoints(res)
                 window.append(res)
             else:
-                window.append(np.zeros(1692))
+                window.append(np.zeros(258))
         
         sequences.append(window)
         labels.append(label_map[action])
@@ -115,7 +127,7 @@ tb_callback = TensorBoard(log_dir=log_dir)
 early_stop = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
 
 model = Sequential()
-model.add(LSTM(64, return_sequences=True, activation='relu', input_shape=(sequence_length, 1692)))
+model.add(LSTM(64, return_sequences=True, activation='relu', input_shape=(sequence_length, 258)))
 model.add(Dropout(0.2))
 model.add(LSTM(128, return_sequences=True, activation='relu'))
 model.add(Dropout(0.2))
