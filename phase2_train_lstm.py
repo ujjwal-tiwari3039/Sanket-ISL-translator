@@ -39,7 +39,7 @@ print("Labels saved to models/labels.json")
 def normalize_keypoints(res):
     if res[0] == 0 and res[1] == 0:
         # If no pose, return trimmed zeros
-        return np.zeros(258)
+        return np.zeros(132)
         
     nose_x = res[0]
     nose_y = res[1]
@@ -48,13 +48,13 @@ def normalize_keypoints(res):
     l_shoulder_x, l_shoulder_y = res[11*4], res[11*4+1]
     r_shoulder_x, r_shoulder_y = res[12*4], res[12*4+1]
     shoulder_width = np.sqrt((l_shoulder_x - r_shoulder_x)**2 + (l_shoulder_y - r_shoulder_y)**2)
-    # Avoid division by zero
     scale = shoulder_width if shoulder_width > 0.01 else 1.0
     
     for i in range(0, 132, 4):
         if res[i] != 0 or res[i+1] != 0:
             res[i] = (res[i] - nose_x) / scale
             res[i+1] = (res[i+1] - nose_y) / scale
+            
     for i in range(132, 1566, 3):
         if res[i] != 0 or res[i+1] != 0:
             res[i] = (res[i] - nose_x) / scale
@@ -127,7 +127,7 @@ tb_callback = TensorBoard(log_dir=log_dir)
 early_stop = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
 
 model = Sequential()
-model.add(LSTM(64, return_sequences=True, activation='relu', input_shape=(sequence_length, 258)))
+model.add(LSTM(64, return_sequences=True, activation='relu', input_shape=(sequence_length, 132)))
 model.add(Dropout(0.2))
 model.add(LSTM(128, return_sequences=True, activation='relu'))
 model.add(Dropout(0.2))
