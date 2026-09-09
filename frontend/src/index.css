@@ -251,3 +251,71 @@ video {
 .btn:active {
   background: #9ca3af;
 }
+
+.btn-record {
+  background: #10b981;
+  color: #000000;
+  font-weight: 600;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.btn-record:hover {
+  background: #34d399;
+}
+
+.btn-record.recording {
+  background: #ef4444;
+  color: #ffffff;
+  animation: blink 0.8s infinite;
+}
+
+.gesture-progress-container {
+  width: 100%;
+  height: 6px;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  margin-top: 0.75rem;
+  overflow: hidden;
+}
+
+.gesture-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #10b981);
+  transition: width 0.06s linear;
+}
+
+.gesture-progress-bar.recording {
+  background: linear-gradient(90deg, #f59e0b, #ef4444);
+}
+
+.mode-toggle-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.ui-state-badge.recording .ui-state-indicator { 
+  background: #ef4444; 
+  animation: blink 0.6s infinite; 
+}
+.ui-state-badge.cooldown .ui-state-indicator { 
+  background: #10b981; 
+}
+
