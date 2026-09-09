@@ -405,16 +405,20 @@ function App() {
 
       // Draw smoothed hand skeleton with grace-period fade
       const connections = {
-        thumb: [[0, 1], [1, 2], [2, 3], [3, 4]],
-        index: [[0, 5], [5, 6], [6, 7], [7, 8]],
-        middle: [[0, 9], [9, 10], [10, 11], [11, 12]],
-        ring: [[0, 13], [13, 14], [14, 15], [15, 16]],
-        pinky: [[0, 17], [17, 18], [18, 19], [19, 20]],
-        palm: [[5, 9], [9, 13], [13, 17]]
+        palm: [[0, 1], [0, 5], [5, 9], [9, 13], [13, 17], [0, 17]],
+        thumb: [[1, 2], [2, 3], [3, 4]],
+        index: [[5, 6], [6, 7], [7, 8]],
+        middle: [[9, 10], [10, 11], [11, 12]],
+        ring: [[13, 14], [14, 15], [15, 16]],
+        pinky: [[17, 18], [18, 19], [19, 20]]
       };
       const colors = {
-        thumb: '#ef4444', index: '#f59e0b', middle: '#10b981', 
-        ring: '#3b82f6', pinky: '#8b5cf6', palm: '#9ca3af'
+        palm: '#9ca3af',
+        thumb: '#ef4444',
+        index: '#f59e0b',
+        middle: '#10b981', 
+        ring: '#3b82f6',
+        pinky: '#8b5cf6'
       };
 
       const drawSegment = (landmarks, segment, color, opacity) => {
