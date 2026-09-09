@@ -5,6 +5,7 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.callbacks import TensorBoard, EarlyStopping
+from tensorflow.keras.optimizers import Adam
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.metrics import classification_report, confusion_matrix
 import matplotlib.pyplot as plt
@@ -31,15 +32,15 @@ label_map = {label: num for num, label in enumerate(actions)}
 
 # Save labels.json early
 os.makedirs('models', exist_ok=True)
-import json
+clean_actions = [a.split('. ', 1)[-1].strip() if '. ' in a else a for a in actions]
 with open('models/labels.json', 'w') as f:
-    json.dump({str(i): action for i, action in enumerate(actions)}, f)
+    json.dump({str(i): action for i, action in enumerate(clean_actions)}, f)
 print("Labels saved to models/labels.json")
 
 def normalize_keypoints(res):
     if res[0] == 0 and res[1] == 0:
         # If no pose, return trimmed zeros
-        return np.zeros(132)
+        return np.zeros(258)
         
     nose_x = res[0]
     nose_y = res[1]
@@ -124,28 +125,58 @@ class_weight_dict = {i: class_weight_dict.get(i, 1.0) for i in range(len(actions
 # --- 3. BUILD AND COMPILE MODEL ---
 log_dir = os.path.join('Logs')
 tb_callback = TensorBoard(log_dir=log_dir)
-early_stop = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
+early_stop = EarlyStopping(monitor='val_categorical_accuracy', mode='max', patience=25, restore_best_weights=True)
 
 model = Sequential()
-model.add(LSTM(64, return_sequences=True, activation='relu', input_shape=(sequence_length, 132)))
+model.add(LSTM(64, return_sequences=True, activation='tanh', input_shape=(sequence_length, 258)))
 model.add(Dropout(0.2))
-model.add(LSTM(128, return_sequences=True, activation='relu'))
+model.add(LSTM(128, return_sequences=True, activation='tanh'))
 model.add(Dropout(0.2))
-model.add(LSTM(64, return_sequences=False, activation='relu'))
+model.add(LSTM(64, return_sequences=False, activation='tanh'))
 model.add(Dense(64, activation='relu'))
 model.add(Dense(32, activation='relu'))
 model.add(Dense(actions.shape[0], activation='softmax'))
 
-model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['categorical_accuracy'])
+model.compile(optimizer=Adam(learning_rate=0.001, clipnorm=1.0), loss='categorical_crossentropy', metrics=['categorical_accuracy'])
 
 # --- 4. TRAIN MODEL ---
 print("Starting training...")
-model.fit(X_train, y_train, epochs=200, batch_size=32, validation_data=(X_test, y_test), 
+model.fit(X_train, y_train, epochs=80, batch_size=32, validation_data=(X_test, y_test), 
           class_weight=class_weight_dict, callbacks=[tb_callback, early_stop])
 
 # --- 5. SAVE MODEL ---
 model.save('models/action.h5')
 print("Model saved to models/action.h5")
+
+# Export to TensorFlow.js
+try:
+    import sys, types, shutil
+    sys.modules['tensorflow_decision_forests'] = types.ModuleType('tensorflow_decision_forests')
+    sys.modules['tensorflow_decision_forests.keras'] = types.ModuleType('tensorflow_decision_forests.keras')
+    import tensorflowjs as tfjs
+    tfjs_dir = os.path.join('frontend', 'public', 'models')
+    os.makedirs(tfjs_dir, exist_ok=True)
+    # Post-process model.json for Keras 3 -> TFJS 4 compatibility
+    mjson_path = os.path.join(tfjs_dir, 'model.json')
+    if os.path.exists(mjson_path):
+        with open(mjson_path, 'r') as f:
+            mj = json.load(f)
+        for layer in mj.get('modelTopology', {}).get('model_config', {}).get('config', {}).get('layers', []):
+            if layer.get('class_name') == 'InputLayer':
+                cfg = layer.get('config', {})
+                if 'batch_shape' in cfg:
+                    cfg['batch_input_shape'] = cfg['batch_shape']
+                    cfg['batchInputShape'] = cfg['batch_shape']
+        for manifest in mj.get('weightsManifest', []):
+            for w in manifest.get('weights', []):
+                if w['name'].startswith('sequential/'):
+                    w['name'] = w['name'].replace('sequential/', '')
+                w['name'] = w['name'].replace('/lstm_cell/', '/')
+        with open(mjson_path, 'w') as f:
+            json.dump(mj, f)
+    print("Exported and patched model for TensorFlow.js in frontend/public/models/")
+except Exception as e:
+    print(f"Warning: TFJS export failed: {e}")
 
 # --- 6. EVALUATE ---
 os.makedirs('models/eval', exist_ok=True)
@@ -153,7 +184,7 @@ yhat = model.predict(X_test)
 ytrue = np.argmax(y_test, axis=1)
 yhat_classes = np.argmax(yhat, axis=1)
 
-report = classification_report(ytrue, yhat_classes, target_names=actions, labels=np.arange(len(actions)), zero_division=0)
+report = classification_report(ytrue, yhat_classes, target_names=clean_actions, labels=np.arange(len(actions)), zero_division=0)
 print(report)
 
 with open('models/eval/classification_report.txt', 'w') as f:
@@ -161,7 +192,7 @@ with open('models/eval/classification_report.txt', 'w') as f:
 
 cm = confusion_matrix(ytrue, yhat_classes, labels=np.arange(len(actions)))
 plt.figure(figsize=(20, 20))
-sns.heatmap(cm, annot=False, fmt='d', xticklabels=actions, yticklabels=actions)
+sns.heatmap(cm, annot=False, fmt='d', xticklabels=clean_actions, yticklabels=clean_actions)
 plt.ylabel('Actual')
 plt.xlabel('Predicted')
 plt.title('Confusion Matrix')
