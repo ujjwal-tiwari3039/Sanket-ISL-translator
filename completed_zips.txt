@@ -8,3 +8,10 @@ Adjectives_7of8.zip
 Adjectives_8of8.zip
 Animals_1of2.zip
 Animals_2of2.zip
+Clothes_1of2.zip
+Clothes_2of2.zip
+Colours_1of2.zip
+Colours_2of2.zip
+Days_and_Time_1of3.zip
+Days_and_Time_2of3.zip
+Days_and_Time_3of3.zip

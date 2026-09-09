@@ -27,16 +27,39 @@ function App() {
   const tfModelRef = useRef(null);
   const landmarkersRef = useRef(null);
   const isPredictingRef = useRef(false);
+  const smoothedHandsRef = useRef([]);
+  const smoothedFaceRef = useRef(null);
 
   useEffect(() => {
+    let activeStream = null;
+    let isCancelled = false;
+
     // Start Webcam
     const startWebcam = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play().catch(e => console.error("Play error:", e));
-          setIsStreaming(true);
+        if (isCancelled) {
+          stream.getTracks().forEach(t => t.stop());
+          return;
+        }
+        activeStream = stream;
+        const video = videoRef.current;
+        if (video) {
+          video.srcObject = stream;
+          video.onloadedmetadata = () => {
+            if (!isCancelled && video) {
+              video.play().catch(e => {
+                if (e.name !== 'AbortError') console.error("Play error:", e);
+              });
+              setIsStreaming(true);
+            }
+          };
+          if (video.readyState >= 1) {
+            video.play().catch(e => {
+              if (e.name !== 'AbortError') console.error("Play error:", e);
+            });
+            setIsStreaming(true);
+          }
         }
       } catch (err) {
         console.error("Error accessing webcam:", err);
@@ -97,6 +120,13 @@ function App() {
 
     startWebcam();
     loadModels();
+
+    return () => {
+      isCancelled = true;
+      if (activeStream) {
+        activeStream.getTracks().forEach(t => t.stop());
+      }
+    };
   }, []);
 
   const extractKeypoints = (poseResult, handResult, faceResult) => {
@@ -171,10 +201,11 @@ function App() {
       }
     }
     
-    // Trim out Face (1434 features) and Hands (126 features)
-    // Pose only: 0-132 -> Total 132 features
-    const finalResult = new Float32Array(132);
+    // Trim out Face landmarks (1434 features) to prevent LSTM from keying on facial noise
+    // Pose: 0-132, Hands: 1566-1692 -> Total 258 features
+    const finalResult = new Float32Array(258);
     finalResult.set(result.slice(0, 132), 0);
+    finalResult.set(result.slice(1566, 1692), 132);
     
     return Array.from(finalResult); // Convert to JS array for TF tensor creation
   };
@@ -189,73 +220,198 @@ function App() {
     let lastVideoTime = -1;
     let lastFrameTimeMs = 0;
 
-    const drawLandmarks = (handRes, faceRes) => {
+    const drawLandmarks = (poseRes, handRes, faceRes) => {
       const canvas = canvasRef.current;
       const video = videoRef.current;
       if (!canvas || !video) return;
       
       const ctx = canvas.getContext('2d');
-      if (canvas.width !== video.videoWidth) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+      const w = video.videoWidth || canvas.clientWidth || 640;
+      const h = video.videoHeight || canvas.clientHeight || 480;
+      if (w > 0 && h > 0 && (canvas.width !== w || canvas.height !== h)) {
+        canvas.width = w;
+        canvas.height = h;
       }
       
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const w = canvas.width;
-      const h = canvas.height;
-      
-      // Face Mesh Toggle
-      if (showFaceMesh && faceRes && faceRes.faceLandmarks) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      const alpha = 0.65; // Temporal exponential moving average factor
+
+      // 1. Pose Skeleton (Torso, Shoulders, Arms, Wrists)
+      if (poseRes && poseRes.landmarks && poseRes.landmarks.length > 0) {
+        const poseLm = poseRes.landmarks[0];
+        const poseLines = [
+          [11, 12], // shoulders
+          [11, 13], [13, 15], // left arm
+          [12, 14], [14, 16], // right arm
+          [11, 23], [12, 24], // torso sides
+          [23, 24]  // hips
+        ];
+
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)'; // Bright cyber cyan
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        for (const face of faceRes.faceLandmarks) {
-          for (const pt of face) {
-            ctx.rect(pt.x * w, pt.y * h, 1, 1);
+        for (const [i, j] of poseLines) {
+          const p1 = poseLm[i];
+          const p2 = poseLm[j];
+          if (p1 && p2 && (p1.visibility ?? 1) > 0.3 && (p2.visibility ?? 1) > 0.3) {
+            ctx.moveTo(p1.x * w, p1.y * h);
+            ctx.lineTo(p2.x * w, p2.y * h);
           }
         }
-        ctx.fill();
+        ctx.stroke();
+
+        // Joint points
+        for (const idx of [11, 12, 13, 14, 15, 16, 23, 24]) {
+          const pt = poseLm[idx];
+          if (pt && (pt.visibility ?? 1) > 0.3) {
+            ctx.fillStyle = '#06b6d4';
+            ctx.beginPath();
+            ctx.arc(pt.x * w, pt.y * h, 4, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+        }
       }
       
-      // Hands (Instagram-filter style overlay)
-      if (handRes && handRes.landmarks) {
-        const connections = {
-          thumb: [[1, 2], [2, 3], [3, 4]],
-          index: [[5, 6], [6, 7], [7, 8]],
-          middle: [[9, 10], [10, 11], [11, 12]],
-          ring: [[13, 14], [14, 15], [15, 16]],
-          pinky: [[17, 18], [18, 19], [19, 20]],
-          palm: [[0, 1], [0, 5], [0, 17], [5, 9], [9, 13], [13, 17]]
-        };
-        const colors = {
-          thumb: '#ef4444', index: '#f59e0b', middle: '#10b981', 
-          ring: '#3b82f6', pinky: '#8b5cf6', palm: '#9ca3af'
-        };
+      // 2. Face Mesh & Key Facial Anchors
+      if (faceRes && faceRes.faceLandmarks && faceRes.faceLandmarks.length > 0) {
+        const rawFace = faceRes.faceLandmarks[0];
+        if (!smoothedFaceRef.current || smoothedFaceRef.current.length !== rawFace.length) {
+          smoothedFaceRef.current = rawFace.map(pt => ({ x: pt.x, y: pt.y, z: pt.z }));
+        } else {
+          smoothedFaceRef.current = smoothedFaceRef.current.map((prev, i) => ({
+            x: alpha * rawFace[i].x + (1 - alpha) * prev.x,
+            y: alpha * rawFace[i].y + (1 - alpha) * prev.y,
+            z: alpha * rawFace[i].z + (1 - alpha) * prev.z
+          }));
+        }
 
-        const drawSegment = (landmarks, segment, color) => {
-           ctx.strokeStyle = color;
-           ctx.lineWidth = 2;
-           ctx.beginPath();
-           for (const [i, j] of segment) {
+        // Always draw subtle facial landmarks (brows, eyes, nose, lips)
+        const keyFacePoints = [
+          70, 63, 105, 66, 107, 336, 296, 334, 293, 300,
+          33, 133, 159, 145, 362, 263, 386, 374,
+          1, 2, 98, 327, 0, 13, 14, 17, 61, 291
+        ];
+        ctx.fillStyle = 'rgba(147, 197, 253, 0.6)';
+        for (const idx of keyFacePoints) {
+          const pt = smoothedFaceRef.current[idx];
+          if (pt) {
+            ctx.beginPath();
+            ctx.arc(pt.x * w, pt.y * h, 1.5, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+        }
+
+        // Full Face Mesh (if enabled)
+        if (showFaceMesh) {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+          ctx.beginPath();
+          for (let i = 0; i < smoothedFaceRef.current.length; i += 2) {
+            const pt = smoothedFaceRef.current[i];
+            ctx.rect(pt.x * w, pt.y * h, 1.5, 1.5);
+          }
+          ctx.fill();
+        }
+      } else {
+        smoothedFaceRef.current = null;
+      }
+      
+      // 3. Dual-Hand Temporal Smoothing + Priority 1 Grace Period
+      const prevHands = smoothedHandsRef.current || [];
+      const nextHands = [];
+      const detectedHandLandmarks = (handRes && handRes.landmarks) ? handRes.landmarks : [];
+      const handednesses = (handRes && handRes.handednesses) ? handRes.handednesses : [];
+
+      const matchedPrevIndices = new Set();
+
+      detectedHandLandmarks.forEach((rawPoints, dIdx) => {
+        const hLabel = handednesses[dIdx]?.[0]?.categoryName || `Hand_${dIdx}`;
+        const score = handednesses[dIdx]?.[0]?.score || 0.8;
+
+        // Match with existing hand of same label or nearest index
+        let prevMatchIdx = prevHands.findIndex((ph, pIdx) => !matchedPrevIndices.has(pIdx) && ph.label === hLabel);
+        if (prevMatchIdx === -1) {
+          prevMatchIdx = prevHands.findIndex((ph, pIdx) => !matchedPrevIndices.has(pIdx));
+        }
+
+        let smoothedPoints;
+        if (prevMatchIdx !== -1) {
+          matchedPrevIndices.add(prevMatchIdx);
+          const prevPoints = prevHands[prevMatchIdx].landmarks;
+          smoothedPoints = rawPoints.map((curr, pIdx) => ({
+            x: alpha * curr.x + (1 - alpha) * (prevPoints[pIdx]?.x ?? curr.x),
+            y: alpha * curr.y + (1 - alpha) * (prevPoints[pIdx]?.y ?? curr.y),
+            z: alpha * curr.z + (1 - alpha) * (prevPoints[pIdx]?.z ?? curr.z)
+          }));
+        } else {
+          smoothedPoints = rawPoints.map(curr => ({ x: curr.x, y: curr.y, z: curr.z }));
+        }
+
+        nextHands.push({
+          label: hLabel,
+          landmarks: smoothedPoints,
+          missedFrames: 0,
+          score: score
+        });
+      });
+
+      // Grace period: Carry forward temporarily dropped hands for up to 3 frames
+      prevHands.forEach((ph, pIdx) => {
+        if (!matchedPrevIndices.has(pIdx) && ph.missedFrames < 3) {
+          nextHands.push({
+            label: ph.label,
+            landmarks: ph.landmarks,
+            missedFrames: ph.missedFrames + 1,
+            score: ph.score * 0.8
+          });
+        }
+      });
+
+      smoothedHandsRef.current = nextHands;
+
+      // Draw smoothed hand skeleton with grace-period fade
+      const connections = {
+        thumb: [[0, 1], [1, 2], [2, 3], [3, 4]],
+        index: [[0, 5], [5, 6], [6, 7], [7, 8]],
+        middle: [[0, 9], [9, 10], [10, 11], [11, 12]],
+        ring: [[0, 13], [13, 14], [14, 15], [15, 16]],
+        pinky: [[0, 17], [17, 18], [18, 19], [19, 20]],
+        palm: [[5, 9], [9, 13], [13, 17]]
+      };
+      const colors = {
+        thumb: '#ef4444', index: '#f59e0b', middle: '#10b981', 
+        ring: '#3b82f6', pinky: '#8b5cf6', palm: '#9ca3af'
+      };
+
+      const drawSegment = (landmarks, segment, color, opacity) => {
+         ctx.save();
+         ctx.globalAlpha = opacity;
+         ctx.strokeStyle = color;
+         ctx.lineWidth = 2.5;
+         ctx.beginPath();
+         for (const [i, j] of segment) {
+           if (landmarks[i] && landmarks[j]) {
              ctx.moveTo(landmarks[i].x * w, landmarks[i].y * h);
              ctx.lineTo(landmarks[j].x * w, landmarks[j].y * h);
            }
-           ctx.stroke();
-        };
+         }
+         ctx.stroke();
+         ctx.restore();
+      };
 
-        for (const landmarks of handRes.landmarks) {
-          for (const [part, lines] of Object.entries(connections)) {
-            drawSegment(landmarks, lines, colors[part]);
-          }
-          
-          // Draw points with Z-depth mapping (closer = bigger/brighter)
-          for (const pt of landmarks) {
-            const zOpacity = Math.min(1.0, Math.max(0.2, 1 - (pt.z * 5))); 
-            const r = Math.max(2, 6 * zOpacity);
-            ctx.fillStyle = `rgba(255, 255, 255, ${zOpacity})`;
-            ctx.beginPath();
-            ctx.arc(pt.x * w, pt.y * h, r, 0, 2 * Math.PI);
-            ctx.fill();
-          }
+      for (const hand of nextHands) {
+        const handOpacity = Math.max(0.2, 1.0 - hand.missedFrames * 0.25);
+        for (const [part, lines] of Object.entries(connections)) {
+          drawSegment(hand.landmarks, lines, colors[part], handOpacity);
+        }
+        
+        // Draw points with Z-depth mapping and hand opacity
+        for (const pt of hand.landmarks) {
+          const zOpacity = Math.min(1.0, Math.max(0.3, 1 - (pt.z * 5))) * handOpacity; 
+          const r = Math.max(2.5, 6 * zOpacity);
+          ctx.fillStyle = `rgba(255, 255, 255, ${zOpacity})`;
+          ctx.beginPath();
+          ctx.arc(pt.x * w, pt.y * h, r, 0, 2 * Math.PI);
+          ctx.fill();
         }
       }
     };
@@ -296,11 +452,14 @@ function App() {
           setIsQuestion(questionFlag);
           
           // Draw the overlay
-          drawLandmarks(handRes, faceRes);
+          drawLandmarks(poseRes, handRes, faceRes);
 
-          const keypoints = extractKeypoints(poseRes, handRes, faceRes);
-          setDebugInfo(`Pose: ${poseRes.landmarks.length > 0} | Face: ${faceRes.faceLandmarks.length > 0} | Hands: ${handRes.landmarks.length}`);
+          const rawHandCount = (handRes && handRes.landmarks) ? handRes.landmarks.length : 0;
+          const handScores = (handRes.handednesses || []).map((h, i) => `${h[0]?.categoryName || 'H' + (i+1)}: ${(h[0]?.score * 100).toFixed(0)}%`).join(', ');
+          const activeHandCount = smoothedHandsRef.current.filter(h => h.missedFrames < 3).length;
+          setDebugInfo(`Pose: ${poseRes.landmarks ? poseRes.landmarks.length > 0 : false} | Hands: ${rawHandCount} (${handScores || 'None'}) [Smoothed: ${activeHandCount}] | Face: ${faceRes.faceLandmarks ? faceRes.faceLandmarks.length : 0}`);
           
+          const keypoints = extractKeypoints(poseRes, handRes, faceRes);
           sequenceRef.current.push(keypoints);
           if (sequenceRef.current.length > sequenceLength) {
             sequenceRef.current.shift();
@@ -308,7 +467,7 @@ function App() {
 
           if (sequenceRef.current.length === sequenceLength) {
              setUiState("DETECTING");
-             const inputTensor = tf.tensor3d([sequenceRef.current], [1, sequenceLength, 132]);
+             const inputTensor = tf.tensor3d([sequenceRef.current], [1, sequenceLength, 258]);
              const prediction = tfModelRef.current.predict(inputTensor);
              const scores = await prediction.data();
              inputTensor.dispose();
@@ -319,18 +478,17 @@ function App() {
              
              setConfidence(maxScore * 100);
              
-             // Check if hands are present; if not, force idle
-             if (handRes.landmarks.length === 0) {
+             // Check if hands are present (utilizing grace period to bridge 1-2 frame dropouts)
+             const activeHands = smoothedHandsRef.current.filter(h => h.missedFrames < 3);
+             if (activeHands.length === 0) {
                 setCurrentSign("Waiting...");
                 predictionsBufferRef.current = [];
-             } else if (maxScore > 0.70 && actionsList.length > 0) {
+             } else if (maxScore > 0.55 && actionsList.length > 0) {
                 let action = actionsList[classIndex];
                 if (questionFlag) action += "?";
                 
-                // Calculate average hand presence confidence
-                let handConf = 0;
-                handRes.handednesses.forEach(h => handConf += h[0].score);
-                handConf /= handRes.handednesses.length;
+                // Calculate average hand presence confidence from active tracked hands
+                const handConf = activeHands.reduce((acc, h) => acc + h.score, 0) / activeHands.length;
 
                 // Add to predictions buffer for rolling vote
                 predictionsBufferRef.current.push({ sign: action, weight: handConf });
@@ -348,8 +506,8 @@ function App() {
                 
                 let majoritySign = null;
                 for (const [sign, weight] of Object.entries(counts)) {
-                    // Require >60% of the total weighted buffer
-                    if (weight > (totalWeight * 0.6)) majoritySign = sign;
+                    // Require >50% of the total weighted buffer
+                    if (weight > (totalWeight * 0.5)) majoritySign = sign;
                 }
                                  
                 setCurrentSign(action);

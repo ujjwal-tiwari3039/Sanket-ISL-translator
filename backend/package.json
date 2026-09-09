@@ -9,9 +9,10 @@
   "keywords": [],
   "type": "commonjs",
   "dependencies": {
-    "@google/genai": "^2.18.0",
+    "@google/genai": "^2.21.0",
+    "content-type": "^1.0.5",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "express": "^4.21.2"
   }
 }
