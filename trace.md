@@ -130,3 +130,15 @@ Re-evaluated the 258-feature model on the held-out test split, breaking down dyn
   3. Hardened webcam stream initialization in `App.jsx` with `onloadedmetadata` listeners and React StrictMode unmount cleanup to eliminate browser `AbortError` stream conflicts.
 - **Verification**: Verified via Chrome DevTools Protocol that headless Brave loaded all 3 MediaPipe tasks and the TensorFlow.js model, logging `All models loaded successfully.` with active inference graphs.
 
+---
+
+## 8. Dynamic Gesture Stroke Capture Engine (Anti-Fluctuation)
+- **Problem**: Continuous 15 FPS rolling prediction evaluated incomplete, unaligned motion slices while hands were moving. This caused dynamic signs (e.g., `shoes`, `happy`) to violently fluctuate through 10+ random words per second during execution.
+- **Implementation**:
+  1. **Hand Velocity Tracking**: Real-time Euclidean displacement metric tracking across wrists and fingertips frame-to-frame.
+  2. **Auto Stroke Capture**: When hand motion begins ($v > 0.05$), the system locks into `RECORDING` state and captures an exact 30-frame gesture window (~1.5s) matching the model's training distribution.
+  3. **Visual Progress Feedback**: Canvas overlay badge `CAPTURING GESTURE (X/30)` and animated gradient progress bar ($0 \rightarrow 100\%$) indicating stroke progress.
+  4. **Single-Shot Evaluation & Lock**: Once the 30-frame motion completes, the LSTM evaluates the entire gesture once, commits the confirmed sign, and engages a 1.0s cooldown so hands can return to rest without triggering false transitions.
+  5. **Exhibition Manual Trigger**: Spacebar keybinding and `● Record Gesture` UI button to allow presenters to trigger dedicated 30-frame capture on command.
+
+

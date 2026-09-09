@@ -20,7 +20,13 @@ function App() {
   const [actionsList, setActionsList] = useState([]);
   const sequenceLength = 30;
 
-  // Refs for logic loop
+  // Dynamic Stroke Capture states (Anti-Fluctuation)
+  const [isStrokeMode, setIsStrokeMode] = useState(true);
+  const [recordingProgress, setRecordingProgress] = useState(0);
+  const [strokeStatus, setStrokeStatus] = useState("IDLE"); // IDLE, RECORDING, EVALUATING, COOLDOWN
+  const [isStrokeCapturing, setIsStrokeCapturing] = useState(false);
+
+  // Refs for logic loop & stroke engine
   const canvasRef = useRef(null);
   const sequenceRef = useRef([]);
   const sentenceRef = useRef([]);
@@ -29,6 +35,35 @@ function App() {
   const isPredictingRef = useRef(false);
   const smoothedHandsRef = useRef([]);
   const smoothedFaceRef = useRef(null);
+  const isStrokeModeRef = useRef(true);
+  const strokeFramesRef = useRef([]);
+  const strokeStateRef = useRef("IDLE");
+  const strokeCooldownRef = useRef(0);
+  const lastHandLandmarksRef = useRef(null);
+  const strokeQuestionRef = useRef(false);
+
+  const triggerManualRecording = () => {
+    if (strokeStateRef.current === "RECORDING") return;
+    strokeStateRef.current = "RECORDING";
+    strokeFramesRef.current = [];
+    strokeQuestionRef.current = false;
+    setStrokeStatus("RECORDING");
+    setIsStrokeCapturing(true);
+    setRecordingProgress(0);
+    setCurrentSign("Recording sign...");
+    setUiState("RECORDING");
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        triggerManualRecording();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     let activeStream = null;
@@ -414,6 +449,31 @@ function App() {
           ctx.fill();
         }
       }
+
+      // Drawing recording or recognized badge directly on the canvas
+      if (strokeStateRef.current === "RECORDING") {
+        ctx.save();
+        ctx.fillStyle = "rgba(239, 68, 68, 0.9)";
+        ctx.beginPath();
+        ctx.arc(28, 28, 7, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 13px 'JetBrains Mono', monospace";
+        ctx.fillText(`CAPTURING GESTURE (${strokeFramesRef.current.length}/30)`, 45, 33);
+        ctx.restore();
+      } else if (strokeStateRef.current === "COOLDOWN") {
+        ctx.save();
+        ctx.fillStyle = "rgba(16, 185, 129, 0.9)";
+        ctx.beginPath();
+        ctx.arc(28, 28, 7, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 13px 'JetBrains Mono', monospace";
+        ctx.fillText("SIGN RECOGNIZED", 45, 33);
+        ctx.restore();
+      }
     };
 
     const detectAndPredict = async () => {
@@ -457,66 +517,186 @@ function App() {
           const rawHandCount = (handRes && handRes.landmarks) ? handRes.landmarks.length : 0;
           const handScores = (handRes.handednesses || []).map((h, i) => `${h[0]?.categoryName || 'H' + (i+1)}: ${(h[0]?.score * 100).toFixed(0)}%`).join(', ');
           const activeHandCount = smoothedHandsRef.current.filter(h => h.missedFrames < 3).length;
-          setDebugInfo(`Pose: ${poseRes.landmarks ? poseRes.landmarks.length > 0 : false} | Hands: ${rawHandCount} (${handScores || 'None'}) [Smoothed: ${activeHandCount}] | Face: ${faceRes.faceLandmarks ? faceRes.faceLandmarks.length : 0}`);
           
           const keypoints = extractKeypoints(poseRes, handRes, faceRes);
-          sequenceRef.current.push(keypoints);
-          if (sequenceRef.current.length > sequenceLength) {
-            sequenceRef.current.shift();
+
+          // Calculate Hand Velocity across frames to detect movement start
+          let handVelocity = 0;
+          if (handRes && handRes.landmarks && handRes.landmarks.length > 0) {
+            const currentHands = handRes.landmarks;
+            if (lastHandLandmarksRef.current && lastHandLandmarksRef.current.length > 0) {
+              for (let h = 0; h < currentHands.length; h++) {
+                const prev = lastHandLandmarksRef.current[h];
+                const curr = currentHands[h];
+                if (prev && curr) {
+                  for (const idx of [0, 4, 8, 12, 16, 20]) {
+                    if (curr[idx] && prev[idx]) {
+                      const dx = curr[idx].x - prev[idx].x;
+                      const dy = curr[idx].y - prev[idx].y;
+                      handVelocity += Math.sqrt(dx * dx + dy * dy);
+                    }
+                  }
+                }
+              }
+            }
+            lastHandLandmarksRef.current = currentHands;
+          } else {
+            lastHandLandmarksRef.current = null;
           }
 
-          if (sequenceRef.current.length === sequenceLength) {
-             setUiState("DETECTING");
-             const inputTensor = tf.tensor3d([sequenceRef.current], [1, sequenceLength, 258]);
-             const prediction = tfModelRef.current.predict(inputTensor);
-             const scores = await prediction.data();
-             inputTensor.dispose();
-             prediction.dispose();
-             
-             const maxScore = Math.max(...scores);
-             const classIndex = scores.indexOf(maxScore);
-             
-             setConfidence(maxScore * 100);
-             
-             // Check if hands are present (utilizing grace period to bridge 1-2 frame dropouts)
-             const activeHands = smoothedHandsRef.current.filter(h => h.missedFrames < 3);
-             if (activeHands.length === 0) {
-                setCurrentSign("Waiting...");
-                predictionsBufferRef.current = [];
-             } else if (maxScore > 0.55 && actionsList.length > 0) {
-                let action = actionsList[classIndex];
-                if (questionFlag) action += "?";
-                
-                // Calculate average hand presence confidence from active tracked hands
-                const handConf = activeHands.reduce((acc, h) => acc + h.score, 0) / activeHands.length;
+          setDebugInfo(`Pose: ${poseRes.landmarks ? poseRes.landmarks.length > 0 : false} | Hands: ${rawHandCount} (${handScores || 'None'}) | Motion: ${handVelocity.toFixed(2)} | Mode: ${isStrokeModeRef.current ? 'Stroke' : 'Rolling'}`);
 
-                // Add to predictions buffer for rolling vote
-                predictionsBufferRef.current.push({ sign: action, weight: handConf });
-                if (predictionsBufferRef.current.length > 5) {
-                  predictionsBufferRef.current.shift();
+          if (isStrokeModeRef.current) {
+            // ===============================================
+            // DYNAMIC GESTURE STROKE MODE (ZERO FLUCTUATION)
+            // ===============================================
+            const activeHands = smoothedHandsRef.current.filter(h => h.missedFrames < 3);
+
+            if (strokeStateRef.current === "COOLDOWN") {
+              strokeCooldownRef.current -= 1;
+              if (strokeCooldownRef.current <= 0 && handVelocity < 0.05) {
+                strokeStateRef.current = "IDLE";
+                setStrokeStatus("IDLE");
+                setIsStrokeCapturing(false);
+                setRecordingProgress(0);
+                setUiState("IDLE");
+              }
+            } else if (strokeStateRef.current === "IDLE") {
+              // Auto-trigger when hands are visible and motion initiates
+              if (activeHands.length > 0 && handVelocity > 0.05) {
+                strokeStateRef.current = "RECORDING";
+                strokeFramesRef.current = [keypoints];
+                strokeQuestionRef.current = questionFlag;
+                setStrokeStatus("RECORDING");
+                setIsStrokeCapturing(true);
+                setCurrentSign("Capturing sign...");
+                setRecordingProgress(Math.round((1 / sequenceLength) * 100));
+                setUiState("RECORDING");
+              }
+            } else if (strokeStateRef.current === "RECORDING") {
+              strokeFramesRef.current.push(keypoints);
+              if (questionFlag) strokeQuestionRef.current = true;
+              
+              const currentFrameCount = strokeFramesRef.current.length;
+              const progressPct = Math.min(100, Math.round((currentFrameCount / sequenceLength) * 100));
+              setRecordingProgress(progressPct);
+
+              if (currentFrameCount >= sequenceLength) {
+                // Complete 30-frame gesture captured!
+                strokeStateRef.current = "EVALUATING";
+                setStrokeStatus("EVALUATING");
+                setRecordingProgress(100);
+                setUiState("DETECTING");
+
+                const inputTensor = tf.tensor3d([strokeFramesRef.current], [1, sequenceLength, 258]);
+                const prediction = tfModelRef.current.predict(inputTensor);
+                const scores = await prediction.data();
+                inputTensor.dispose();
+                prediction.dispose();
+
+                const maxScore = Math.max(...scores);
+                const classIndex = scores.indexOf(maxScore);
+                let recognizedAction = actionsList[classIndex] || "unknown";
+                if (strokeQuestionRef.current) recognizedAction += "?";
+
+                setConfidence(maxScore * 100);
+
+                if (maxScore > 0.40 && recognizedAction !== "idle") {
+                  setCurrentSign(recognizedAction);
+
+                  let curSentence = [...sentenceRef.current];
+                  if (curSentence.length === 0 || curSentence[curSentence.length - 1] !== recognizedAction) {
+                    curSentence.push(recognizedAction);
+                    if (curSentence.length > 5) curSentence.shift();
+                    sentenceRef.current = curSentence;
+                    setSentence(curSentence);
+
+                    // Trigger Gemini LLM
+                    setUiState("ASSEMBLING");
+                    setLlmSentence("");
+                    fetch('http://localhost:3001/api/assemble', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ sequence: curSentence })
+                    }).then(async response => {
+                      if (!response.body) return;
+                      const reader = response.body.getReader();
+                      const decoder = new TextDecoder('utf-8');
+                      let assembled = "";
+                      while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        assembled += decoder.decode(value, { stream: true });
+                        setLlmSentence(assembled);
+                      }
+                      setUiState("COOLDOWN");
+                    }).catch(err => {
+                      console.error("LLM Error:", err);
+                      setLlmSentence("Error generating sentence.");
+                      setUiState("ERROR");
+                    });
+                  }
+                } else {
+                  setCurrentSign(maxScore > 0.40 ? "idle..." : "No sign detected");
                 }
-                
-                // Rolling majority vote weighted by hand confidence
-                const counts = {};
-                let totalWeight = 0;
-                predictionsBufferRef.current.forEach(v => { 
-                  counts[v.sign] = (counts[v.sign] || 0) + v.weight; 
-                  totalWeight += v.weight;
-                });
-                
-                let majoritySign = null;
-                for (const [sign, weight] of Object.entries(counts)) {
-                    // Require >50% of the total weighted buffer
-                    if (weight > (totalWeight * 0.5)) majoritySign = sign;
-                }
-                                 
-                setCurrentSign(action);
-                
-                if (majoritySign) {
-                  if (majoritySign === "idle") {
-                    setCurrentSign("idle...");
-                    // We don't add idle to the sentence.
-                  } else {
+
+                strokeStateRef.current = "COOLDOWN";
+                setStrokeStatus("COOLDOWN");
+                strokeCooldownRef.current = 15; // ~1 second cooldown
+              }
+            }
+          } else {
+            // ===============================================
+            // CONTINUOUS ROLLING BUFFER (WITH HYSTERESIS)
+            // ===============================================
+            sequenceRef.current.push(keypoints);
+            if (sequenceRef.current.length > sequenceLength) {
+              sequenceRef.current.shift();
+            }
+
+            if (sequenceRef.current.length === sequenceLength) {
+               setUiState("DETECTING");
+               const inputTensor = tf.tensor3d([sequenceRef.current], [1, sequenceLength, 258]);
+               const prediction = tfModelRef.current.predict(inputTensor);
+               const scores = await prediction.data();
+               inputTensor.dispose();
+               prediction.dispose();
+               
+               const maxScore = Math.max(...scores);
+               const classIndex = scores.indexOf(maxScore);
+               
+               setConfidence(maxScore * 100);
+               
+               const activeHands = smoothedHandsRef.current.filter(h => h.missedFrames < 3);
+               if (activeHands.length === 0) {
+                  setCurrentSign("Waiting...");
+                  predictionsBufferRef.current = [];
+               } else if (maxScore > 0.50 && actionsList.length > 0) {
+                  let action = actionsList[classIndex];
+                  if (questionFlag) action += "?";
+                  
+                  const handConf = activeHands.reduce((acc, h) => acc + h.score, 0) / activeHands.length;
+
+                  predictionsBufferRef.current.push({ sign: action, weight: handConf });
+                  if (predictionsBufferRef.current.length > 5) {
+                    predictionsBufferRef.current.shift();
+                  }
+                  
+                  const counts = {};
+                  let totalWeight = 0;
+                  predictionsBufferRef.current.forEach(v => { 
+                    counts[v.sign] = (counts[v.sign] || 0) + v.weight; 
+                    totalWeight += v.weight;
+                  });
+                  
+                  let majoritySign = null;
+                  for (const [sign, weight] of Object.entries(counts)) {
+                      if (weight > (totalWeight * 0.5)) majoritySign = sign;
+                  }
+                                   
+                  setCurrentSign(action);
+                  
+                  if (majoritySign && majoritySign !== "idle") {
                     let curSentence = [...sentenceRef.current];
                     if (curSentence.length === 0 || curSentence[curSentence.length - 1] !== majoritySign) {
                       curSentence.push(majoritySign);
@@ -524,7 +704,6 @@ function App() {
                       sentenceRef.current = curSentence;
                       setSentence(curSentence);
                       
-                      // Trigger LLM
                       setUiState("ASSEMBLING");
                       setLlmSentence("");
                       fetch('http://localhost:3001/api/assemble', {
@@ -550,13 +729,8 @@ function App() {
                       });
                     }
                   }
-                }
-             } else {
-                 // Low confidence, reset buffer
-                 predictionsBufferRef.current = [];
-             }
-          } else {
-              setUiState("IDLE");
+               }
+            }
           }
         } catch(e) {
           console.error(e);
@@ -616,11 +790,29 @@ function App() {
 
         <section className="controls-panel">
           <div className="data-panel">
-            <h3>Raw Prediction</h3>
-            <div className="translation-text">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3>Sign Detection</h3>
+              <span style={{ 
+                fontSize: '0.75rem', 
+                fontFamily: 'JetBrains Mono', 
+                color: strokeStatus === 'RECORDING' ? '#ef4444' : strokeStatus === 'COOLDOWN' ? '#10b981' : 'var(--text-muted)' 
+              }}>
+                {strokeStatus === 'RECORDING' ? `CAPTURING (${recordingProgress}%)` : strokeStatus === 'COOLDOWN' ? 'LOCKED' : 'READY'}
+              </span>
+            </div>
+
+            <div className="translation-text" style={{ color: strokeStatus === 'RECORDING' ? '#f59e0b' : 'var(--text-main)' }}>
               {currentSign.toUpperCase()}
             </div>
             
+            {/* Gesture Stroke Progress Bar */}
+            <div className="gesture-progress-container">
+              <div 
+                className={`gesture-progress-bar ${strokeStatus === 'RECORDING' ? 'recording' : ''}`}
+                style={{ width: `${recordingProgress}%` }}
+              ></div>
+            </div>
+
             <div className="confidence-bar-container">
               <div 
                 className="confidence-bar" 
@@ -629,6 +821,29 @@ function App() {
             </div>
             <div className="conf-label">
               CONFIDENCE: {confidence.toFixed(1)}%
+            </div>
+
+            {/* Manual Trigger Button & Mode Toggle */}
+            <button 
+              className={`btn-record ${strokeStatus === 'RECORDING' ? 'recording' : ''}`}
+              onClick={triggerManualRecording}
+              disabled={!modelsLoaded}
+            >
+              {strokeStatus === 'RECORDING' ? `Recording Gesture (${recordingProgress}%)...` : '● Record Gesture (Spacebar)'}
+            </button>
+
+            <div className="mode-toggle-group">
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={isStrokeMode} 
+                  onChange={(e) => {
+                    setIsStrokeMode(e.target.checked);
+                    isStrokeModeRef.current = e.target.checked;
+                  }} 
+                />
+                Dynamic Stroke Capture (Anti-Fluctuation)
+              </label>
             </div>
 
             {isQuestion && (
