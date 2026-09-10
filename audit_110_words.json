@@ -1,0 +1,1769 @@
+{
+  "trigger_stats": {
+    "dog": {
+      "total": 18,
+      "trig_005": 18,
+      "rate_005": 1.0,
+      "trig_0035": 18,
+      "rate_0035": 1.0,
+      "trig_0025": 18,
+      "rate_0025": 1.0
+    },
+    "loud": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "mean": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "rich": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "poor": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "thick": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "thin": {
+      "total": 4,
+      "trig_005": 4,
+      "rate_005": 1.0,
+      "trig_0035": 4,
+      "rate_0035": 1.0,
+      "trig_0025": 4,
+      "rate_0025": 1.0
+    },
+    "expensive": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "cheap": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "flat": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "curved": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "male": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "cat": {
+      "total": 18,
+      "trig_005": 18,
+      "rate_005": 1.0,
+      "trig_0035": 18,
+      "rate_0035": 1.0,
+      "trig_0025": 18,
+      "rate_0025": 1.0
+    },
+    "quiet": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "female": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "tight": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "loose": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "high": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "low": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "soft": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "hard": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "deep": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "shallow": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "clean": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "fish": {
+      "total": 18,
+      "trig_005": 18,
+      "rate_005": 1.0,
+      "trig_0035": 18,
+      "rate_0035": 1.0,
+      "trig_0025": 18,
+      "rate_0025": 1.0
+    },
+    "happy": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "dirty": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "strong": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "weak": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "dead": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "alive": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "heavy": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "light": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "hat": {
+      "total": 19,
+      "trig_005": 19,
+      "rate_005": 1.0,
+      "trig_0035": 19,
+      "rate_0035": 1.0,
+      "trig_0025": 19,
+      "rate_0025": 1.0
+    },
+    "dress": {
+      "total": 19,
+      "trig_005": 19,
+      "rate_005": 1.0,
+      "trig_0035": 19,
+      "rate_0035": 1.0,
+      "trig_0025": 19,
+      "rate_0025": 1.0
+    },
+    "famous": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "suit": {
+      "total": 18,
+      "trig_005": 18,
+      "rate_005": 1.0,
+      "trig_0035": 18,
+      "rate_0035": 1.0,
+      "trig_0025": 18,
+      "rate_0025": 1.0
+    },
+    "bird": {
+      "total": 18,
+      "trig_005": 18,
+      "rate_005": 1.0,
+      "trig_0035": 18,
+      "rate_0035": 1.0,
+      "trig_0025": 18,
+      "rate_0025": 1.0
+    },
+    "sad": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "skirt": {
+      "total": 18,
+      "trig_005": 18,
+      "rate_005": 1.0,
+      "trig_0035": 18,
+      "rate_0035": 1.0,
+      "trig_0025": 18,
+      "rate_0025": 1.0
+    },
+    "shirt": {
+      "total": 19,
+      "trig_005": 19,
+      "rate_005": 1.0,
+      "trig_0035": 19,
+      "rate_0035": 1.0,
+      "trig_0025": 19,
+      "rate_0025": 1.0
+    },
+    "t-shirt": {
+      "total": 19,
+      "trig_005": 19,
+      "rate_005": 1.0,
+      "trig_0035": 19,
+      "rate_0035": 1.0,
+      "trig_0025": 19,
+      "rate_0025": 1.0
+    },
+    "pant": {
+      "total": 19,
+      "trig_005": 19,
+      "rate_005": 1.0,
+      "trig_0035": 19,
+      "rate_0035": 1.0,
+      "trig_0025": 19,
+      "rate_0025": 1.0
+    },
+    "shoes": {
+      "total": 19,
+      "trig_005": 19,
+      "rate_005": 1.0,
+      "trig_0035": 19,
+      "rate_0035": 1.0,
+      "trig_0025": 19,
+      "rate_0025": 1.0
+    },
+    "pocket": {
+      "total": 19,
+      "trig_005": 16,
+      "rate_005": 0.8421052631578947,
+      "trig_0035": 16,
+      "rate_0035": 0.8421052631578947,
+      "trig_0025": 16,
+      "rate_0025": 0.8421052631578947
+    },
+    "clothing": {
+      "total": 19,
+      "trig_005": 19,
+      "rate_005": 1.0,
+      "trig_0035": 19,
+      "rate_0035": 1.0,
+      "trig_0025": 19,
+      "rate_0025": 1.0
+    },
+    "red": {
+      "total": 19,
+      "trig_005": 18,
+      "rate_005": 0.9473684210526315,
+      "trig_0035": 18,
+      "rate_0035": 0.9473684210526315,
+      "trig_0025": 18,
+      "rate_0025": 0.9473684210526315
+    },
+    "green": {
+      "total": 19,
+      "trig_005": 19,
+      "rate_005": 1.0,
+      "trig_0035": 19,
+      "rate_0035": 1.0,
+      "trig_0025": 19,
+      "rate_0025": 1.0
+    },
+    "blue": {
+      "total": 19,
+      "trig_005": 19,
+      "rate_005": 1.0,
+      "trig_0035": 19,
+      "rate_0035": 1.0,
+      "trig_0025": 19,
+      "rate_0025": 1.0
+    },
+    "beautiful": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "cow": {
+      "total": 19,
+      "trig_005": 19,
+      "rate_005": 1.0,
+      "trig_0035": 19,
+      "rate_0035": 1.0,
+      "trig_0025": 19,
+      "rate_0025": 1.0
+    },
+    "yellow": {
+      "total": 19,
+      "trig_005": 19,
+      "rate_005": 1.0,
+      "trig_0035": 19,
+      "rate_0035": 1.0,
+      "trig_0025": 19,
+      "rate_0025": 1.0
+    },
+    "brown": {
+      "total": 20,
+      "trig_005": 20,
+      "rate_005": 1.0,
+      "trig_0035": 20,
+      "rate_0035": 1.0,
+      "trig_0025": 20,
+      "rate_0025": 1.0
+    },
+    "pink": {
+      "total": 19,
+      "trig_005": 19,
+      "rate_005": 1.0,
+      "trig_0035": 19,
+      "rate_0035": 1.0,
+      "trig_0025": 19,
+      "rate_0025": 1.0
+    },
+    "orange": {
+      "total": 19,
+      "trig_005": 19,
+      "rate_005": 1.0,
+      "trig_0035": 19,
+      "rate_0035": 1.0,
+      "trig_0025": 19,
+      "rate_0025": 1.0
+    },
+    "black": {
+      "total": 19,
+      "trig_005": 19,
+      "rate_005": 1.0,
+      "trig_0035": 19,
+      "rate_0035": 1.0,
+      "trig_0025": 19,
+      "rate_0025": 1.0
+    },
+    "white": {
+      "total": 19,
+      "trig_005": 19,
+      "rate_005": 1.0,
+      "trig_0035": 19,
+      "rate_0035": 1.0,
+      "trig_0025": 19,
+      "rate_0025": 1.0
+    },
+    "grey": {
+      "total": 20,
+      "trig_005": 20,
+      "rate_005": 1.0,
+      "trig_0035": 20,
+      "rate_0035": 1.0,
+      "trig_0025": 20,
+      "rate_0025": 1.0
+    },
+    "colour": {
+      "total": 19,
+      "trig_005": 19,
+      "rate_005": 1.0,
+      "trig_0035": 19,
+      "rate_0035": 1.0,
+      "trig_0025": 19,
+      "rate_0025": 1.0
+    },
+    "mouse": {
+      "total": 18,
+      "trig_005": 18,
+      "rate_005": 1.0,
+      "trig_0035": 18,
+      "rate_0035": 1.0,
+      "trig_0025": 18,
+      "rate_0025": 1.0
+    },
+    "ugly": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "sunday": {
+      "total": 11,
+      "trig_005": 10,
+      "rate_005": 0.9090909090909091,
+      "trig_0035": 10,
+      "rate_0035": 0.9090909090909091,
+      "trig_0025": 10,
+      "rate_0025": 0.9090909090909091
+    },
+    "monday": {
+      "total": 11,
+      "trig_005": 11,
+      "rate_005": 1.0,
+      "trig_0035": 11,
+      "rate_0035": 1.0,
+      "trig_0025": 11,
+      "rate_0025": 1.0
+    },
+    "tuesday": {
+      "total": 11,
+      "trig_005": 9,
+      "rate_005": 0.8181818181818182,
+      "trig_0035": 10,
+      "rate_0035": 0.9090909090909091,
+      "trig_0025": 10,
+      "rate_0025": 0.9090909090909091
+    },
+    "wednesday": {
+      "total": 11,
+      "trig_005": 11,
+      "rate_005": 1.0,
+      "trig_0035": 11,
+      "rate_0035": 1.0,
+      "trig_0025": 11,
+      "rate_0025": 1.0
+    },
+    "deaf": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "horse": {
+      "total": 18,
+      "trig_005": 18,
+      "rate_005": 1.0,
+      "trig_0035": 18,
+      "rate_0035": 1.0,
+      "trig_0025": 18,
+      "rate_0025": 1.0
+    },
+    "thursday": {
+      "total": 11,
+      "trig_005": 9,
+      "rate_005": 0.8181818181818182,
+      "trig_0035": 9,
+      "rate_0035": 0.8181818181818182,
+      "trig_0025": 9,
+      "rate_0025": 0.8181818181818182
+    },
+    "friday": {
+      "total": 11,
+      "trig_005": 8,
+      "rate_005": 0.7272727272727273,
+      "trig_0035": 8,
+      "rate_0035": 0.7272727272727273,
+      "trig_0025": 9,
+      "rate_0025": 0.8181818181818182
+    },
+    "saturday": {
+      "total": 11,
+      "trig_005": 11,
+      "rate_005": 1.0,
+      "trig_0035": 11,
+      "rate_0035": 1.0,
+      "trig_0025": 11,
+      "rate_0025": 1.0
+    },
+    "today": {
+      "total": 11,
+      "trig_005": 11,
+      "rate_005": 1.0,
+      "trig_0035": 11,
+      "rate_0035": 1.0,
+      "trig_0025": 11,
+      "rate_0025": 1.0
+    },
+    "tomorrow": {
+      "total": 11,
+      "trig_005": 10,
+      "rate_005": 0.9090909090909091,
+      "trig_0035": 10,
+      "rate_0035": 0.9090909090909091,
+      "trig_0025": 10,
+      "rate_0025": 0.9090909090909091
+    },
+    "yesterday": {
+      "total": 11,
+      "trig_005": 11,
+      "rate_005": 1.0,
+      "trig_0035": 11,
+      "rate_0035": 1.0,
+      "trig_0025": 11,
+      "rate_0025": 1.0
+    },
+    "week": {
+      "total": 11,
+      "trig_005": 11,
+      "rate_005": 1.0,
+      "trig_0035": 11,
+      "rate_0035": 1.0,
+      "trig_0025": 11,
+      "rate_0025": 1.0
+    },
+    "month": {
+      "total": 11,
+      "trig_005": 11,
+      "rate_005": 1.0,
+      "trig_0035": 11,
+      "rate_0035": 1.0,
+      "trig_0025": 11,
+      "rate_0025": 1.0
+    },
+    "long": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "year": {
+      "total": 11,
+      "trig_005": 11,
+      "rate_005": 1.0,
+      "trig_0035": 11,
+      "rate_0035": 1.0,
+      "trig_0025": 11,
+      "rate_0025": 1.0
+    },
+    "hour": {
+      "total": 11,
+      "trig_005": 9,
+      "rate_005": 0.8181818181818182,
+      "trig_0035": 9,
+      "rate_0035": 0.8181818181818182,
+      "trig_0025": 9,
+      "rate_0025": 0.8181818181818182
+    },
+    "short": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "animal": {
+      "total": 18,
+      "trig_005": 18,
+      "rate_005": 1.0,
+      "trig_0035": 18,
+      "rate_0035": 1.0,
+      "trig_0025": 18,
+      "rate_0025": 1.0
+    },
+    "blind": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    },
+    "minute": {
+      "total": 11,
+      "trig_005": 11,
+      "rate_005": 1.0,
+      "trig_0035": 11,
+      "rate_0035": 1.0,
+      "trig_0025": 11,
+      "rate_0025": 1.0
+    },
+    "tall": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "second": {
+      "total": 3,
+      "trig_005": 2,
+      "rate_005": 0.6666666666666666,
+      "trig_0035": 2,
+      "rate_0035": 0.6666666666666666,
+      "trig_0025": 2,
+      "rate_0025": 0.6666666666666666
+    },
+    "wide": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "morning": {
+      "total": 11,
+      "trig_005": 11,
+      "rate_005": 1.0,
+      "trig_0035": 11,
+      "rate_0035": 1.0,
+      "trig_0025": 11,
+      "rate_0025": 1.0
+    },
+    "narrow": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "afternoon": {
+      "total": 11,
+      "trig_005": 11,
+      "rate_005": 1.0,
+      "trig_0035": 11,
+      "rate_0035": 1.0,
+      "trig_0025": 11,
+      "rate_0025": 1.0
+    },
+    "big large": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "evening": {
+      "total": 11,
+      "trig_005": 10,
+      "rate_005": 0.9090909090909091,
+      "trig_0035": 11,
+      "rate_0035": 1.0,
+      "trig_0025": 11,
+      "rate_0025": 1.0
+    },
+    "small little": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "night": {
+      "total": 11,
+      "trig_005": 11,
+      "rate_005": 1.0,
+      "trig_0035": 11,
+      "rate_0035": 1.0,
+      "trig_0025": 11,
+      "rate_0025": 1.0
+    },
+    "slow": {
+      "total": 21,
+      "trig_005": 20,
+      "rate_005": 0.9523809523809523,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "fast": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "time": {
+      "total": 11,
+      "trig_005": 10,
+      "rate_005": 0.9090909090909091,
+      "trig_0035": 10,
+      "rate_0035": 0.9090909090909091,
+      "trig_0025": 10,
+      "rate_0025": 0.9090909090909091
+    },
+    "hot": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "cold": {
+      "total": 20,
+      "trig_005": 20,
+      "rate_005": 1.0,
+      "trig_0035": 20,
+      "rate_0035": 1.0,
+      "trig_0025": 20,
+      "rate_0025": 1.0
+    },
+    "warm": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "nice": {
+      "total": 4,
+      "trig_005": 4,
+      "rate_005": 1.0,
+      "trig_0035": 4,
+      "rate_0035": 1.0,
+      "trig_0025": 4,
+      "rate_0025": 1.0
+    },
+    "cool": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "new": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "old": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "young": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "good": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "bad": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "wet": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "dry": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "sick": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "healthy": {
+      "total": 21,
+      "trig_005": 21,
+      "rate_005": 1.0,
+      "trig_0035": 21,
+      "rate_0035": 1.0,
+      "trig_0025": 21,
+      "rate_0025": 1.0
+    },
+    "extra": {
+      "total": 8,
+      "trig_005": 8,
+      "rate_005": 1.0,
+      "trig_0035": 8,
+      "rate_0035": 1.0,
+      "trig_0025": 8,
+      "rate_0025": 1.0
+    }
+  },
+  "classification_report": {
+    "dog": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 18.0
+    },
+    "loud": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "mean": {
+      "precision": 0.8888888888888888,
+      "recall": 1.0,
+      "f1-score": 0.9411764705882353,
+      "support": 8.0
+    },
+    "rich": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "poor": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "thick": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "thin": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 4.0
+    },
+    "expensive": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "cheap": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "flat": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "curved": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "male": {
+      "precision": 0.8888888888888888,
+      "recall": 1.0,
+      "f1-score": 0.9411764705882353,
+      "support": 8.0
+    },
+    "cat": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 18.0
+    },
+    "quiet": {
+      "precision": 0.8076923076923077,
+      "recall": 1.0,
+      "f1-score": 0.8936170212765957,
+      "support": 21.0
+    },
+    "female": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "tight": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "loose": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "high": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "low": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "soft": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "hard": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "deep": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "shallow": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "clean": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "fish": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 18.0
+    },
+    "happy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "dirty": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "strong": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "weak": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "dead": {
+      "precision": 0.8,
+      "recall": 1.0,
+      "f1-score": 0.8888888888888888,
+      "support": 8.0
+    },
+    "alive": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "heavy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "light": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "hat": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 19.0
+    },
+    "dress": {
+      "precision": 0.9375,
+      "recall": 0.7894736842105263,
+      "f1-score": 0.8571428571428571,
+      "support": 19.0
+    },
+    "famous": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "suit": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 18.0
+    },
+    "bird": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 18.0
+    },
+    "sad": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "skirt": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 18.0
+    },
+    "shirt": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 19.0
+    },
+    "t-shirt": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 19.0
+    },
+    "pant": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 19.0
+    },
+    "shoes": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 19.0
+    },
+    "pocket": {
+      "precision": 0.95,
+      "recall": 1.0,
+      "f1-score": 0.9743589743589743,
+      "support": 19.0
+    },
+    "clothing": {
+      "precision": 0.9,
+      "recall": 0.9473684210526315,
+      "f1-score": 0.9230769230769231,
+      "support": 19.0
+    },
+    "red": {
+      "precision": 0.8947368421052632,
+      "recall": 0.8947368421052632,
+      "f1-score": 0.8947368421052632,
+      "support": 19.0
+    },
+    "green": {
+      "precision": 1.0,
+      "recall": 0.9473684210526315,
+      "f1-score": 0.972972972972973,
+      "support": 19.0
+    },
+    "blue": {
+      "precision": 1.0,
+      "recall": 0.8947368421052632,
+      "f1-score": 0.9444444444444444,
+      "support": 19.0
+    },
+    "beautiful": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "cow": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 19.0
+    },
+    "yellow": {
+      "precision": 0.9,
+      "recall": 0.9473684210526315,
+      "f1-score": 0.9230769230769231,
+      "support": 19.0
+    },
+    "brown": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "pink": {
+      "precision": 0.9,
+      "recall": 0.9473684210526315,
+      "f1-score": 0.9230769230769231,
+      "support": 19.0
+    },
+    "orange": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 19.0
+    },
+    "black": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 19.0
+    },
+    "white": {
+      "precision": 1.0,
+      "recall": 0.7894736842105263,
+      "f1-score": 0.8823529411764706,
+      "support": 19.0
+    },
+    "grey": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "colour": {
+      "precision": 1.0,
+      "recall": 0.8421052631578947,
+      "f1-score": 0.9142857142857143,
+      "support": 19.0
+    },
+    "mouse": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 18.0
+    },
+    "ugly": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "sunday": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 11.0
+    },
+    "monday": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 11.0
+    },
+    "tuesday": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 11.0
+    },
+    "wednesday": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 11.0
+    },
+    "deaf": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "horse": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 18.0
+    },
+    "thursday": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 11.0
+    },
+    "friday": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 11.0
+    },
+    "saturday": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 11.0
+    },
+    "today": {
+      "precision": 1.0,
+      "recall": 0.7272727272727273,
+      "f1-score": 0.8421052631578947,
+      "support": 11.0
+    },
+    "tomorrow": {
+      "precision": 0.7857142857142857,
+      "recall": 1.0,
+      "f1-score": 0.88,
+      "support": 11.0
+    },
+    "yesterday": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 11.0
+    },
+    "week": {
+      "precision": 0.8461538461538461,
+      "recall": 1.0,
+      "f1-score": 0.9166666666666666,
+      "support": 11.0
+    },
+    "month": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 11.0
+    },
+    "long": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "year": {
+      "precision": 0.9166666666666666,
+      "recall": 1.0,
+      "f1-score": 0.9565217391304348,
+      "support": 11.0
+    },
+    "hour": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 11.0
+    },
+    "short": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "animal": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 18.0
+    },
+    "blind": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "minute": {
+      "precision": 1.0,
+      "recall": 0.9090909090909091,
+      "f1-score": 0.9523809523809523,
+      "support": 11.0
+    },
+    "tall": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "second": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 3.0
+    },
+    "wide": {
+      "precision": 0.9545454545454546,
+      "recall": 1.0,
+      "f1-score": 0.9767441860465116,
+      "support": 21.0
+    },
+    "morning": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 11.0
+    },
+    "narrow": {
+      "precision": 1.0,
+      "recall": 0.9523809523809523,
+      "f1-score": 0.975609756097561,
+      "support": 21.0
+    },
+    "afternoon": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 11.0
+    },
+    "big large": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "evening": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 11.0
+    },
+    "small little": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "night": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 11.0
+    },
+    "slow": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "fast": {
+      "precision": 0.8666666666666667,
+      "recall": 0.6190476190476191,
+      "f1-score": 0.7222222222222222,
+      "support": 21.0
+    },
+    "time": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 11.0
+    },
+    "hot": {
+      "precision": 1.0,
+      "recall": 0.9523809523809523,
+      "f1-score": 0.975609756097561,
+      "support": 21.0
+    },
+    "cold": {
+      "precision": 1.0,
+      "recall": 0.9,
+      "f1-score": 0.9473684210526315,
+      "support": 20.0
+    },
+    "warm": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "nice": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 4.0
+    },
+    "cool": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "new": {
+      "precision": 1.0,
+      "recall": 0.9523809523809523,
+      "f1-score": 0.975609756097561,
+      "support": 21.0
+    },
+    "old": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "young": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "good": {
+      "precision": 0.9130434782608695,
+      "recall": 1.0,
+      "f1-score": 0.9545454545454546,
+      "support": 21.0
+    },
+    "bad": {
+      "precision": 0.7407407407407407,
+      "recall": 0.9523809523809523,
+      "f1-score": 0.8333333333333334,
+      "support": 21.0
+    },
+    "wet": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "dry": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "sick": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "healthy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "extra": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 8.0
+    },
+    "accuracy": 0.9763275751759437,
+    "macro avg": {
+      "precision": 0.9808294369665808,
+      "recall": 0.9814994096812278,
+      "f1-score": 0.9798463806717109,
+      "support": 1563.0
+    },
+    "weighted avg": {
+      "precision": 0.9787300490160793,
+      "recall": 0.9763275751759437,
+      "f1-score": 0.9760561931509635,
+      "support": 1563.0
+    }
+  },
+  "low_trigger": {
+    "pocket": {
+      "total": 19,
+      "trig_005": 16,
+      "rate_005": 0.8421052631578947,
+      "trig_0035": 16,
+      "rate_0035": 0.8421052631578947,
+      "trig_0025": 16,
+      "rate_0025": 0.8421052631578947
+    },
+    "tuesday": {
+      "total": 11,
+      "trig_005": 9,
+      "rate_005": 0.8181818181818182,
+      "trig_0035": 10,
+      "rate_0035": 0.9090909090909091,
+      "trig_0025": 10,
+      "rate_0025": 0.9090909090909091
+    },
+    "thursday": {
+      "total": 11,
+      "trig_005": 9,
+      "rate_005": 0.8181818181818182,
+      "trig_0035": 9,
+      "rate_0035": 0.8181818181818182,
+      "trig_0025": 9,
+      "rate_0025": 0.8181818181818182
+    },
+    "friday": {
+      "total": 11,
+      "trig_005": 8,
+      "rate_005": 0.7272727272727273,
+      "trig_0035": 8,
+      "rate_0035": 0.7272727272727273,
+      "trig_0025": 9,
+      "rate_0025": 0.8181818181818182
+    },
+    "hour": {
+      "total": 11,
+      "trig_005": 9,
+      "rate_005": 0.8181818181818182,
+      "trig_0035": 9,
+      "rate_0035": 0.8181818181818182,
+      "trig_0025": 9,
+      "rate_0025": 0.8181818181818182
+    },
+    "second": {
+      "total": 3,
+      "trig_005": 2,
+      "rate_005": 0.6666666666666666,
+      "trig_0035": 2,
+      "rate_0035": 0.6666666666666666,
+      "trig_0025": 2,
+      "rate_0025": 0.6666666666666666
+    }
+  },
+  "low_recall": {
+    "dress": {
+      "precision": 0.9375,
+      "recall": 0.7894736842105263,
+      "f1-score": 0.8571428571428571,
+      "support": 19.0
+    },
+    "red": {
+      "precision": 0.8947368421052632,
+      "recall": 0.8947368421052632,
+      "f1-score": 0.8947368421052632,
+      "support": 19.0
+    },
+    "blue": {
+      "precision": 1.0,
+      "recall": 0.8947368421052632,
+      "f1-score": 0.9444444444444444,
+      "support": 19.0
+    },
+    "white": {
+      "precision": 1.0,
+      "recall": 0.7894736842105263,
+      "f1-score": 0.8823529411764706,
+      "support": 19.0
+    },
+    "colour": {
+      "precision": 1.0,
+      "recall": 0.8421052631578947,
+      "f1-score": 0.9142857142857143,
+      "support": 19.0
+    },
+    "today": {
+      "precision": 1.0,
+      "recall": 0.7272727272727273,
+      "f1-score": 0.8421052631578947,
+      "support": 11.0
+    },
+    "fast": {
+      "precision": 0.8666666666666667,
+      "recall": 0.6190476190476191,
+      "f1-score": 0.7222222222222222,
+      "support": 21.0
+    }
+  }
+}
