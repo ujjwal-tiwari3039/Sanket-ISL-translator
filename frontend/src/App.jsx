@@ -41,11 +41,57 @@ function App() {
   const strokeCooldownRef = useRef(0);
   const lastHandLandmarksRef = useRef(null);
   const strokeQuestionRef = useRef(false);
+  const lowVelocityFramesRef = useRef(0);
+  const evaluateStrokeRef = useRef(null);
+
+  // Time-normalized resampling of variable-length capture (e.g. 15 to 60 frames)
+  // to the fixed 30-frame sequence expected by the LSTM model, matching training linspace
+  const resampleSequence = (frames, targetLength = 30) => {
+    const N = frames.length;
+    if (N === targetLength) {
+      return frames;
+    }
+    if (N < 2) {
+      const padded = [...frames];
+      while (padded.length < targetLength) {
+        padded.push(frames[frames.length - 1] || new Array(258).fill(0));
+      }
+      return padded;
+    }
+
+    const resampled = [];
+    for (let t = 0; t < targetLength; t++) {
+      const pos = (t * (N - 1)) / (targetLength - 1);
+      const i0 = Math.floor(pos);
+      const i1 = Math.min(i0 + 1, N - 1);
+      const alpha = pos - i0;
+
+      if (alpha === 0 || i0 === i1) {
+        resampled.push(frames[i0]);
+      } else {
+        const f0 = frames[i0];
+        const f1 = frames[i1];
+        const interpolated = new Float32Array(258);
+        for (let k = 0; k < 258; k++) {
+          interpolated[k] = (1 - alpha) * f0[k] + alpha * f1[k];
+        }
+        resampled.push(Array.from(interpolated));
+      }
+    }
+    return resampled;
+  };
 
   const triggerManualRecording = () => {
-    if (strokeStateRef.current === "RECORDING") return;
+    if (strokeStateRef.current === "RECORDING") {
+      // Manual trigger while recording immediately finalizes and evaluates gesture
+      if (evaluateStrokeRef.current) {
+        evaluateStrokeRef.current();
+      }
+      return;
+    }
     strokeStateRef.current = "RECORDING";
     strokeFramesRef.current = [];
+    lowVelocityFramesRef.current = 0;
     strokeQuestionRef.current = false;
     setStrokeStatus("RECORDING");
     setIsStrokeCapturing(true);
@@ -464,7 +510,7 @@ function App() {
 
         ctx.fillStyle = "#ffffff";
         ctx.font = "bold 13px 'JetBrains Mono', monospace";
-        ctx.fillText(`CAPTURING GESTURE (${strokeFramesRef.current.length}/30)`, 45, 33);
+        ctx.fillText(`CAPTURING GESTURE (${strokeFramesRef.current.length}f)`, 45, 33);
         ctx.restore();
       } else if (strokeStateRef.current === "COOLDOWN") {
         ctx.save();
@@ -479,6 +525,76 @@ function App() {
         ctx.restore();
       }
     };
+
+    const evaluateStroke = async () => {
+      if (strokeFramesRef.current.length === 0) return;
+      strokeStateRef.current = "EVALUATING";
+      setStrokeStatus("EVALUATING");
+      setRecordingProgress(100);
+      setUiState("DETECTING");
+
+      const rawFrames = strokeFramesRef.current;
+      // Resample variable-length capture across time to the fixed 30-frame sequence
+      const normalizedSequence = resampleSequence(rawFrames, sequenceLength);
+
+      const inputTensor = tf.tensor3d([normalizedSequence], [1, sequenceLength, 258]);
+      const prediction = tfModelRef.current.predict(inputTensor);
+      const scores = await prediction.data();
+      inputTensor.dispose();
+      prediction.dispose();
+
+      const maxScore = Math.max(...scores);
+      const classIndex = scores.indexOf(maxScore);
+      let recognizedAction = actionsList[classIndex] || "unknown";
+      if (strokeQuestionRef.current) recognizedAction += "?";
+
+      setConfidence(maxScore * 100);
+
+      if (maxScore > 0.40 && recognizedAction !== "idle") {
+        setCurrentSign(recognizedAction);
+
+        let curSentence = [...sentenceRef.current];
+        if (curSentence.length === 0 || curSentence[curSentence.length - 1] !== recognizedAction) {
+          curSentence.push(recognizedAction);
+          if (curSentence.length > 5) curSentence.shift();
+          sentenceRef.current = curSentence;
+          setSentence(curSentence);
+
+          // Trigger Gemini LLM
+          setUiState("ASSEMBLING");
+          setLlmSentence("");
+          fetch('http://localhost:3001/api/assemble', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sequence: curSentence })
+          }).then(async response => {
+            if (!response.body) return;
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let assembled = "";
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              assembled += decoder.decode(value, { stream: true });
+              setLlmSentence(assembled);
+            }
+            setUiState("COOLDOWN");
+          }).catch(err => {
+            console.error("LLM Error:", err);
+            setLlmSentence("Error generating sentence.");
+            setUiState("ERROR");
+          });
+        }
+      } else {
+        setCurrentSign(maxScore > 0.40 ? "idle..." : "No sign detected");
+      }
+
+      strokeStateRef.current = "COOLDOWN";
+      setStrokeStatus("COOLDOWN");
+      strokeCooldownRef.current = 15; // ~1 second cooldown
+    };
+
+    evaluateStrokeRef.current = evaluateStroke;
 
     const detectAndPredict = async () => {
       if (isPredictingRef.current) return;
@@ -524,15 +640,24 @@ function App() {
           
           const keypoints = extractKeypoints(poseRes, handRes, faceRes);
 
-          // Calculate Hand Velocity across frames to detect movement start
+          // Calculate Hand Velocity across frames matching persistent handedness labels
           let handVelocity = 0;
           if (handRes && handRes.landmarks && handRes.landmarks.length > 0) {
             const currentHands = handRes.landmarks;
+            const currentHandedness = handRes.handednesses || [];
+
             if (lastHandLandmarksRef.current && lastHandLandmarksRef.current.length > 0) {
-              for (let h = 0; h < currentHands.length; h++) {
-                const prev = lastHandLandmarksRef.current[h];
-                const curr = currentHands[h];
-                if (prev && curr) {
+              const prevHandsData = lastHandLandmarksRef.current;
+
+              currentHands.forEach((curr, cIdx) => {
+                const label = currentHandedness[cIdx]?.[0]?.categoryName || `Hand_${cIdx}`;
+                let prevMatch = prevHandsData.find(p => p.label === label);
+                if (!prevMatch && prevHandsData[cIdx]) {
+                  prevMatch = prevHandsData[cIdx];
+                }
+
+                if (prevMatch && prevMatch.landmarks) {
+                  const prev = prevMatch.landmarks;
                   for (const idx of [0, 4, 8, 12, 16, 20]) {
                     if (curr[idx] && prev[idx]) {
                       const dx = curr[idx].x - prev[idx].x;
@@ -541,9 +666,13 @@ function App() {
                     }
                   }
                 }
-              }
+              });
             }
-            lastHandLandmarksRef.current = currentHands;
+
+            lastHandLandmarksRef.current = currentHands.map((lm, cIdx) => ({
+              label: currentHandedness[cIdx]?.[0]?.categoryName || `Hand_${cIdx}`,
+              landmarks: lm
+            }));
           } else {
             lastHandLandmarksRef.current = null;
           }
@@ -551,14 +680,14 @@ function App() {
           setDebugInfo(`Pose: ${poseRes.landmarks ? poseRes.landmarks.length > 0 : false} | Hands: ${rawHandCount} (${handScores || 'None'}) | Motion: ${handVelocity.toFixed(2)} | Mode: ${isStrokeModeRef.current ? 'Stroke' : 'Rolling'}`);
 
           if (isStrokeModeRef.current) {
-            // ===============================================
-            // DYNAMIC GESTURE STROKE MODE (ZERO FLUCTUATION)
-            // ===============================================
+            // =========================================================
+            // HYSTERESIS-BASED VARIABLE-LENGTH STROKE CAPTURE
+            // =========================================================
             const activeHands = smoothedHandsRef.current.filter(h => h.missedFrames < 3);
 
             if (strokeStateRef.current === "COOLDOWN") {
               strokeCooldownRef.current -= 1;
-              if (strokeCooldownRef.current <= 0 && handVelocity < 0.05) {
+              if (strokeCooldownRef.current <= 0 && handVelocity < 0.035) {
                 strokeStateRef.current = "IDLE";
                 setStrokeStatus("IDLE");
                 setIsStrokeCapturing(false);
@@ -566,15 +695,16 @@ function App() {
                 setUiState("IDLE");
               }
             } else if (strokeStateRef.current === "IDLE") {
-              // Auto-trigger when hands are visible and motion initiates
-              if (activeHands.length > 0 && handVelocity > 0.05) {
+              // 1. Start trigger: motion initiation above start threshold
+              if (activeHands.length > 0 && handVelocity >= 0.038) {
                 strokeStateRef.current = "RECORDING";
                 strokeFramesRef.current = [keypoints];
+                lowVelocityFramesRef.current = 0;
                 strokeQuestionRef.current = questionFlag;
                 setStrokeStatus("RECORDING");
                 setIsStrokeCapturing(true);
                 setCurrentSign("Capturing sign...");
-                setRecordingProgress(Math.round((1 / sequenceLength) * 100));
+                setRecordingProgress(10);
                 setUiState("RECORDING");
               }
             } else if (strokeStateRef.current === "RECORDING") {
@@ -582,71 +712,26 @@ function App() {
               if (questionFlag) strokeQuestionRef.current = true;
               
               const currentFrameCount = strokeFramesRef.current.length;
-              const progressPct = Math.min(100, Math.round((currentFrameCount / sequenceLength) * 100));
+
+              // 2. Sustain threshold: if velocity stays above 0.018, reset pause counter
+              if (handVelocity < 0.018) {
+                lowVelocityFramesRef.current += 1;
+              } else {
+                lowVelocityFramesRef.current = 0;
+              }
+
+              // Visual indicator relative to typical 35-frame sign duration
+              const progressPct = Math.min(100, Math.round((currentFrameCount / 35) * 100));
               setRecordingProgress(progressPct);
 
-              if (currentFrameCount >= sequenceLength) {
-                // Complete 30-frame gesture captured!
-                strokeStateRef.current = "EVALUATING";
-                setStrokeStatus("EVALUATING");
-                setRecordingProgress(100);
-                setUiState("DETECTING");
+              // 3. Stop conditions:
+              // - Gesture reached at least 14 frames AND velocity paused for 5 consecutive frames (~0.3s)
+              // - OR safety cap reached (60 frames)
+              const isStopHysteresis = (currentFrameCount >= 14 && lowVelocityFramesRef.current >= 5);
+              const isSafetyCap = (currentFrameCount >= 60);
 
-                const inputTensor = tf.tensor3d([strokeFramesRef.current], [1, sequenceLength, 258]);
-                const prediction = tfModelRef.current.predict(inputTensor);
-                const scores = await prediction.data();
-                inputTensor.dispose();
-                prediction.dispose();
-
-                const maxScore = Math.max(...scores);
-                const classIndex = scores.indexOf(maxScore);
-                let recognizedAction = actionsList[classIndex] || "unknown";
-                if (strokeQuestionRef.current) recognizedAction += "?";
-
-                setConfidence(maxScore * 100);
-
-                if (maxScore > 0.40 && recognizedAction !== "idle") {
-                  setCurrentSign(recognizedAction);
-
-                  let curSentence = [...sentenceRef.current];
-                  if (curSentence.length === 0 || curSentence[curSentence.length - 1] !== recognizedAction) {
-                    curSentence.push(recognizedAction);
-                    if (curSentence.length > 5) curSentence.shift();
-                    sentenceRef.current = curSentence;
-                    setSentence(curSentence);
-
-                    // Trigger Gemini LLM
-                    setUiState("ASSEMBLING");
-                    setLlmSentence("");
-                    fetch('http://localhost:3001/api/assemble', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ sequence: curSentence })
-                    }).then(async response => {
-                      if (!response.body) return;
-                      const reader = response.body.getReader();
-                      const decoder = new TextDecoder('utf-8');
-                      let assembled = "";
-                      while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        assembled += decoder.decode(value, { stream: true });
-                        setLlmSentence(assembled);
-                      }
-                      setUiState("COOLDOWN");
-                    }).catch(err => {
-                      console.error("LLM Error:", err);
-                      setLlmSentence("Error generating sentence.");
-                      setUiState("ERROR");
-                    });
-                  }
-                } else {
-                  setCurrentSign(maxScore > 0.40 ? "idle..." : "No sign detected");
-                }
-
-                strokeStateRef.current = "COOLDOWN";
-                setStrokeStatus("COOLDOWN");
-                strokeCooldownRef.current = 15; // ~1 second cooldown
+              if (isStopHysteresis || isSafetyCap) {
+                evaluateStroke();
               }
             }
           } else {
@@ -833,7 +918,7 @@ function App() {
               onClick={triggerManualRecording}
               disabled={!modelsLoaded}
             >
-              {strokeStatus === 'RECORDING' ? `Recording Gesture (${recordingProgress}%)...` : '● Record Gesture (Spacebar)'}
+              {strokeStatus === 'RECORDING' ? `Recording Gesture (${recordingProgress}%)... Click / Space to Finish` : '● Record Gesture (Spacebar)'}
             </button>
 
             <div className="mode-toggle-group">
