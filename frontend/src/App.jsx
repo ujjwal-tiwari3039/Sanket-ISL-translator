@@ -43,6 +43,14 @@ function App() {
   const strokeQuestionRef = useRef(false);
   const lowVelocityFramesRef = useRef(0);
   const evaluateStrokeRef = useRef(null);
+  const preStrokeBufferRef = useRef([]);
+  const postPadFramesRemainingRef = useRef(0);
+
+  // Tuned stroke capture parameters matching training distribution & mitigating boundary crop
+  const PRE_PAD_FRAMES = 5;            // Prepend 5 rolling frames to capture motion wind-up
+  const POST_PAD_FRAMES = 4;           // Retain 4 frames after stop condition for wind-down
+  const MIN_STROKE_FRAMES = 20;        // Minimum gesture duration before hysteresis stop allowed
+  const STOP_LOW_VELOCITY_FRAMES = 10; // Consecutive low-velocity frames (~0.66s) required to stop
 
   // Time-normalized resampling of variable-length capture (e.g. 15 to 60 frames)
   // to the fixed 30-frame sequence expected by the LSTM model, matching training linspace
@@ -82,7 +90,7 @@ function App() {
   };
 
   const triggerManualRecording = () => {
-    if (strokeStateRef.current === "RECORDING") {
+    if (strokeStateRef.current === "RECORDING" || strokeStateRef.current === "POST_RECORDING") {
       // Manual trigger while recording immediately finalizes and evaluates gesture
       if (evaluateStrokeRef.current) {
         evaluateStrokeRef.current();
@@ -90,8 +98,9 @@ function App() {
       return;
     }
     strokeStateRef.current = "RECORDING";
-    strokeFramesRef.current = [];
+    strokeFramesRef.current = [...preStrokeBufferRef.current];
     lowVelocityFramesRef.current = 0;
+    postPadFramesRemainingRef.current = 0;
     strokeQuestionRef.current = false;
     setStrokeStatus("RECORDING");
     setIsStrokeCapturing(true);
@@ -501,7 +510,7 @@ function App() {
       }
 
       // Drawing recording or recognized badge directly on the canvas
-      if (strokeStateRef.current === "RECORDING") {
+      if (strokeStateRef.current === "RECORDING" || strokeStateRef.current === "POST_RECORDING") {
         ctx.save();
         ctx.fillStyle = "rgba(239, 68, 68, 0.9)";
         ctx.beginPath();
@@ -693,13 +702,22 @@ function App() {
                 setIsStrokeCapturing(false);
                 setRecordingProgress(0);
                 setUiState("IDLE");
+                preStrokeBufferRef.current = [];
               }
             } else if (strokeStateRef.current === "IDLE") {
+              // Always maintain a rolling pre-buffer of low-velocity wind-up frames
+              preStrokeBufferRef.current.push(keypoints);
+              if (preStrokeBufferRef.current.length > PRE_PAD_FRAMES) {
+                preStrokeBufferRef.current.shift();
+              }
+
               // 1. Start trigger: motion initiation above start threshold
               if (activeHands.length > 0 && handVelocity >= 0.038) {
                 strokeStateRef.current = "RECORDING";
-                strokeFramesRef.current = [keypoints];
+                // Prepend rolling pre-buffer so motion initiation / wind-up is preserved
+                strokeFramesRef.current = [...preStrokeBufferRef.current];
                 lowVelocityFramesRef.current = 0;
+                postPadFramesRemainingRef.current = 0;
                 strokeQuestionRef.current = questionFlag;
                 setStrokeStatus("RECORDING");
                 setIsStrokeCapturing(true);
@@ -724,14 +742,35 @@ function App() {
               const progressPct = Math.min(100, Math.round((currentFrameCount / 35) * 100));
               setRecordingProgress(progressPct);
 
-              // 3. Stop conditions:
-              // - Gesture reached at least 14 frames AND velocity paused for 5 consecutive frames (~0.3s)
-              // - OR safety cap reached (60 frames)
-              const isStopHysteresis = (currentFrameCount >= 14 && lowVelocityFramesRef.current >= 5);
+              // 3. Stop conditions with pause/dip tolerance & post-padding:
+              // - Gesture must reach MIN_STROKE_FRAMES (20) before hysteresis stop is allowed
+              // - Requires STOP_LOW_VELOCITY_FRAMES (10) consecutive frames below 0.018 (~0.66s pause)
+              // - If stop condition is met: transition to POST_RECORDING to capture wind-down padding
+              // - Safety cap: 60 frames immediately finalizes
+              const isStopHysteresis = (currentFrameCount >= MIN_STROKE_FRAMES && lowVelocityFramesRef.current >= STOP_LOW_VELOCITY_FRAMES);
               const isSafetyCap = (currentFrameCount >= 60);
 
-              if (isStopHysteresis || isSafetyCap) {
+              if (isSafetyCap) {
                 evaluateStroke();
+              } else if (isStopHysteresis) {
+                strokeStateRef.current = "POST_RECORDING";
+                postPadFramesRemainingRef.current = POST_PAD_FRAMES;
+              }
+            } else if (strokeStateRef.current === "POST_RECORDING") {
+              strokeFramesRef.current.push(keypoints);
+              if (questionFlag) strokeQuestionRef.current = true;
+
+              // Multi-part / repetitive motion continuation check (Step 3):
+              // If motion re-accelerates before post-pad finishes, treat as continuation of stroke
+              if (handVelocity >= 0.038) {
+                strokeStateRef.current = "RECORDING";
+                lowVelocityFramesRef.current = 0;
+                postPadFramesRemainingRef.current = 0;
+              } else {
+                postPadFramesRemainingRef.current -= 1;
+                if (postPadFramesRemainingRef.current <= 0 || strokeFramesRef.current.length >= 60) {
+                  evaluateStroke();
+                }
               }
             }
           } else {

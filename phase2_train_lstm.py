@@ -77,6 +77,34 @@ def augment_sequence(sequence):
     aug_seq[mask] += noise[mask]
     return aug_seq
 
+def random_boundary_trim(sequence, max_trim=4):
+    """
+    Randomly trims 0 to max_trim frames from the beginning and/or end,
+    then linearly resamples back to sequence_length (30 frames).
+    Teaches the model to tolerate capture boundary variation and imperfect capture windows.
+    """
+    trim_start = np.random.randint(0, max_trim + 1)
+    trim_end = np.random.randint(0, max_trim + 1)
+    if len(sequence) - trim_start - trim_end < 15:
+        trim_start = 1
+        trim_end = 1
+        
+    cropped = sequence[trim_start : len(sequence) - trim_end]
+    N = len(cropped)
+    target_length = len(sequence)
+    
+    resampled = np.zeros_like(sequence)
+    for t in range(target_length):
+        pos = (t * (N - 1)) / (target_length - 1)
+        i0 = int(np.floor(pos))
+        i1 = min(i0 + 1, N - 1)
+        alpha = pos - i0
+        if alpha == 0 or i0 == i1:
+            resampled[t] = cropped[i0]
+        else:
+            resampled[t] = (1 - alpha) * cropped[i0] + alpha * cropped[i1]
+    return resampled
+
 # --- 2. LOAD DATA ---
 print("Loading data from MP_Data...")
 sequences, labels = [], []
@@ -98,8 +126,12 @@ for action in actions:
         sequences.append(window)
         labels.append(label_map[action])
         
-        # Add an augmented version to double the dataset
+        # Add a coordinate jitter augmented version
         sequences.append(augment_sequence(np.array(window)))
+        labels.append(label_map[action])
+
+        # Add a boundary-trim & resample augmented version (Step 5 boundary tolerance)
+        sequences.append(random_boundary_trim(np.array(window)))
         labels.append(label_map[action])
 
 X = np.array(sequences)
