@@ -47,4 +47,12 @@
 - Ensured the UI displays a clear confidence score and explicit visual flags for the NMF heuristic (e.g., `NMF: Eyebrow Raise (?)`).
 - The full end-to-end Vite & Express pipeline is now fully integrated and documented. 
 
-**Project Rebuild Successfully Concluded!**
+## Phase 8 — Motion-Sign Capture/Training Boundary Alignment (Complete)
+- Resolved the live motion sign recognition disparity (offline 0.98 F1 vs. live hallucination).
+- Diagnosed root causes: (1) edge cropping of low-velocity wind-up/wind-down frames, and (2) premature termination during mid-sign velocity dips on multi-part signs (e.g., `happy`).
+- Implemented rolling pre-buffer window (`PRE_PAD_FRAMES = 5`), post-recording window (`POST_PAD_FRAMES = 4`), and extended pause stillness with dip tolerance (`MIN_STROKE_FRAMES = 20`, `STOP_LOW_VELOCITY_FRAMES = 10`).
+- Added `random_boundary_trim` augmentation to `phase2_train_lstm.py` for intrinsic boundary shift tolerance.
+- Comprehensive technical documentation saved to `MOTION_SIGN_BOUNDARY_FIX.md`.
+
+**Project Rebuild & Calibration Successfully Concluded!**
+

@@ -141,4 +141,26 @@ Re-evaluated the 258-feature model on the held-out test split, breaking down dyn
   4. **Single-Shot Evaluation & Lock**: Once the 30-frame motion completes, the LSTM evaluates the entire gesture once, commits the confirmed sign, and engages a 1.0s cooldown so hands can return to rest without triggering false transitions.
   5. **Exhibition Manual Trigger**: Spacebar keybinding and `● Record Gesture` UI button to allow presenters to trigger dedicated 30-frame capture on command.
 
+---
+
+## 9. Motion-Sign Capture/Training Boundary Alignment Fix
+
+- **Problem**: Despite dynamic signs achieving 0.98 F1 offline, live capture underperformed due to two boundary mismatches:
+  1. Hysteresis trigger chopped off low-velocity wind-up and wind-down edges that were present in the training clips (`np.linspace(0, N-1, 30)`).
+  2. Multi-part and repetitive motion signs (e.g., `happy`, `deaf`, `bad`) dipped below the sustain threshold ($v < 0.018$) mid-sign, triggering premature termination at frames 14–19.
+- **Fixes Applied**:
+  1. **Pre-Buffer Padding (`PRE_PAD_FRAMES = 5`)**: Rolling buffer prepended on start trigger to capture true motion wind-up.
+  2. **Post-Buffer Padding (`POST_PAD_FRAMES = 4`)**: Introduced `POST_RECORDING` state to capture deceleration frames after stop condition.
+  3. **Dip Tolerance & Minimum Duration (`MIN_STROKE_FRAMES = 20`, `STOP_LOW_VELOCITY_FRAMES = 10`)**: Requires at least 20 captured frames before stop evaluation, extended pause stillness to 10 consecutive frames, and added re-acceleration check to continue multi-part strokes.
+  4. **Training Augmentation**: Added `random_boundary_trim` in `phase2_train_lstm.py` to make the model invariant to boundary variation.
+- **Results**:
+  - `happy`: **71.4% $\rightarrow$ 100.0%**
+  - `deaf`: **62.5% $\rightarrow$ 100.0%**
+  - `young`: **85.7% $\rightarrow$ 100.0%**
+  - `year`: **81.8% $\rightarrow$ 90.9%**
+  - `bad`: **38.1% $\rightarrow$ 76.2%**
+  - Dynamic Sign Average: **72.8% $\rightarrow$ 93.2%**
+  - Overall Benchmark Accuracy: **68.1% $\rightarrow$ 90.6%**
+- **Documentation**: Full details, tables, and velocity logs documented in [`MOTION_SIGN_BOUNDARY_FIX.md`](file:///home/samashech/Documents/Sign-language-translator/Ai_sign_language_translator-/MOTION_SIGN_BOUNDARY_FIX.md).
+
 
