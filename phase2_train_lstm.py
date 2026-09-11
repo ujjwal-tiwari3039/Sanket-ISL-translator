@@ -156,6 +156,8 @@ try:
     import tensorflowjs as tfjs
     tfjs_dir = os.path.join('frontend', 'public', 'models')
     os.makedirs(tfjs_dir, exist_ok=True)
+    tfjs.converters.save_keras_model(model, tfjs_dir)
+    shutil.copy('models/labels.json', os.path.join(tfjs_dir, 'labels.json'))
     # Post-process model.json for Keras 3 -> TFJS 4 compatibility
     mjson_path = os.path.join(tfjs_dir, 'model.json')
     if os.path.exists(mjson_path):
