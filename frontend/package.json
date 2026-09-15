@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "update-demo": "node update_demo_manifest.js"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.0.0",
