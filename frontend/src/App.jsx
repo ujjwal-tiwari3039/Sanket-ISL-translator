@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import * as tf from '@tensorflow/tfjs';
 import { FilesetResolver, PoseLandmarker, HandLandmarker, FaceLandmarker } from '@mediapipe/tasks-vision';
+import DemoMode from './DemoMode';
 import './index.css';
 
 function App() {
   const videoRef = useRef(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [modelsLoaded, setModelsLoaded] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   
   // State for our dynamic translation
   const [currentSign, setCurrentSign] = useState("Waiting...");
@@ -559,7 +561,7 @@ function App() {
 
       setConfidence(maxScore * 100);
 
-      if (maxScore > 0.40 && recognizedAction !== "idle") {
+      if (maxScore > 0.70 && recognizedAction !== "idle") {
         setCurrentSign(recognizedAction);
 
         let curSentence = [...sentenceRef.current];
@@ -595,7 +597,7 @@ function App() {
           });
         }
       } else {
-        setCurrentSign(maxScore > 0.40 ? "idle..." : "No sign detected");
+        setCurrentSign(maxScore > 0.70 ? "idle..." : "No sign detected");
       }
 
       strokeStateRef.current = "COOLDOWN";
@@ -732,12 +734,14 @@ function App() {
                   setRecordingProgress(10);
                   setUiState("RECORDING");
                   window.staticHoldFrames = 0;
-                } else if (handVelocity < 0.018) {
-                  // Static Sign Tracking
-                  window.staticHoldFrames = (window.staticHoldFrames || 0) + 1;
-                  if (window.staticHoldFrames >= 20) {
-                     // 20 frames of stillness -> Evaluate Static Sign
-                     // Pad if needed, though resampleSequence handles it
+                } else if (handVelocity < 0.012) {
+                  // Static Sign Tracking — very conservative to avoid false triggers
+                  const avgHandConf = activeHands.reduce((a, h) => a + h.score, 0) / activeHands.length;
+                  if (avgHandConf > 0.85) {
+                    window.staticHoldFrames = (window.staticHoldFrames || 0) + 1;
+                  }
+                  if (window.staticHoldFrames >= 30 && window.staticFrameBuffer.length >= 30) {
+                     // 30 frames of confirmed stillness with high confidence -> Evaluate Static Sign
                      strokeFramesRef.current = [...window.staticFrameBuffer];
                      strokeQuestionRef.current = questionFlag;
                      evaluateStroke();
@@ -825,7 +829,7 @@ function App() {
                if (activeHands.length === 0) {
                   setCurrentSign("Waiting...");
                   predictionsBufferRef.current = [];
-               } else if (maxScore > 0.50 && actionsList.length > 0) {
+               } else if (maxScore > 0.70 && actionsList.length > 0) {
                   let action = actionsList[classIndex];
                   if (questionFlag) action += "?";
                   
@@ -899,6 +903,10 @@ function App() {
     return () => cancelAnimationFrame(animationFrameId);
   }, [isStreaming, modelsLoaded, actionsList]);
 
+  if (isDemoMode) {
+    return <DemoMode onExit={() => setIsDemoMode(false)} />;
+  }
+
   return (
     <div className="app-container">
       <header>
@@ -910,6 +918,9 @@ function App() {
           <div className="ui-state-indicator"></div>
           {uiState}
         </div>
+        <button className="btn" onClick={() => setIsDemoMode(true)} style={{ marginLeft: 'auto' }}>
+          Enter Demo Mode
+        </button>
       </header>
 
       <main className="main-content">

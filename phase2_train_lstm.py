@@ -3,8 +3,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout, BatchNormalization
-from tensorflow.keras.regularizers import l2
+from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.callbacks import TensorBoard, EarlyStopping
 from tensorflow.keras.optimizers import Adam
 from sklearn.utils.class_weight import compute_class_weight
@@ -70,12 +69,61 @@ def normalize_keypoints(res):
     # Pose: 0-132, Hands: 1566-1692 -> Total 258 features
     return np.concatenate([res[:132], res[1566:]])
 
-def augment_sequence(sequence):
+def augment_jitter(sequence, sigma=0.005):
     """Add small coordinate jitter"""
     aug_seq = sequence.copy()
-    noise = np.random.normal(0, 0.005, aug_seq.shape)
+    noise = np.random.normal(0, sigma, aug_seq.shape)
     mask = aug_seq != 0
     aug_seq[mask] += noise[mask]
+    return aug_seq
+
+def augment_scale(sequence):
+    """Randomly scale all coordinates by 0.85-1.15 to simulate distance variation"""
+    aug_seq = sequence.copy()
+    scale_factor = np.random.uniform(0.85, 1.15)
+    mask = aug_seq != 0
+    aug_seq[mask] *= scale_factor
+    return aug_seq
+
+def augment_temporal_warp(sequence):
+    """Randomly speed up or slow down parts of the sequence via non-linear resampling"""
+    N = len(sequence)
+    # Create a non-linear time warp
+    anchors = np.sort(np.random.uniform(0.3, 0.7, size=2))
+    src_times = np.array([0.0, anchors[0], anchors[1], 1.0])
+    dst_times = np.array([0.0, np.random.uniform(0.2, 0.5), np.random.uniform(0.5, 0.8), 1.0])
+    
+    resampled = np.zeros_like(sequence)
+    for t in range(N):
+        # Map t to warped position
+        t_norm = t / (N - 1)
+        # Piecewise linear interpolation of the warp function
+        t_warped = np.interp(t_norm, dst_times, src_times)
+        pos = t_warped * (N - 1)
+        i0 = int(np.floor(pos))
+        i1 = min(i0 + 1, N - 1)
+        alpha = pos - i0
+        resampled[t] = (1 - alpha) * sequence[i0] + alpha * sequence[i1]
+    return resampled
+
+def augment_mirror(sequence):
+    """Mirror the X coordinates of all landmarks to simulate left-right hand swap"""
+    aug_seq = sequence.copy()
+    # Pose X coordinates are at indices 0, 4, 8, ... (every 4th starting from 0) within first 132
+    for frame in aug_seq:
+        # Flip pose X (already nose-normalized, so just negate)
+        for i in range(0, 132, 4):
+            if frame[i] != 0:
+                frame[i] = -frame[i]
+        # Flip hand X
+        for i in range(132, 258, 3):
+            if frame[i] != 0:
+                frame[i] = -frame[i]
+        # Swap left and right hand data (63 features each, starting at index 132)
+        lh = frame[132:195].copy()
+        rh = frame[195:258].copy()
+        frame[132:195] = rh
+        frame[195:258] = lh
     return aug_seq
 
 def random_boundary_trim(sequence, max_trim=4):
@@ -124,19 +172,44 @@ for action in actions:
             else:
                 window.append(np.zeros(258))
         
+        window = np.array(window)
+        
+        # Original
         sequences.append(window)
         labels.append(label_map[action])
         
-        # Add a coordinate jitter augmented version
-        sequences.append(augment_sequence(np.array(window)))
+        # Aug 1: Light jitter
+        sequences.append(augment_jitter(window, sigma=0.005))
         labels.append(label_map[action])
 
-        # Add a boundary-trim & resample augmented version (Step 5 boundary tolerance)
-        sequences.append(random_boundary_trim(np.array(window)))
+        # Aug 2: Heavy jitter
+        sequences.append(augment_jitter(window, sigma=0.012))
+        labels.append(label_map[action])
+
+        # Aug 3: Boundary trim & resample
+        sequences.append(random_boundary_trim(window))
+        labels.append(label_map[action])
+
+        # Aug 4: Scale variation
+        sequences.append(augment_scale(window))
+        labels.append(label_map[action])
+
+        # Aug 5: Temporal warp (speed variation)
+        sequences.append(augment_temporal_warp(window))
+        labels.append(label_map[action])
+
+        # Aug 6: Mirror flip
+        sequences.append(augment_mirror(window))
+        labels.append(label_map[action])
+
+        # Aug 7: Jitter + Scale combo
+        sequences.append(augment_jitter(augment_scale(window), sigma=0.008))
         labels.append(label_map[action])
 
 X = np.array(sequences)
 y = to_categorical(labels).astype(int)
+
+print(f"Total samples after augmentation: {len(X)} ({len(X) // len(actions)} per class avg)")
 
 # Split the data - safely fallback to non-stratified if counts are too low
 try:
@@ -156,29 +229,28 @@ class_weight_dict = {cls: weight for cls, weight in zip(np.unique(y_train_classe
 class_weight_dict = {i: class_weight_dict.get(i, 1.0) for i in range(len(actions))}
 
 # --- 3. BUILD AND COMPILE MODEL ---
+# Using the SMALLER architecture to prevent overfitting on small dataset
+# The heavy augmentation (8x) compensates for limited real samples
 log_dir = os.path.join('Logs')
 tb_callback = TensorBoard(log_dir=log_dir)
 early_stop = EarlyStopping(monitor='val_categorical_accuracy', mode='max', patience=25, restore_best_weights=True)
 
 model = Sequential()
-model.add(LSTM(128, return_sequences=True, activation='tanh', input_shape=(sequence_length, 258)))
-model.add(BatchNormalization())
-model.add(Dropout(0.3))
-model.add(LSTM(256, return_sequences=True, activation='tanh'))
-model.add(BatchNormalization())
-model.add(Dropout(0.3))
-model.add(LSTM(128, return_sequences=False, activation='tanh'))
-model.add(BatchNormalization())
-model.add(Dense(128, activation='relu', kernel_regularizer=l2(0.01)))
-model.add(Dropout(0.3))
-model.add(Dense(64, activation='relu', kernel_regularizer=l2(0.01)))
+model.add(LSTM(64, return_sequences=True, activation='tanh', input_shape=(sequence_length, 258)))
+model.add(Dropout(0.4))
+model.add(LSTM(128, return_sequences=True, activation='tanh'))
+model.add(Dropout(0.4))
+model.add(LSTM(64, return_sequences=False, activation='tanh'))
+model.add(Dense(64, activation='relu'))
+model.add(Dropout(0.4))
+model.add(Dense(32, activation='relu'))
 model.add(Dense(actions.shape[0], activation='softmax'))
 
-model.compile(optimizer=Adam(learning_rate=0.001, clipnorm=1.0), loss='categorical_crossentropy', metrics=['categorical_accuracy'])
+model.compile(optimizer=Adam(learning_rate=0.0005, clipnorm=1.0), loss='categorical_crossentropy', metrics=['categorical_accuracy'])
 
 # --- 4. TRAIN MODEL ---
 print("Starting training...")
-model.fit(X_train, y_train, epochs=80, batch_size=32, validation_data=(X_test, y_test), 
+model.fit(X_train, y_train, epochs=120, batch_size=64, validation_data=(X_test, y_test), 
           class_weight=class_weight_dict, callbacks=[tb_callback, early_stop])
 
 # --- 5. SAVE MODEL ---
@@ -206,6 +278,10 @@ try:
                 if 'batch_shape' in cfg:
                     cfg['batch_input_shape'] = cfg['batch_shape']
                     cfg['batchInputShape'] = cfg['batch_shape']
+            # Strip regularizers for TFJS compatibility
+            cfg = layer.get('config', {})
+            if 'kernel_regularizer' in cfg:
+                cfg['kernel_regularizer'] = None
         for manifest in mj.get('weightsManifest', []):
             for w in manifest.get('weights', []):
                 if w['name'].startswith('sequential/'):

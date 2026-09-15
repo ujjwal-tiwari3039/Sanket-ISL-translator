@@ -1,0 +1,129 @@
+[
+  {
+    "video": "Am I right.mp4",
+    "words": [
+      {
+        "word": "Am",
+        "timestamp": 1,
+        "confidence": 0.9665484490073839
+      },
+      {
+        "word": "I",
+        "timestamp": 2.2,
+        "confidence": 0.9689552357675781
+      },
+      {
+        "word": "right",
+        "timestamp": 3.4000000000000004,
+        "confidence": 0.9591782406096265
+      }
+    ],
+    "sentence": "Am I right?"
+  },
+  {
+    "video": "are you alright.mp4",
+    "words": [
+      {
+        "word": "are",
+        "timestamp": 1,
+        "confidence": 0.9588534898106483
+      },
+      {
+        "word": "you",
+        "timestamp": 2.2,
+        "confidence": 0.9409208382482376
+      },
+      {
+        "word": "alright",
+        "timestamp": 3.4000000000000004,
+        "confidence": 0.9754405163038828
+      }
+    ],
+    "sentence": "Are you alright?"
+  },
+  {
+    "video": "deaf_MVI_9851.MOV",
+    "words": [
+      {
+        "word": "deaf",
+        "timestamp": 1,
+        "confidence": 0.9608741710087025
+      }
+    ],
+    "sentence": "I am deaf."
+  },
+  {
+    "video": "happy_MVI_5263.MOV",
+    "words": [
+      {
+        "word": "happy",
+        "timestamp": 1,
+        "confidence": 0.9832646011911901
+      }
+    ],
+    "sentence": "I am feeling happy today."
+  },
+  {
+    "video": "i am alright.mp4",
+    "words": [
+      {
+        "word": "i",
+        "timestamp": 1,
+        "confidence": 0.95993350839653
+      },
+      {
+        "word": "am",
+        "timestamp": 2.2,
+        "confidence": 0.9836848064170526
+      },
+      {
+        "word": "alright",
+        "timestamp": 3.4000000000000004,
+        "confidence": 0.9795872678400981
+      }
+    ],
+    "sentence": "I am alright."
+  },
+  {
+    "video": "i am good.mp4",
+    "words": [
+      {
+        "word": "i",
+        "timestamp": 1,
+        "confidence": 0.9800104396375501
+      },
+      {
+        "word": "am",
+        "timestamp": 2.2,
+        "confidence": 0.9826709165852087
+      },
+      {
+        "word": "good",
+        "timestamp": 3.4000000000000004,
+        "confidence": 0.9555420584862779
+      }
+    ],
+    "sentence": "I am good."
+  },
+  {
+    "video": "i am tired.mp4",
+    "words": [
+      {
+        "word": "i",
+        "timestamp": 1,
+        "confidence": 0.952687308041815
+      },
+      {
+        "word": "am",
+        "timestamp": 2.2,
+        "confidence": 0.9819291858859446
+      },
+      {
+        "word": "tired",
+        "timestamp": 3.4000000000000004,
+        "confidence": 0.9681373282378427
+      }
+    ],
+    "sentence": "I am tired."
+  }
+]
