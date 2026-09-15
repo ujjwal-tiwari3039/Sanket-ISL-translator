@@ -3,7 +3,8 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout
+from tensorflow.keras.layers import LSTM, Dense, Dropout, BatchNormalization
+from tensorflow.keras.regularizers import l2
 from tensorflow.keras.callbacks import TensorBoard, EarlyStopping
 from tensorflow.keras.optimizers import Adam
 from sklearn.utils.class_weight import compute_class_weight
@@ -160,13 +161,17 @@ tb_callback = TensorBoard(log_dir=log_dir)
 early_stop = EarlyStopping(monitor='val_categorical_accuracy', mode='max', patience=25, restore_best_weights=True)
 
 model = Sequential()
-model.add(LSTM(64, return_sequences=True, activation='tanh', input_shape=(sequence_length, 258)))
-model.add(Dropout(0.2))
-model.add(LSTM(128, return_sequences=True, activation='tanh'))
-model.add(Dropout(0.2))
-model.add(LSTM(64, return_sequences=False, activation='tanh'))
-model.add(Dense(64, activation='relu'))
-model.add(Dense(32, activation='relu'))
+model.add(LSTM(128, return_sequences=True, activation='tanh', input_shape=(sequence_length, 258)))
+model.add(BatchNormalization())
+model.add(Dropout(0.3))
+model.add(LSTM(256, return_sequences=True, activation='tanh'))
+model.add(BatchNormalization())
+model.add(Dropout(0.3))
+model.add(LSTM(128, return_sequences=False, activation='tanh'))
+model.add(BatchNormalization())
+model.add(Dense(128, activation='relu', kernel_regularizer=l2(0.01)))
+model.add(Dropout(0.3))
+model.add(Dense(64, activation='relu', kernel_regularizer=l2(0.01)))
 model.add(Dense(actions.shape[0], activation='softmax'))
 
 model.compile(optimizer=Adam(learning_rate=0.001, clipnorm=1.0), loss='categorical_crossentropy', metrics=['categorical_accuracy'])
