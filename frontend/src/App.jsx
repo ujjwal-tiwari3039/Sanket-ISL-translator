@@ -710,20 +710,46 @@ function App() {
               if (preStrokeBufferRef.current.length > PRE_PAD_FRAMES) {
                 preStrokeBufferRef.current.shift();
               }
+              
+              // Maintain a hidden 30-frame buffer just for static evaluation
+              if (!window.staticFrameBuffer) window.staticFrameBuffer = [];
+              window.staticFrameBuffer.push(keypoints);
+              if (window.staticFrameBuffer.length > sequenceLength) {
+                 window.staticFrameBuffer.shift();
+              }
 
-              // 1. Start trigger: motion initiation above start threshold
-              if (activeHands.length > 0 && handVelocity >= 0.038) {
-                strokeStateRef.current = "RECORDING";
-                // Prepend rolling pre-buffer so motion initiation / wind-up is preserved
-                strokeFramesRef.current = [...preStrokeBufferRef.current];
-                lowVelocityFramesRef.current = 0;
-                postPadFramesRemainingRef.current = 0;
-                strokeQuestionRef.current = questionFlag;
-                setStrokeStatus("RECORDING");
-                setIsStrokeCapturing(true);
-                setCurrentSign("Capturing sign...");
-                setRecordingProgress(10);
-                setUiState("RECORDING");
+              if (activeHands.length > 0) {
+                // 1. Start trigger: motion initiation above start threshold
+                if (handVelocity >= 0.038) {
+                  strokeStateRef.current = "RECORDING";
+                  strokeFramesRef.current = [...preStrokeBufferRef.current];
+                  lowVelocityFramesRef.current = 0;
+                  postPadFramesRemainingRef.current = 0;
+                  strokeQuestionRef.current = questionFlag;
+                  setStrokeStatus("RECORDING");
+                  setIsStrokeCapturing(true);
+                  setCurrentSign("Capturing sign...");
+                  setRecordingProgress(10);
+                  setUiState("RECORDING");
+                  window.staticHoldFrames = 0;
+                } else if (handVelocity < 0.018) {
+                  // Static Sign Tracking
+                  window.staticHoldFrames = (window.staticHoldFrames || 0) + 1;
+                  if (window.staticHoldFrames >= 20) {
+                     // 20 frames of stillness -> Evaluate Static Sign
+                     // Pad if needed, though resampleSequence handles it
+                     strokeFramesRef.current = [...window.staticFrameBuffer];
+                     strokeQuestionRef.current = questionFlag;
+                     evaluateStroke();
+                     window.staticHoldFrames = 0;
+                     window.staticFrameBuffer = [];
+                  }
+                } else {
+                  window.staticHoldFrames = 0;
+                }
+              } else {
+                window.staticHoldFrames = 0;
+                window.staticFrameBuffer = [];
               }
             } else if (strokeStateRef.current === "RECORDING") {
               strokeFramesRef.current.push(keypoints);
