@@ -10,14 +10,43 @@ env/
 Logs/
 Raw_Videos/
 MP_Data/
+MP_Data_old_*/
 downloaded_files/
 uploads/
+scratch/
 
-# IDEs
+# Large Archives & Temp Data
+*.tar.gz
+*.tar
+*.zip
+*.bin
+!frontend/public/models/*.bin
+*.npy
+test_v4.bin
+sign_language_backup.tar.gz
+
+# Temporary scripts, logs & audit lists
+patch_*.py
+wget-log*
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+audit_*.json
+completed_zips.txt
+test_videos_list.txt
+test_mp.py
+test_fidelity.py
+
+# IDEs & System
 .idea/
 .vscode/
+.DS_Store
+.system_generated/
+.cache/
+*.tmp
 
-# Build and Temp
+# Build and Media
 build/
 dist/
 *.egg-info/
@@ -25,10 +54,8 @@ dist/
 *.mp4
 *.webm
 *.pdf
+*.MOV
 /reference/
 
 # Node
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
