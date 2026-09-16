@@ -1,22 +1,16 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
-const { GoogleGenAI } = require('@google/genai');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 3001;
-
-let ai;
-if (process.env.GEMINI_API_KEY) {
-  ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-}
+const OLLAMA_URL = 'http://127.0.0.1:11434/api/generate';
 
 app.get('/', (req, res) => {
-  res.send('SignAI Backend Proxy is running and listening for POST requests on /api/assemble.');
+  res.send('SignAI Backend Proxy is running with local Ollama SLM.');
 });
 
 app.post('/api/assemble', async (req, res) => {
@@ -25,36 +19,69 @@ app.post('/api/assemble', async (req, res) => {
     return res.status(400).json({ error: 'Sequence array is required' });
   }
 
-  if (!ai) {
-    return res.status(503).json({ error: 'GEMINI_API_KEY is not configured on the backend.' });
-  }
-
   try {
-    const prompt = `Convert these isolated sign language words into a natural, grammatical English sentence: ${sequence.join(', ')}. Keep it short and direct. If it includes a word with '?', treat it as a question. Output only the final sentence.`;
-    
-    // We can use streaming if needed, but for Express basic fetch, we can return the text.
-    // If we want to support streaming, we could use res.write...
-    // The prompt requests streaming in phase 5, but for Phase 2, a simple endpoint is fine. Wait, Phase 5: "Use Gemini's streaming response mode so the sentence appears progressively..." Let's do streaming!
+    const prompt = `Convert these isolated sign language words into a natural, grammatical English sentence: ${sequence.join(', ')}. Keep it short and direct. If it includes a word with '?', treat it as a question. Output only the final sentence without any introductory text.`;
     
     res.setHeader('Content-Type', 'text/plain');
     res.setHeader('Transfer-Encoding', 'chunked');
 
-    const responseStream = await ai.models.generateContentStream({
-      model: 'gemini-3.6-flash',
-      contents: prompt,
+    const ollamaResponse = await fetch(OLLAMA_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gemma2:2b',
+        prompt: prompt,
+        stream: true
+      })
     });
 
-    for await (const chunk of responseStream) {
-      res.write(chunk.text);
+    if (!ollamaResponse.ok) {
+        throw new Error(`Ollama responded with status: ${ollamaResponse.status}`);
     }
+
+    if (ollamaResponse.body) {
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+      
+      // Node 18+ fetch body is an async iterable
+      for await (const chunk of ollamaResponse.body) {
+        buffer += decoder.decode(chunk, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // Keep the last incomplete line in the buffer
+        
+        for (const line of lines) {
+          if (line.trim() === '') continue;
+          try {
+            const parsed = JSON.parse(line);
+            if (parsed.response) {
+              res.write(parsed.response);
+            }
+          } catch (e) {
+             console.error("JSON parse error on line:", line);
+          }
+        }
+      }
+      
+      if (buffer.trim() !== '') {
+          try {
+              const parsed = JSON.parse(buffer);
+              if (parsed.response) res.write(parsed.response);
+          } catch(e) {}
+      }
+    }
+    
     res.end();
 
   } catch (error) {
-    console.error('Gemini error:', error);
-    res.status(500).json({ error: `Failed to generate sentence: ${error.message}` });
+    console.error('Ollama error:', error);
+    if (!res.headersSent) {
+       res.status(500).json({ error: `Failed to generate sentence: ${error.message}` });
+    } else {
+       res.end();
+    }
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Backend running on port ${PORT}`);
+  console.log(`Backend running on port ${PORT} using local Ollama.`);
 });
