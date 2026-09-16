@@ -5,17 +5,17 @@
       {
         "word": "Am",
         "timestamp": 1,
-        "confidence": 0.9665484490073839
+        "confidence": 0.9715109853912199
       },
       {
         "word": "I",
         "timestamp": 2.2,
-        "confidence": 0.9689552357675781
+        "confidence": 0.9465510152506823
       },
       {
         "word": "right",
         "timestamp": 3.4000000000000004,
-        "confidence": 0.9591782406096265
+        "confidence": 0.9524463334786396
       }
     ],
     "sentence": "Am I right?"
@@ -26,42 +26,20 @@
       {
         "word": "are",
         "timestamp": 1,
-        "confidence": 0.9588534898106483
+        "confidence": 0.9770968006492862
       },
       {
         "word": "you",
         "timestamp": 2.2,
-        "confidence": 0.9409208382482376
+        "confidence": 0.9577975752148966
       },
       {
         "word": "alright",
         "timestamp": 3.4000000000000004,
-        "confidence": 0.9754405163038828
+        "confidence": 0.9588563869075982
       }
     ],
     "sentence": "Are you alright?"
-  },
-  {
-    "video": "deaf_MVI_9851.MOV",
-    "words": [
-      {
-        "word": "deaf",
-        "timestamp": 1,
-        "confidence": 0.9608741710087025
-      }
-    ],
-    "sentence": "I am deaf."
-  },
-  {
-    "video": "happy_MVI_5263.MOV",
-    "words": [
-      {
-        "word": "happy",
-        "timestamp": 1,
-        "confidence": 0.9832646011911901
-      }
-    ],
-    "sentence": "I am feeling happy today."
   },
   {
     "video": "i am alright.mp4",
@@ -69,17 +47,17 @@
       {
         "word": "i",
         "timestamp": 1,
-        "confidence": 0.95993350839653
+        "confidence": 0.971601635433534
       },
       {
         "word": "am",
         "timestamp": 2.2,
-        "confidence": 0.9836848064170526
+        "confidence": 0.9483045204916615
       },
       {
         "word": "alright",
         "timestamp": 3.4000000000000004,
-        "confidence": 0.9795872678400981
+        "confidence": 0.9567623185749046
       }
     ],
     "sentence": "I am alright."
@@ -90,17 +68,17 @@
       {
         "word": "i",
         "timestamp": 1,
-        "confidence": 0.9800104396375501
+        "confidence": 0.9571092520020024
       },
       {
         "word": "am",
         "timestamp": 2.2,
-        "confidence": 0.9826709165852087
+        "confidence": 0.9504619878174673
       },
       {
         "word": "good",
         "timestamp": 3.4000000000000004,
-        "confidence": 0.9555420584862779
+        "confidence": 0.9617516150988489
       }
     ],
     "sentence": "I am good."
@@ -111,19 +89,145 @@
       {
         "word": "i",
         "timestamp": 1,
-        "confidence": 0.952687308041815
+        "confidence": 0.9827260540647776
       },
       {
         "word": "am",
         "timestamp": 2.2,
-        "confidence": 0.9819291858859446
+        "confidence": 0.9567010836740448
       },
       {
         "word": "tired",
         "timestamp": 3.4000000000000004,
-        "confidence": 0.9681373282378427
+        "confidence": 0.9569366053293643
       }
     ],
     "sentence": "I am tired."
+  },
+  {
+    "video": "i travel by bus.mp4",
+    "words": [
+      {
+        "word": "i",
+        "timestamp": 1,
+        "confidence": 0.9720537247468352
+      },
+      {
+        "word": "travel",
+        "timestamp": 2.2,
+        "confidence": 0.9416822114406059
+      },
+      {
+        "word": "by",
+        "timestamp": 3.4000000000000004,
+        "confidence": 0.9576475523473308
+      },
+      {
+        "word": "bus",
+        "timestamp": 4.6000000000000005,
+        "confidence": 0.9828369308226451
+      }
+    ],
+    "sentence": "I travel by bus."
+  },
+  {
+    "video": "the man is blind.mp4",
+    "words": [
+      {
+        "word": "the",
+        "timestamp": 1,
+        "confidence": 0.9659703458286938
+      },
+      {
+        "word": "man",
+        "timestamp": 2.2,
+        "confidence": 0.974642201469091
+      },
+      {
+        "word": "is",
+        "timestamp": 3.4000000000000004,
+        "confidence": 0.9788612382915701
+      },
+      {
+        "word": "blind",
+        "timestamp": 4.6000000000000005,
+        "confidence": 0.9527579995511505
+      }
+    ],
+    "sentence": "The man is blind."
+  },
+  {
+    "video": "the sky is blue.mp4",
+    "words": [
+      {
+        "word": "the",
+        "timestamp": 1,
+        "confidence": 0.9405110500435294
+      },
+      {
+        "word": "sky",
+        "timestamp": 2.2,
+        "confidence": 0.9865578961610902
+      },
+      {
+        "word": "is",
+        "timestamp": 3.4000000000000004,
+        "confidence": 0.9797155769032438
+      },
+      {
+        "word": "blue",
+        "timestamp": 4.6000000000000005,
+        "confidence": 0.9734562767686393
+      }
+    ],
+    "sentence": "The sky is blue."
+  },
+  {
+    "video": "the water is cold.mp4",
+    "words": [
+      {
+        "word": "the",
+        "timestamp": 1,
+        "confidence": 0.9563557075907976
+      },
+      {
+        "word": "water",
+        "timestamp": 2.2,
+        "confidence": 0.9779303221999835
+      },
+      {
+        "word": "is",
+        "timestamp": 3.4000000000000004,
+        "confidence": 0.9428287403287959
+      },
+      {
+        "word": "cold",
+        "timestamp": 4.6000000000000005,
+        "confidence": 0.9595458641293148
+      }
+    ],
+    "sentence": "The water is cold."
+  },
+  {
+    "video": "deaf_MVI_9851.MOV",
+    "words": [
+      {
+        "word": "deaf",
+        "timestamp": 1,
+        "confidence": 0.9658754319245586
+      }
+    ],
+    "sentence": "I am deaf."
+  },
+  {
+    "video": "happy_MVI_5263.MOV",
+    "words": [
+      {
+        "word": "happy",
+        "timestamp": 1,
+        "confidence": 0.9469863499066018
+      }
+    ],
+    "sentence": "I am feeling happy today."
   }
 ]

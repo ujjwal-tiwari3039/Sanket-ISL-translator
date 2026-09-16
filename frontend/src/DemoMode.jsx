@@ -119,7 +119,7 @@ export default function DemoMode({ onExit }) {
           processedWordsRef.current.add(i);
           setSentence(prev => {
              const ns = [...prev, w.word.toUpperCase()];
-             return ns.length > 5 ? ns.slice(ns.length - 5) : ns;
+             return ns.length > 15 ? ns.slice(ns.length - 15) : ns;
           });
           break;
         } else if (processedWordsRef.current.has(i)) {

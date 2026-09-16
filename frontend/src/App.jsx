@@ -27,6 +27,17 @@ function App() {
   const [recordingProgress, setRecordingProgress] = useState(0);
   const [strokeStatus, setStrokeStatus] = useState("IDLE"); // IDLE, RECORDING, EVALUATING, COOLDOWN
   const [isStrokeCapturing, setIsStrokeCapturing] = useState(false);
+  const [fingerspellInput, setFingerspellInput] = useState("");
+
+  const handleAddFingerspell = () => {
+    if (!fingerspellInput.trim()) return;
+    const cleanLetters = fingerspellInput.trim().toUpperCase().replace(/[^A-Z]/g, '').split('');
+    if (cleanLetters.length === 0) return;
+    const updated = [...sentenceRef.current, ...cleanLetters];
+    sentenceRef.current = updated;
+    setSentence(updated);
+    setFingerspellInput("");
+  };
 
   // Refs for logic loop & stroke engine
   const canvasRef = useRef(null);
@@ -585,14 +596,19 @@ function App() {
       inputTensor.dispose();
       prediction.dispose();
 
-      const maxScore = Math.max(...scores);
-      const classIndex = scores.indexOf(maxScore);
-      let recognizedAction = actionsList[classIndex] || "unknown";
+      // Rank top predictions
+      const indexedScores = Array.from(scores).map((score, index) => ({ score, action: actionsList[index] || "unknown" }));
+      indexedScores.sort((a, b) => b.score - a.score);
+      const top1 = indexedScores[0];
+      const top3Str = indexedScores.slice(0, 3).map(c => `${c.action}: ${(c.score * 100).toFixed(1)}%`).join(' | ');
+
+      let recognizedAction = top1.action;
       if (strokeQuestionRef.current) recognizedAction += "?";
 
-      setConfidence(maxScore * 100);
+      setConfidence(top1.score * 100);
+      setDebugInfo(`Top candidates: ${top3Str}`);
 
-      if (maxScore > 0.70 && recognizedAction !== "idle") {
+      if (top1.score > 0.40 && recognizedAction !== "idle") {
         setCurrentSign(recognizedAction);
 
         let curSentence = [...sentenceRef.current];
@@ -601,7 +617,7 @@ function App() {
         setSentence(curSentence);
         setUiState("IDLE");
       } else {
-        setCurrentSign(maxScore > 0.70 ? "idle..." : "No sign detected");
+        setCurrentSign(top1.score > 0.30 ? top1.action : "No sign detected");
       }
 
       strokeStateRef.current = "COOLDOWN";
@@ -872,6 +888,37 @@ function App() {
              <h3>Sequence Context</h3>
              <div className="sequence-text">
                {sentence.length > 0 ? sentence.join(" → ") : "..."}
+             </div>
+             <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.6rem' }}>
+               <input
+                 type="text"
+                 placeholder="Spell letters / Name (e.g. Ujjwal)..."
+                 value={fingerspellInput}
+                 onChange={(e) => setFingerspellInput(e.target.value)}
+                 onKeyDown={(e) => {
+                   if (e.key === 'Enter') {
+                     e.preventDefault();
+                     handleAddFingerspell();
+                   }
+                 }}
+                 style={{
+                   flex: 1,
+                   background: 'rgba(255, 255, 255, 0.05)',
+                   border: '1px solid rgba(255, 255, 255, 0.15)',
+                   color: '#fff',
+                   padding: '0.35rem 0.6rem',
+                   borderRadius: '4px',
+                   fontSize: '0.75rem',
+                   fontFamily: 'monospace'
+                 }}
+               />
+               <button 
+                 className="btn" 
+                 onClick={handleAddFingerspell}
+                 style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem', background: '#3b82f6', color: '#fff', whiteSpace: 'nowrap' }}
+               >
+                 + Spell Name
+               </button>
              </div>
           </div>
 

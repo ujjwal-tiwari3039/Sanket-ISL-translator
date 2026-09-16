@@ -13,14 +13,41 @@ app.get('/', (req, res) => {
   res.send('SignAI Backend Proxy is running with local Ollama SLM.');
 });
 
+function mergeFingerspelledLetters(seq) {
+  const result = [];
+  let buffer = [];
+  for (let i = 0; i < seq.length; i++) {
+    const item = String(seq[i]).trim();
+    if (item.length === 1 && /^[a-zA-Z]$/.test(item)) {
+      buffer.push(item);
+    } else {
+      if (buffer.length > 1) {
+        result.push(buffer.join(''));
+      } else if (buffer.length === 1) {
+        result.push(buffer[0]);
+      }
+      buffer = [];
+      result.push(item);
+    }
+  }
+  if (buffer.length > 1) {
+    result.push(buffer.join(''));
+  } else if (buffer.length === 1) {
+    result.push(buffer[0]);
+  }
+  return result;
+}
+
 app.post('/api/assemble', async (req, res) => {
   const { sequence } = req.body;
   if (!sequence || !Array.isArray(sequence)) {
     return res.status(400).json({ error: 'Sequence array is required' });
   }
 
+  const mergedSequence = mergeFingerspelledLetters(sequence);
+
   try {
-    const prompt = `Convert these isolated sign language words into a natural, grammatical English sentence: ${sequence.join(', ')}. Keep it short and direct. If it includes a word with '?', treat it as a question. Output only the final sentence without any introductory text.`;
+    const prompt = `Convert these sign language words into a natural English sentence: ${mergedSequence.join(', ')}. If no question word or ? is present, end with a period. Output only the sentence without any introductory text.`;
     
     res.setHeader('Content-Type', 'text/plain');
     res.setHeader('Transfer-Encoding', 'chunked');
@@ -73,11 +100,27 @@ app.post('/api/assemble', async (req, res) => {
     res.end();
 
   } catch (error) {
-    console.error('Ollama error:', error);
-    if (!res.headersSent) {
-       res.status(500).json({ error: `Failed to generate sentence: ${error.message}` });
+    console.error('Ollama error, using resilient fallback:', error.message);
+    const words = mergedSequence.map(w => String(w).replace(/\?/g, '').trim()).filter(Boolean);
+    if (words.length > 0) {
+      let fallbackSentence = words.join(' ').toLowerCase();
+      fallbackSentence = fallbackSentence.charAt(0).toUpperCase() + fallbackSentence.slice(1);
+      fallbackSentence = fallbackSentence.replace(/\bi\b/g, 'I');
+      const isQuestion = sequence.some(w => String(w).includes('?')) || ['is', 'are', 'am', 'can', 'how', 'what', 'who', 'where'].includes(words[0].toLowerCase());
+      fallbackSentence += isQuestion ? '?' : '.';
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'text/plain');
+        res.send(fallbackSentence);
+      } else {
+        res.write(fallbackSentence);
+        res.end();
+      }
     } else {
-       res.end();
+      if (!res.headersSent) {
+        res.status(500).json({ error: `Failed to generate sentence: ${error.message}` });
+      } else {
+        res.end();
+      }
     }
   }
 });

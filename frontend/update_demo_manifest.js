@@ -9,7 +9,15 @@ if (!fs.existsSync(videosDir)) {
   fs.mkdirSync(videosDir, { recursive: true });
 }
 
-const files = fs.readdirSync(videosDir).filter(f => f.toLowerCase().endsWith('.mp4') || f.toLowerCase().endsWith('.mov'));
+const files = fs.readdirSync(videosDir)
+  .filter(f => f.toLowerCase().endsWith('.mp4') || f.toLowerCase().endsWith('.mov'))
+  .sort((a, b) => {
+    const aIsTest = a.includes('_MVI_');
+    const bIsTest = b.includes('_MVI_');
+    if (aIsTest && !bIsTest) return 1;
+    if (!aIsTest && bIsTest) return -1;
+    return a.localeCompare(b);
+  });
 
 const manifest = [];
 
@@ -43,7 +51,23 @@ for (const file of files) {
   }
   
   const cleanName = baseName.replace(/_/g, ' ');
-  const wordsList = cleanName.split(' ').filter(w => w.trim().length > 0);
+  const rawWords = cleanName.split(' ').filter(w => w.trim().length > 0);
+  
+  // Expand names into fingerspelled letter tokens
+  const wordsList = [];
+  for (let i = 0; i < rawWords.length; i++) {
+    const rw = rawWords[i];
+    // If it's a hyphenated spelled sequence like 'u-j-j-w-a-l'
+    if (rw.includes('-')) {
+      const chars = rw.split('-').filter(Boolean);
+      for (const c of chars) wordsList.push(c.toUpperCase());
+    } else if (i > 0 && (rawWords[i - 1].toLowerCase() === 'is' || rawWords[i - 1].toLowerCase() === 'name') && i === rawWords.length - 1 && rw.length >= 2) {
+      // It is a proper name at the end of 'name is ...' -> Fingerspell each letter
+      for (const c of rw) wordsList.push(c.toUpperCase());
+    } else {
+      wordsList.push(rw);
+    }
+  }
   
   const wordsObjects = [];
   
