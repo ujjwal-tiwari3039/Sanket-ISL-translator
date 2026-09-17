@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3001;
 const OLLAMA_URL = 'http://127.0.0.1:11434/api/generate';
 
 app.get('/', (req, res) => {
-  res.send('SignAI Backend Proxy is running with local Ollama SLM.');
+  res.send('Sanket-ISLT Backend Proxy is running with local Ollama SLM.');
 });
 
 function mergeFingerspelledLetters(seq) {

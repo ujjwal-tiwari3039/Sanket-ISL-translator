@@ -51,7 +51,7 @@ header {
   font-weight: 600;
   letter-spacing: -0.02em;
   font-family: 'JetBrains Mono', monospace;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .logo-container p {
@@ -318,4 +318,3 @@ video {
 .ui-state-badge.cooldown .ui-state-indicator { 
   background: #10b981; 
 }
-
