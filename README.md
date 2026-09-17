@@ -1,4 +1,4 @@
-# SignAI: Real-Time Indian Sign Language (ISL) Translation Pipeline
+# Sanket-ISLT: Real-Time Indian Sign Language (ISL) Translation Pipeline
 
 [![TensorFlow.js](https://img.shields.io/badge/TensorFlow.js-WebGL%20Accelerated-orange?logo=tensorflow)](https://www.tensorflow.org/js)
 [![MediaPipe Vision Tasks](https://img.shields.io/badge/MediaPipe-Tasks%20Vision-blue?logo=google)](https://developers.google.com/mediapipe)
@@ -6,7 +6,7 @@
 [![Ollama](https://img.shields.io/badge/Ollama-Gemma%202%20(2B)-black?logo=ollama)](https://ollama.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-An end-to-end, edge-accelerated sign language recognition and natural language translation pipeline. SignAI translates continuous and isolated **Indian Sign Language (ISL)** gestures into fluent, grammatical English sentences running **100% locally and offline** with zero cloud dependencies.
+An end-to-end, edge-accelerated sign language recognition and natural language translation pipeline. Sanket-ISLT translates continuous and isolated **Indian Sign Language (ISL)** gestures into fluent, grammatical English sentences running **100% locally and offline** with zero cloud dependencies.
 
 ---
 
@@ -101,7 +101,7 @@ flowchart TD
 
 ## 🎛️ Dual Operational Modes
 
-SignAI provides two complementary operational pipelines designed to balance research development with flawless live demonstration:
+Sanket-ISLT provides two complementary operational pipelines designed to balance research development with flawless live demonstration:
 
 ### 1. High-Fidelity Presentation Showcase (Demo Mode)
 * **Live Skeletal Tracing**: MediaPipe runs in real time on calibrated 16:9 ISL demonstration footage. Judges see real-time Cyan pose lines, 21-joint color-coded fingers, and facial anchors tracking every nuance of the signer's movements.

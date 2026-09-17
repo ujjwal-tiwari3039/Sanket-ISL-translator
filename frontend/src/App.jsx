@@ -765,7 +765,7 @@ function App() {
     <div className="app-container">
       <header>
         <div className="logo-container">
-          <h1>SignAI</h1>
+          <h1>Sanket-ISLT</h1>
           <p>Real-time Translation Pipeline</p>
         </div>
         <div className={`ui-state-badge ${uiState.toLowerCase()}`}>
