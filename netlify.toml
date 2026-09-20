@@ -1,0 +1,16 @@
+# Optional static hosting target; no deployment or domain currently exists.
+[build]
+  command = "npm --prefix frontend ci && npm --prefix frontend run build"
+  publish = "frontend/dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[context.production]
+  command = "npm --prefix frontend ci && npm --prefix frontend run build:production && npm --prefix frontend run check:discoverability"
+
+[context.deploy-preview.environment]
+  SANKET_PREVIEW = "1"
+
+[context.branch-deploy.environment]
+  SANKET_PREVIEW = "1"

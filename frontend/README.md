@@ -1,16 +1,7 @@
-# React + Vite
+# Sanket ISL Translator frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Real-time Indian Sign Language (ISL) to English translation using computer vision and deep learning.
 
-Currently, two official plugins are available:
+React 19 and Vite 8 power the interactive browser interface. See the [project README](../README.md), [installation](../docs/installation.md), [deployment](../docs/deployment.md), and [architecture](../docs/architecture.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Run `npm install` and `npm run dev` in this directory. `npm run build` emits static documentation and the application. `npm run check:discoverability` validates the output. Restart Vite after editing documentation.

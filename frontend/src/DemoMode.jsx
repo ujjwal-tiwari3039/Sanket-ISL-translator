@@ -423,14 +423,14 @@ export default function DemoMode({ onExit }) {
     <div className="app-container">
       <header>
         <div className="logo-container">
-          <h1>Sanket-ISLT</h1>
-          <p>Real-time Translation Pipeline</p>
+          <h2>Sanket ISL Translator</h2>
+          <p>Scripted presentation · words and confidence are prerecorded</p>
         </div>
         <div className={`ui-state-badge ACTIVE`}>
           <div className="ui-state-indicator"></div>
           ACTIVE
         </div>
-        <button className="btn" onClick={onExit} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: 'transparent' }}>x</button>
+        <button className="btn" onClick={onExit} style={{ marginLeft: 'auto' }}>Exit demo</button>
       </header>
 
       <main className="main-content">

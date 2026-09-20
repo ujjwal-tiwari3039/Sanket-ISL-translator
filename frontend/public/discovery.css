@@ -1,0 +1,31 @@
+/* Scoped styles keep the interactive translator's layout independent. */
+body.documentation { margin: 0; background: #080c12; color: #e8eef5; font: 17px/1.75 system-ui, sans-serif; }
+body > nav { display: flex; flex-wrap: wrap; gap: 12px 26px; padding: 20px max(24px, calc((100% - 1200px) / 2)); border-bottom: 1px solid #293442; background: #0c131e; font: 14px/1.6 system-ui, sans-serif; }
+body > nav a { color: #cde5f2; text-decoration: none; }
+body > nav a:first-child { color: #68e9bf; font-weight: 700; margin-right: auto; }
+.discovery-home, .discovery-document, .discovery-footer { box-sizing: border-box; color: #e8eef5; font: 17px/1.75 system-ui, sans-serif; }
+.discovery-home { max-width: 1200px; margin: 0 auto; padding: 42px 24px 30px; }
+.discovery-home h1 { max-width: 960px; font-size: clamp(28px, 4vw, 44px); line-height: 1.18; letter-spacing: -.035em; margin: 12px 0 20px; }
+.discovery-home p { max-width: 920px; margin: 12px 0; }
+.discovery-home .discovery-eyebrow { font-size: 11px; letter-spacing: .15em; color: #68e9bf; }
+.discovery-links { display: flex; flex-wrap: wrap; gap: 12px 22px; margin: 22px 0; }
+.discovery-home a, .discovery-document a, .discovery-footer a, .discovery-note a { color: #68e9bf; text-underline-offset: 4px; }
+.discovery-home a:hover, .discovery-document a:hover { color: #b0ffe5; }
+.discovery-note { padding: 12px 16px; border-left: 3px solid #68e9bf; background: #111e27; color: #bdcedd; font: 14px/1.7 system-ui, sans-serif; }
+.discovery-document { max-width: 900px; margin: 0 auto; padding: 32px 24px 60px; }
+.discovery-document h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.2; letter-spacing: -.025em; margin: 28px 0; }
+.discovery-document h2 { font-size: 25px; line-height: 1.3; margin: 36px 0 12px; }
+.discovery-document nav { font-size: 13px; color: #9fb0c4; }
+.discovery-document p, .discovery-document ul { margin: 16px 0; }
+.discovery-document li { margin: 8px 0; }
+.discovery-document pre { overflow-x: auto; padding: 20px; background: #111e27; border: 1px solid #293442; border-radius: 8px; }
+.discovery-document code { font: .9em/1.65 ui-monospace, monospace; overflow-wrap: anywhere; }
+.discovery-document table { border-collapse: collapse; display: block; overflow-x: auto; }
+.discovery-document th, .discovery-document td { text-align: left; border-bottom: 1px solid #293442; padding: 10px 16px; }
+.discovery-document blockquote { margin: 20px 0; padding: 0 20px; border-left: 3px solid #68e9bf; }
+.discovery-footer { padding: 28px 24px; text-align: center; border-top: 1px solid #293442; background: #0c131e; font-size: 13px; }
+.discovery-footer p { margin: 8px 0; }
+.discovery-document .source-link { margin-top: 40px; font-size: 14px; }
+body > nav a:focus-visible, .discovery-home a:focus-visible, .discovery-document a:focus-visible { outline: 2px solid #68e9bf; outline-offset: 5px; }
+
+.discovery-document img { display: block; max-width: 100%; height: auto; border: 1px solid #293442; border-radius: 8px; }

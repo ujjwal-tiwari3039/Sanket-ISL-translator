@@ -1,3 +1,5 @@
+> Historical development notes. Claims below describe earlier experiments and are not verified current capabilities. Use the [audited Sanket ISL Translator documentation](docs/index.md) for the shipped implementation, model and limitations.
+
 # Technical Documentation: Motion-Sign Capture/Training Boundary Mismatch Fix
 
 *Date: September 12, 2026*  
