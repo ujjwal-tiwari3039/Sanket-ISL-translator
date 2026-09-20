@@ -4,8 +4,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createSite, pages } from './discoverability.mjs';
 
-const root = fileURLToPath(new URL('../../', import.meta.url));
-const dist = path.join(root, 'frontend/dist');
+const root = fileURLToPath(new URL('../../../', import.meta.url));
+const dist = path.join(root, 'apps/frontend/dist');
 const read = file => fs.readFileSync(path.join(dist, file), 'utf8');
 const walk = directory => fs.readdirSync(directory, { withFileTypes: true }).flatMap(entry => entry.isDirectory() ? walk(path.join(directory, entry.name)) : [path.join(directory, entry.name)]);
 assert(fs.existsSync(path.join(dist, 'index.html')), 'Run npm run build first');
