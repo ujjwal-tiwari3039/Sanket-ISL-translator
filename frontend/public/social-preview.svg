@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<title>Sanket ISL Translator — Indian Sign Language to English</title>
+<rect width="1200" height="630" fill="#080c12"/>
+<rect x="42" y="42" width="1116" height="546" rx="20" fill="#0c131e" stroke="#293442" stroke-width="2"/>
+<path d="M88 94h64" stroke="#68e9bf" stroke-width="7"/>
+<g font-family="DejaVu Sans, sans-serif">
+<text x="88" y="152" fill="#9fb0c4" font-size="19" letter-spacing="4">COMPUTER VISION + DEEP LEARNING</text>
+<text x="82" y="284" fill="#e8eef5" font-size="108" font-weight="bold" letter-spacing="-5">SANKET</text>
+<text x="88" y="365" fill="#68e9bf" font-size="42">Indian Sign Language → English</text>
+<text x="88" y="427" fill="#e8eef5" font-size="30">Real-Time AI Translator</text>
+<path d="M88 477h1024" stroke="#293442" stroke-width="2"/>
+<text x="88" y="535" fill="#9fb0c4" font-size="20">MediaPipe · LSTM · TensorFlow.js</text>
+<text x="886" y="535" fill="#9fb0c4" font-size="18">Research prototype</text>
+</g></svg>

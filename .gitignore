@@ -59,3 +59,11 @@ dist/
 
 # Node
 node_modules/
+
+# Local environment variants and deployment account state
+.env.*
+!.env.example
+**/.env.*
+!**/.env.example
+.netlify/
+.vercel/

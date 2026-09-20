@@ -765,15 +765,15 @@ function App() {
     <div className="app-container">
       <header>
         <div className="logo-container">
-          <h1>Sanket-ISLT</h1>
+          <h2>Sanket ISL Translator</h2>
           <p>Real-time Translation Pipeline</p>
         </div>
         <div className={`ui-state-badge ${uiState.toLowerCase()}`}>
           <div className="ui-state-indicator"></div>
           {uiState}
         </div>
-        <button className="btn" onClick={() => setIsDemoMode(true)} style={{ marginLeft: 'auto' }}>
-          Enter Demo Mode
+        <button className="btn" disabled={import.meta.env.PROD} title={import.meta.env.PROD ? "Demo footage is available only in local development pending redistribution review." : "Scripted presentation with prerecorded outputs"} onClick={() => setIsDemoMode(true)} style={{ marginLeft: 'auto' }}>
+          {import.meta.env.PROD ? "Demo: local setup required" : "Enter Demo Mode"}
         </button>
       </header>
 

@@ -1,3 +1,5 @@
+> Historical development notes. Claims below describe earlier experiments and are not verified current capabilities. Use the [audited Sanket ISL Translator documentation](docs/index.md) for the shipped implementation, model and limitations.
+
 # Technical Trace: Classifier Input Gap & Tracking Stability Fixes
 
 *Date: September 10, 2026*  

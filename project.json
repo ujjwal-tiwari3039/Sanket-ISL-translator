@@ -1,0 +1,31 @@
+{
+  "name": "Sanket ISL Translator",
+  "description": "Real-time Indian Sign Language (ISL) to English translation using computer vision and deep learning.",
+  "repository": "https://github.com/ujjwal-tiwari3039/Sanket-ISL-translator",
+  "website": null,
+  "domain": "Indian Sign Language",
+  "input": "Selected Indian Sign Language gestures from webcam video",
+  "output": "Recognized labels and generated English text",
+  "programmingLanguage": [
+    "Python",
+    "JavaScript"
+  ],
+  "status": "Research prototype",
+  "topics": [
+    "indian-sign-language",
+    "isl",
+    "sign-language",
+    "sign-language-recognition",
+    "sign-language-translation",
+    "isl-translator",
+    "computer-vision",
+    "deep-learning",
+    "machine-learning",
+    "gesture-recognition",
+    "mediapipe",
+    "tensorflow",
+    "tensorflowjs",
+    "lstm",
+    "browser-based"
+  ]
+}

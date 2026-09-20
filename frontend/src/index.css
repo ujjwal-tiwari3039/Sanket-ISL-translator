@@ -46,7 +46,7 @@ header {
   background: var(--bg-color);
 }
 
-.logo-container h1 {
+.logo-container h2 {
   font-size: 1.2rem;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -318,3 +318,8 @@ video {
 .ui-state-badge.cooldown .ui-state-indicator { 
   background: #10b981; 
 }
+
+/* Keep the canonical project name readable beside header controls. */
+.app-container > header { flex-wrap: wrap; gap: 1rem; }
+.app-container > header .btn { width: auto; }
+.logo-container { flex-shrink: 0; }
