@@ -3,8 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
 
-const root = fileURLToPath(new URL('../../', import.meta.url));
-const publicRoot = path.join(root, 'frontend/public');
+const root = fileURLToPath(new URL('../../../', import.meta.url));
+const publicRoot = path.join(root, 'apps/frontend/public');
 const project = JSON.parse(fs.readFileSync(path.join(root, 'project.json'), 'utf8'));
 const sourceURL = `${project.repository}/blob/main/`;
 const escape = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

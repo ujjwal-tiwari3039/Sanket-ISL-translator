@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "update-demo": "node update_demo_manifest.js",
+    "update-demo": "node ../../scripts/demo/update_demo_manifest.js",
     "build:production": "node scripts/build-production.mjs",
     "check:discoverability": "node scripts/check-discoverability.mjs"
   },
