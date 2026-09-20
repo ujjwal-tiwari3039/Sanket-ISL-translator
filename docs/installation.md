@@ -12,7 +12,7 @@ cd Sanket-ISL-translator
 ## Start the sentence service
 
 ```bash
-cd backend
+cd apps/backend
 npm install
 npm start
 ```
@@ -24,7 +24,7 @@ In another terminal, run `ollama serve` if Ollama is not already a service, then
 From the repository root:
 
 ```bash
-cd frontend
+cd apps/frontend
 npm install
 npm run dev
 ```
@@ -34,7 +34,7 @@ Open the local URL printed by Vite. Grant camera access, arm gesture capture, pe
 ## Inspect documentation and build
 
 ```bash
-cd frontend
+cd apps/frontend
 npm run build
 npm run check:discoverability
 npm run preview
@@ -44,15 +44,15 @@ Documentation pages are static HTML and need no camera or JavaScript. Without a 
 
 ## Training and reproduction
 
-Python extraction dependencies are in `requirements.txt`; that file alone is insufficient for training. `train_in_docker.sh` specifies TensorFlow 2.15.0, scikit-learn 1.3.2, MediaPipe 0.10.14, TensorFlow.js conversion 4.17.0 and plotting libraries in Python 3.11. Its second converter invocation can overwrite the trainer's compatibility adjustments; validate the exported model in the target browser before replacing shipped artifacts.
+Python extraction dependencies are in `ml/requirements.txt`; that file alone is insufficient for training. `scripts/maintenance/train_in_docker.sh` specifies TensorFlow 2.15.0, scikit-learn 1.3.2, MediaPipe 0.10.14, TensorFlow.js conversion 4.17.0 and plotting libraries in Python 3.11. Its second converter invocation can overwrite the trainer's compatibility adjustments; validate the exported model in the target browser before replacing shipped artifacts.
 
-The training script expects `MP_Data/<class>/<sequence>/0.npy` through `29.npy`. Acquire lawful source material and MediaPipe assets first, then extract keypoints and run `phase2_train_lstm.py`. Scripts are available, but exact reproduction of the stored evaluation is not established: training data lineage, split seed and a locked Python environment are missing.
+The training script expects `MP_Data/<class>/<sequence>/0.npy` through `29.npy`. Acquire lawful source material and MediaPipe assets first, then extract keypoints and run `ml/src/training/train_lstm.py`. Scripts are available, but exact reproduction of the stored evaluation is not established: training data lineage, split seed and a locked Python environment are missing.
 
 See [dataset](dataset.md), [preprocessing](preprocessing.md) and [limitations](limitations.md).
 
 ## Source evidence
 
-- [frontend/package.json](../frontend/package.json)
-- [backend/package.json](../backend/package.json)
-- [requirements.txt](../requirements.txt)
-- [train_in_docker.sh](../train_in_docker.sh)
+- [apps/frontend/package.json](../apps/frontend/package.json)
+- [apps/backend/package.json](../apps/backend/package.json)
+- [ml/requirements.txt](../ml/requirements.txt)
+- [train_in_docker.sh](../scripts/maintenance/train_in_docker.sh)

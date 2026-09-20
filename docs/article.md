@@ -30,6 +30,6 @@ The next research work is to establish data lineage, correct evaluation splits a
 
 ## Source evidence
 
-- [frontend/src/App.jsx](../frontend/src/App.jsx)
-- [backend/server.js](../backend/server.js)
-- [phase2_train_lstm.py](../phase2_train_lstm.py)
+- [frontend/src/App.jsx](../apps/frontend/src/App.jsx)
+- [apps/backend/server.js](../apps/backend/server.js)
+- [ml/src/training/train_lstm.py](../ml/src/training/train_lstm.py)

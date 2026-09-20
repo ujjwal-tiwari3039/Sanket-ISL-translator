@@ -272,4 +272,4 @@ See [model](model.md), [dataset](dataset.md) and [limitations](limitations.md).
 
 ## Source evidence
 
-- [frontend/public/models/labels.json](../frontend/public/models/labels.json)
+- [frontend/public/models/labels.json](../apps/frontend/public/models/labels.json)

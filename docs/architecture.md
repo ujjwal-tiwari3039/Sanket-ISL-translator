@@ -29,9 +29,9 @@ The same path in text: webcam → landmarks → spatial normalization → fixed-
 
 - `frontend/src/App.jsx`: camera lifecycle, MediaPipe loading, feature extraction, capture state, classification and sentence display.
 - `frontend/src/DemoMode.jsx`: presentation playback. Words, confidence values and final sentences come from the demo manifest, not live classification.
-- `backend/server.js`: `POST /api/assemble`, letter merging, Ollama streaming and fallback formatting.
-- `phase1_keypoint_extractor.py` and collection scripts: Python landmark extraction.
-- `phase2_train_lstm.py`: augmentation, fitting, artifact export and evaluation.
+- `apps/backend/server.js`: `POST /api/assemble`, letter merging, Ollama streaming and fallback formatting.
+- `ml/src/preprocessing/keypoint_extractor.py` and collection scripts: Python landmark extraction.
+- `ml/src/training/train_lstm.py`: augmentation, fitting, artifact export and evaluation.
 - `frontend/public/models/`: deployed classifier topology, weights and ordered labels.
 
 ## Network boundaries
@@ -42,6 +42,6 @@ See [preprocessing](preprocessing.md), [model](model.md), [inference](inference.
 
 ## Source evidence
 
-- [frontend/src/App.jsx](../frontend/src/App.jsx)
-- [frontend/src/DemoMode.jsx](../frontend/src/DemoMode.jsx)
-- [backend/server.js](../backend/server.js)
+- [frontend/src/App.jsx](../apps/frontend/src/App.jsx)
+- [frontend/src/DemoMode.jsx](../apps/frontend/src/DemoMode.jsx)
+- [backend/server.js](../apps/backend/server.js)

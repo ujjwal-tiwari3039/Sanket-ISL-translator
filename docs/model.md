@@ -21,7 +21,7 @@ There are three LSTM layers, three Dense layers and three Dropout layers, plus t
 
 ## Training configuration
 
-`phase2_train_lstm.py` configures Adam with learning rate 0.0005 and clipnorm 1.0, categorical cross-entropy loss, categorical accuracy, batch size 64 and a maximum of 120 epochs. Early stopping monitors validation categorical accuracy with patience 25 and restores best weights. Balanced class weights are computed on training labels.
+`ml/src/training/train_lstm.py` configures Adam with learning rate 0.0005 and clipnorm 1.0, categorical cross-entropy loss, categorical accuracy, batch size 64 and a maximum of 120 epochs. Early stopping monitors validation categorical accuracy with patience 25 and restores best weights. Balanced class weights are computed on training labels.
 
 These are source configuration values, not proof of the exact run that produced every existing artifact. The training script exports HDF5, then TensorFlow.js, and applies compatibility adjustments to input shape and weight names.
 
@@ -31,12 +31,12 @@ Both label files contain 263 entries, with matching order. Neither contains an `
 
 ## Evaluation interpretation
 
-The stored [classification report](../models/eval/classification_report.txt) reports rounded accuracy 0.98 on 2,944 evaluated samples. This is an existing development artifact, not independently reproduced performance. Augmentation precedes the random split, allowing variants of one recording to enter both partitions. The held-out partition is also used for early stopping. There is no separate untouched test set, fixed random seed, signer grouping or artifact provenance linking a specific run to this report. Do not cite this as live accuracy, official INCLUDE benchmark performance or generalization to unseen signers.
+The stored [classification report](../models/training/eval/classification_report.txt) reports rounded accuracy 0.98 on 2,944 evaluated samples. This is an existing development artifact, not independently reproduced performance. Augmentation precedes the random split, allowing variants of one recording to enter both partitions. The held-out partition is also used for early stopping. There is no separate untouched test set, fixed random seed, signer grouping or artifact provenance linking a specific run to this report. Do not cite this as live accuracy, official INCLUDE benchmark performance or generalization to unseen signers.
 
 See [dataset](dataset.md), [preprocessing](preprocessing.md), [research methodology](research.md) and [inference](inference.md).
 
 ## Source evidence
 
-- [phase2_train_lstm.py](../phase2_train_lstm.py)
-- [frontend/public/models/model.json](../frontend/public/models/model.json)
-- [frontend/public/models/labels.json](../frontend/public/models/labels.json)
+- [ml/src/training/train_lstm.py](../ml/src/training/train_lstm.py)
+- [frontend/public/models/model.json](../apps/frontend/public/models/model.json)
+- [frontend/public/models/labels.json](../apps/frontend/public/models/labels.json)

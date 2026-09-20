@@ -30,6 +30,6 @@ See [FAQ](faq.md), [dataset](dataset.md) and [research](research.md).
 
 ## Source evidence
 
-- [phase2_train_lstm.py](../phase2_train_lstm.py)
-- [frontend/src/App.jsx](../frontend/src/App.jsx)
-- [frontend/src/DemoMode.jsx](../frontend/src/DemoMode.jsx)
+- [ml/src/training/train_lstm.py](../ml/src/training/train_lstm.py)
+- [frontend/src/App.jsx](../apps/frontend/src/App.jsx)
+- [frontend/src/DemoMode.jsx](../apps/frontend/src/DemoMode.jsx)

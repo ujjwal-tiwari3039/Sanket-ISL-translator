@@ -10,7 +10,7 @@ The related publication is [INCLUDE, ACM Multimedia 2020](https://doi.org/10.114
 
 ## What Sanket actually uses
 
-`download_and_extract.py` downloads/extracts source archives and creates landmark sequences. `phase3_process_include.py` reads class directories beneath `islmodel/ProcessedData_vivit`. Other scripts support webcam collection and YouTube search/download. Their existence does not establish the provenance or redistribution rights of every training sample.
+`scripts/dataset/download_and_extract.py` downloads/extracts source archives and creates landmark sequences. `ml/src/data/process_include.py` reads class directories beneath `islmodel/ProcessedData_vivit`. Other scripts support webcam collection and YouTube search/download. Their existence does not establish the provenance or redistribution rights of every training sample.
 
 The exact training-source inventory, signer demographics, number of original recordings used, resolution and frame-rate distribution are unverified. The shipped model has 263 output labels; that count is not a verified count of the source dataset's signs or Sanket's independently validated vocabulary.
 
@@ -27,6 +27,6 @@ Before publishing new results, retain source-video identifiers, split by origina
 ## Source evidence
 
 - [zenodo_files.json](../zenodo_files.json)
-- [download_and_extract.py](../download_and_extract.py)
-- [phase3_process_include.py](../phase3_process_include.py)
-- [phase2_train_lstm.py](../phase2_train_lstm.py)
+- [download_and_extract.py](../scripts/dataset/download_and_extract.py)
+- [ml/src/data/process_include.py](../ml/src/data/process_include.py)
+- [phase2_train_lstm.py](../ml/src/training/train_lstm.py)

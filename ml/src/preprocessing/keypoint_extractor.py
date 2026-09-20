@@ -14,16 +14,16 @@ FaceLandmarker = mp.tasks.vision.FaceLandmarker
 
 # Create Landmarkers
 pose_options = vision.PoseLandmarkerOptions(
-    base_options=BaseOptions(model_asset_path='models/pose_landmarker.task'))
+    base_options=BaseOptions(model_asset_path='models/runtime/pose_landmarker.task'))
 pose_landmarker = PoseLandmarker.create_from_options(pose_options)
 
 hand_options = vision.HandLandmarkerOptions(
-    base_options=BaseOptions(model_asset_path='models/hand_landmarker.task'),
+    base_options=BaseOptions(model_asset_path='models/runtime/hand_landmarker.task'),
     num_hands=2)
 hand_landmarker = HandLandmarker.create_from_options(hand_options)
 
 face_options = vision.FaceLandmarkerOptions(
-    base_options=BaseOptions(model_asset_path='models/face_landmarker.task'))
+    base_options=BaseOptions(model_asset_path='models/runtime/face_landmarker.task'))
 face_landmarker = FaceLandmarker.create_from_options(face_options)
 
 # Drawing utilities

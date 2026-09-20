@@ -21,7 +21,7 @@ except FileNotFoundError:
     print("models/labels.json not found. Please train the model first.")
     actions = np.array([])
 sequence_length = 30
-model_path = 'models/action.h5'
+model_path = 'models/training/action.h5'
 
 # Load the trained model
 print("Loading model...")
@@ -34,13 +34,13 @@ PoseLandmarker = mp.tasks.vision.PoseLandmarker
 HandLandmarker = mp.tasks.vision.HandLandmarker
 FaceLandmarker = mp.tasks.vision.FaceLandmarker
 
-pose_options = vision.PoseLandmarkerOptions(base_options=BaseOptions(model_asset_path='models/pose_landmarker.task'))
+pose_options = vision.PoseLandmarkerOptions(base_options=BaseOptions(model_asset_path='models/runtime/pose_landmarker.task'))
 pose_landmarker = PoseLandmarker.create_from_options(pose_options)
 
-hand_options = vision.HandLandmarkerOptions(base_options=BaseOptions(model_asset_path='models/hand_landmarker.task'), num_hands=2)
+hand_options = vision.HandLandmarkerOptions(base_options=BaseOptions(model_asset_path='models/runtime/hand_landmarker.task'), num_hands=2)
 hand_landmarker = HandLandmarker.create_from_options(hand_options)
 
-face_options = vision.FaceLandmarkerOptions(base_options=BaseOptions(model_asset_path='models/face_landmarker.task'))
+face_options = vision.FaceLandmarkerOptions(base_options=BaseOptions(model_asset_path='models/runtime/face_landmarker.task'))
 face_landmarker = FaceLandmarker.create_from_options(face_options)
 
 def extract_keypoints(pose_result, hand_result, face_result):

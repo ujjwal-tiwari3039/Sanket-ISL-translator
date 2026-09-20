@@ -24,6 +24,6 @@ See [dataset provenance](dataset.md), [LSTM model](model.md) and [live inference
 
 ## Source evidence
 
-- [phase1_keypoint_extractor.py](../phase1_keypoint_extractor.py)
-- [phase2_train_lstm.py](../phase2_train_lstm.py)
-- [frontend/src/App.jsx](../frontend/src/App.jsx)
+- [ml/src/preprocessing/keypoint_extractor.py](../ml/src/preprocessing/keypoint_extractor.py)
+- [ml/src/training/train_lstm.py](../ml/src/training/train_lstm.py)
+- [frontend/src/App.jsx](../apps/frontend/src/App.jsx)
