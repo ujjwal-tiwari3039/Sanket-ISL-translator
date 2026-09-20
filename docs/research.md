@@ -22,5 +22,5 @@ See [architecture](architecture.md), [dataset](dataset.md), [limitations](limita
 
 ## Source evidence
 
-- [phase2_train_lstm.py](../phase2_train_lstm.py)
-- [models/eval/classification_report.txt](../models/eval/classification_report.txt)
+- [ml/src/training/train_lstm.py](../ml/src/training/train_lstm.py)
+- [models/training/eval/classification_report.txt](../models/training/eval/classification_report.txt)

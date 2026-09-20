@@ -22,7 +22,7 @@ Do not describe local inference as verified offline operation. Avoid calling pub
 | Item | Baseline finding |
 | --- | --- |
 | Frontend/backend | React 19 + Vite 8 / Node.js Express 4 |
-| Package manager | npm with tracked frontend/backend package-lock.json |
+| Package manager | npm with tracked apps/frontend & apps/backend package-lock.json |
 | Python workflow | OpenCV/MediaPipe extraction, TensorFlow/Keras training; incomplete requirements.txt for training |
 | Deployment platform/URL | None found; user confirmed not deployed; GitHub homepage empty, Pages disabled |
 | README | Long technical overview with unsupported MIT, offline and idle-class claims |
@@ -44,7 +44,7 @@ Do not describe local inference as verified offline operation. Avoid calling pub
 
 | Claim | Evidence / treatment |
 | --- | --- |
-| React, MediaPipe, TensorFlow.js, Express, Gemma 2 | package manifests, App.jsx and backend/server.js |
+| React, MediaPipe, TensorFlow.js, Express, Gemma 2 | package manifests, App.jsx and apps/backend/server.js |
 | 30 × 258 input, LSTM 64/128/64, Dense 263 | shipped model.json, trainer; checked automatically |
 | 245,831 parameters | calculated from shipped weight shapes; checked automatically |
 | 263 labels, no idle | both label dictionaries; checked automatically |

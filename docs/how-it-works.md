@@ -26,5 +26,5 @@ Read the [model specification](model.md), [inference details](inference.md) and 
 
 ## Source evidence
 
-- [frontend/src/App.jsx](../frontend/src/App.jsx)
-- [frontend/src/DemoMode.jsx](../frontend/src/DemoMode.jsx)
+- [frontend/src/App.jsx](../apps/frontend/src/App.jsx)
+- [frontend/src/DemoMode.jsx](../apps/frontend/src/DemoMode.jsx)

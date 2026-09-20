@@ -22,6 +22,6 @@ See [installation](installation.md), [architecture](architecture.md), [deploymen
 
 ## Source evidence
 
-- [frontend/src/App.jsx](../frontend/src/App.jsx)
-- [backend/server.js](../backend/server.js)
-- [frontend/src/index.css](../frontend/src/index.css)
+- [frontend/src/App.jsx](../apps/frontend/src/App.jsx)
+- [backend/server.js](../apps/backend/server.js)
+- [frontend/src/index.css](../apps/frontend/src/index.css)

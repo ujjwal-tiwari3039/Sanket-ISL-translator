@@ -254,7 +254,7 @@ model.fit(X_train, y_train, epochs=120, batch_size=64, validation_data=(X_test, 
           class_weight=class_weight_dict, callbacks=[tb_callback, early_stop])
 
 # --- 5. SAVE MODEL ---
-model.save('models/action.h5')
+model.save('models/training/action.h5')
 print("Model saved to models/action.h5")
 
 # Export to TensorFlow.js
@@ -263,7 +263,7 @@ try:
     sys.modules['tensorflow_decision_forests'] = types.ModuleType('tensorflow_decision_forests')
     sys.modules['tensorflow_decision_forests.keras'] = types.ModuleType('tensorflow_decision_forests.keras')
     import tensorflowjs as tfjs
-    tfjs_dir = os.path.join('frontend', 'public', 'models')
+    tfjs_dir = os.path.join('apps', 'frontend', 'public', 'models')
     os.makedirs(tfjs_dir, exist_ok=True)
     tfjs.converters.save_keras_model(model, tfjs_dir)
     shutil.copy('models/labels.json', os.path.join(tfjs_dir, 'labels.json'))
@@ -289,12 +289,12 @@ try:
                 w['name'] = w['name'].replace('/lstm_cell/', '/')
         with open(mjson_path, 'w') as f:
             json.dump(mj, f)
-    print("Exported and patched model for TensorFlow.js in frontend/public/models/")
+    print("Exported and patched model for TensorFlow.js in apps/frontend/public/models/")
 except Exception as e:
     print(f"Warning: TFJS export failed: {e}")
 
 # --- 6. EVALUATE ---
-os.makedirs('models/eval', exist_ok=True)
+os.makedirs('models/training/eval', exist_ok=True)
 yhat = model.predict(X_test)
 ytrue = np.argmax(y_test, axis=1)
 yhat_classes = np.argmax(yhat, axis=1)
@@ -302,7 +302,7 @@ yhat_classes = np.argmax(yhat, axis=1)
 report = classification_report(ytrue, yhat_classes, target_names=clean_actions, labels=np.arange(len(actions)), zero_division=0)
 print(report)
 
-with open('models/eval/classification_report.txt', 'w') as f:
+with open('models/training/eval/classification_report.txt', 'w') as f:
     f.write(report)
 
 cm = confusion_matrix(ytrue, yhat_classes, labels=np.arange(len(actions)))
@@ -311,5 +311,5 @@ sns.heatmap(cm, annot=False, fmt='d', xticklabels=clean_actions, yticklabels=cle
 plt.ylabel('Actual')
 plt.xlabel('Predicted')
 plt.title('Confusion Matrix')
-plt.savefig('models/eval/confusion_matrix.png')
-print("Evaluation results saved to models/eval/")
+plt.savefig('models/training/eval/confusion_matrix.png')
+print("Evaluation results saved to models/training/eval/")

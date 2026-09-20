@@ -8,14 +8,14 @@ It connects webcam-based MediaPipe pose and hand landmark detection to a TensorF
 - **GitHub:** [Sanket ISL Translator source repository](https://github.com/ujjwal-tiwari3039/Sanket-ISL-translator).
 - **Documentation:** [technical documentation index](docs/index.md).
 - **Technical details:** [architecture](docs/architecture.md), [model](docs/model.md), [dataset](docs/dataset.md).
-- **Screenshot:** [translator interface with camera disabled](frontend/public/screenshots/translator.png); [demo behavior](docs/how-it-works.md).
+- **Screenshot:** [translator interface with camera disabled](apps/frontend/public/screenshots/translator.png); [demo behavior](docs/how-it-works.md).
 - **Installation:** [setup and usage](docs/installation.md).
 
-[![React](https://img.shields.io/badge/React-19-149eca)](frontend/package.json)
-[![TensorFlow.js](https://img.shields.io/badge/TensorFlow.js-4-orange)](frontend/package.json)
-[![Python](https://img.shields.io/badge/language-Python-3776ab)](phase2_train_lstm.py)
+[![React](https://img.shields.io/badge/React-19-149eca)](apps/frontend/package.json)
+[![TensorFlow.js](https://img.shields.io/badge/TensorFlow.js-4-orange)](apps/frontend/package.json)
+[![Python](https://img.shields.io/badge/language-Python-3776ab)](ml/src/training/train_lstm.py)
 
-![Sanket ISL Translator interface with camera access disabled; no recognition result is shown](frontend/public/screenshots/translator.png)
+![Sanket ISL Translator interface with camera access disabled; no recognition result is shown](apps/frontend/public/screenshots/translator.png)
 
 *Actual local interface capture, 2026-09-20. Camera disabled; this image is not recognition evidence.*
 
@@ -76,7 +76,7 @@ Recognition runs in TensorFlow.js in the browser. The camera and processing loop
 
 ## Performance
 
-The stored [development classification report](models/eval/classification_report.txt) reports rounded accuracy 0.98 over 2,944 evaluated samples. It is not independently reproduced or a live benchmark. Augmentation happens before the split and the held-out data is reused for early stopping and final reporting, so related examples may leak across partitions. No signer-independent accuracy claim is justified. See [evaluation limitations](docs/model.md).
+The stored [development classification report](models/training/eval/classification_report.txt) reports rounded accuracy 0.98 over 2,944 evaluated samples. It is not independently reproduced or a live benchmark. Augmentation happens before the split and the held-out data is reused for early stopping and final reporting, so related examples may leak across partitions. No signer-independent accuracy claim is justified. See [evaluation limitations](docs/model.md).
 
 ## Privacy and Local / Offline Processing
 
@@ -99,14 +99,14 @@ Use Node.js 22.12 or newer and npm. Start the services in separate terminals:
 
 ```bash
 # From the repository root
-cd backend
+cd apps/backend
 npm install
 npm start
 ```
 
 ```bash
 # From the repository root
-cd frontend
+cd apps/frontend
 npm install
 npm run dev
 ```
@@ -116,14 +116,13 @@ Run Ollama and acquire `gemma2:2b` for language-model assembly. Open Vite's prin
 ## Project Structure
 
 ```text
-frontend/src/              React live inference and scripted demo
-frontend/public/models/    TensorFlow.js topology, weights and labels
-frontend/scripts/          Static documentation generator and checks
-backend/server.js          Local Express/Ollama sentence endpoint
+apps/frontend/src/         React live inference and scripted demo
+apps/frontend/public/models/  TensorFlow.js topology, weights and labels
+apps/frontend/scripts/     Static documentation generator and checks
+apps/backend/server.js     Local Express/Ollama sentence endpoint
+ml/src/                    Python landmark extraction, training and inference
 models/                    Python model, landmark assets and evaluation
-phase1*.py                 Landmark extraction and collection
-phase2_train_lstm.py        Training, augmentation and export
-phase3*.py                 Additional extraction/inference tools
+data/                      Data manifests and samples (datasets kept local)
 docs/                      Audited technical documentation
 project.json               Shared project identity and repository metadata
 ```

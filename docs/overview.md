@@ -28,5 +28,5 @@ See the [recognition architecture](architecture.md), [FAQ](faq.md) and [limitati
 
 ## Source evidence
 
-- [frontend/src/App.jsx](../frontend/src/App.jsx)
-- [backend/server.js](../backend/server.js)
+- [frontend/src/App.jsx](../apps/frontend/src/App.jsx)
+- [backend/server.js](../apps/backend/server.js)

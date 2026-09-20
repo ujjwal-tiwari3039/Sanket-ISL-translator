@@ -24,6 +24,6 @@ The source repository is [ujjwal-tiwari3039/Sanket-ISL-translator](https://githu
 
 ## Interface screenshot
 
-![Sanket ISL Translator interface with camera disabled](../frontend/public/screenshots/translator.png)
+![Sanket ISL Translator interface with camera disabled](../apps/frontend/public/screenshots/translator.png)
 
 Actual local interface capture, 2026-09-20, with camera access denied. No recognition result is shown.
