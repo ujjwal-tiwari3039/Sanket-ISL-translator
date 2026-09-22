@@ -2,7 +2,7 @@
 
 > Sanket ISL Translator is a real-time Indian Sign Language (ISL) to English translation system using computer vision and deep learning.
 
-It connects webcam-based MediaPipe pose and hand landmark detection to a TensorFlow.js LSTM classifier and generates English text from recognized labels through local Express and Ollama. Sanket is a research prototype for selected ISL signs, not unrestricted conversational interpretation. Browser inference and sentence generation are separate stages, and the presentation demo uses scripted words rather than measured recognition.
+It connects webcam based MediaPipe pose and hand landmark detection to a TensorFlow.js LSTM classifier and generates English text from recognized labels through local Express and Ollama. Sanket is a research prototype for selected ISL signs, not unrestricted conversational interpretation. Browser inference and sentence generation are separate stages, and the presentation demo uses scripted words rather than measured recognition.
 
 - **Live demo:** not deployed yet; [run locally](docs/installation.md).
 - **GitHub:** [Sanket ISL Translator source repository](https://github.com/ujjwal-tiwari3039/Sanket-ISL-translator).
