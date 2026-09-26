@@ -1,27 +1,7 @@
-# Data
+# Landmark data
 
-Training datasets for Sanket ISL Translator are **not committed to this repository**.
+Canonical custom and INCLUDE samples are local NPZ files under `data/custom` and `data/include`, with normalized `(30,258)` features and validated metadata. See [collection and conversion](../docs/custom-dataset.md).
 
-## What is tracked here
+`data/processed/legacy` is an explicit conversion destination with unknown extraction provenance. Do not mix it with verified canonical extraction. Original `MP_Data` remains local ignored data; `MP_Data_old_224` includes historical files already tracked by Git. Ignore patterns do not remove tracked files.
 
-```text
-data/
-├── manifests/   Future: dataset manifests, checksums, split definitions
-├── samples/     Future: small verified reference samples
-└── README.md    This file
-```
-
-## What is NOT tracked
-
-- `MP_Data/` — primary training keypoint sequences (gitignored; large)
-- `MP_Data_old_224/` — historical 224-resolution variant (rights/maintenance status under review)
-- `downloaded_files/` — source video archives (gitignored)
-- `Raw_Videos/` — raw source video (gitignored)
-
-## Dataset Provenance
-
-The primary training data derives from the [INCLUDE dataset](https://zenodo.org/record/4010759). Dataset rights and redistribution review is pending. See [dataset documentation](../docs/dataset.md) for provenance details and limitations.
-
-## Acquiring Data
-
-Use `scripts/dataset/download_and_extract.py` to download and extract source archives. Ensure you have the right to use and process the data under applicable licensing terms before training.
+The pipeline creates only directories it uses. No source dataset or signer metadata was fabricated. Generated samples should be kept out of version control; share only approved fixtures and aggregate reports.

@@ -1,55 +1,18 @@
-# Machine Learning
+# Machine learning pipeline
 
-Python training and inference pipeline for Sanket ISL Translator.
+Use Python 3.11 from the repository root. `requirements.txt` covers extraction; `requirements-training.txt` adds training/evaluation dependencies.
 
-## Structure
-
-```text
-ml/
-├── src/
-│   ├── preprocessing/
-│   │   └── keypoint_extractor.py   MediaPipe landmark extraction from video
-│   ├── training/
-│   │   └── train_lstm.py           LSTM training, augmentation and TensorFlow.js export
-│   ├── inference/
-│   │   ├── realtime_inference.py   Python-side real-time inference (development tool)
-│   │   └── segmenter.py            Gesture segmentation utilities
-│   └── data/
-│       ├── data_collection.py      Webcam-based keypoint data collection
-│       ├── automated_scraper.py    YouTube search and download helper
-│       └── process_include.py      INCLUDE dataset extraction pipeline
-├── configs/                        Reserved for training configuration files
-└── requirements.txt                Python dependencies (see note below)
-```
-
-## Running
-
-All scripts are designed to run from the **repository root**, not from `ml/`. Paths are relative to the root.
+- `src/preprocessing`: canonical schema, raw packing, normalization, resampling, validation and shared Tasks extractor.
+- `src/data`: custom collection, INCLUDE re-extraction, formal dataset I/O, legacy conversion, validation.
+- `src/training`: group splitting, train-only augmentation, source balancing, candidate training/export.
+- `src/evaluation`: structured metrics, confusion data, threshold reports.
+- `src/inference`: Python manual capture and interactive video segmentation.
 
 ```bash
-# From repo root
-pip install -r ml/requirements.txt
-
-# Landmark extraction (expects MP_Data/ at root)
-python ml/src/preprocessing/keypoint_extractor.py
-
-# Training
-python ml/src/training/train_lstm.py
+python -m ml.src.preprocessing.keypoint_extractor --camera 0
+python -m ml.src.data.data_collection --label hello --samples 15 --signer-id signer-01
+python -m ml.src.data.validate_dataset data/custom
+python -m ml.src.training.train_lstm data/include data/custom --output models/candidates/run-01
 ```
 
-## Requirements
-
-`ml/requirements.txt` lists runtime dependencies. Exact reproduction of stored evaluation requires the environment specified in `scripts/maintenance/train_in_docker.sh` (TensorFlow 2.15.0, MediaPipe 0.10.14, Python 3.11).
-
-## Model Output
-
-Training writes:
-- `models/training/action.h5` — Keras checkpoint
-- `models/training/eval/` — classification report and confusion matrix
-- `apps/frontend/public/models/` — TensorFlow.js topology, weights and labels
-
-See [model documentation](../docs/model.md) and [training limitations](../docs/limitations.md).
-
-## Dataset
-
-Training data is not committed to this repository. The pipeline expects `MP_Data/<class>/<sequence>/0.npy` through `29.npy`. See [dataset documentation](../docs/dataset.md) for provenance details.
+Use module execution (`python -m ...`) so shared imports resolve. Importing numeric preprocessing does not open cameras or models. See [schema](../docs/landmark-schema.md), [custom data](../docs/custom-dataset.md), [training](../docs/training.md) and [evaluation](../docs/evaluation.md).

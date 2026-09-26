@@ -44,11 +44,16 @@ Documentation pages are static HTML and need no camera or JavaScript. Without a 
 
 ## Training and reproduction
 
-Python extraction dependencies are in `ml/requirements.txt`; that file alone is insufficient for training. `scripts/maintenance/train_in_docker.sh` specifies TensorFlow 2.15.0, scikit-learn 1.3.2, MediaPipe 0.10.14, TensorFlow.js conversion 4.17.0 and plotting libraries in Python 3.11. Its second converter invocation can overwrite the trainer's compatibility adjustments; validate the exported model in the target browser before replacing shipped artifacts.
+Use Python 3.11. Install `ml/requirements.txt` for collection/extraction or `ml/requirements-training.txt` for training/evaluation. Run module commands from the repository root:
 
-The training script expects `MP_Data/<class>/<sequence>/0.npy` through `29.npy`. Acquire lawful source material and MediaPipe assets first, then extract keypoints and run `ml/src/training/train_lstm.py`. Scripts are available, but exact reproduction of the stored evaluation is not established: training data lineage, split seed and a locked Python environment are missing.
+```bash
+python -m ml.src.data.data_collection --camera 0 --label hello --samples 15
+python -m ml.src.data.process_include --videos /path/to/include --output data/include
+python -m ml.src.data.validate_dataset data/include data/custom
+python -m ml.src.training.train_lstm data/include data/custom --output models/candidates/run-01
+```
 
-See [dataset](dataset.md), [preprocessing](preprocessing.md) and [limitations](limitations.md).
+See [custom data](custom-dataset.md), [training](training.md) and [evaluation](evaluation.md). Legacy NPY data requires explicit conversion/acknowledgement. The old report cannot be exactly reproduced because its original source lineage and split seed were not recorded.
 
 ## Source evidence
 

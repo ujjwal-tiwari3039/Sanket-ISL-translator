@@ -1,160 +1,102 @@
 # Sanket ISL Translator
 
-> Sanket ISL Translator is a real-time Indian Sign Language (ISL) to English translation system using computer vision and deep learning.
+Sanket is an Indian Sign Language (ISL) to English research prototype using computer vision and deep learning. It classifies selected signs from webcam landmarks, then sends accepted glosses to a local sentence-generation service. It is not unrestricted conversational interpretation.
 
-It connects webcam based MediaPipe pose and hand landmark detection to a TensorFlow.js LSTM classifier and generates English text from recognized labels through local Express and Ollama. Sanket is a research prototype for selected ISL signs, not unrestricted conversational interpretation. Browser inference and sentence generation are separate stages, and the presentation demo uses scripted words rather than measured recognition.
+- [Architecture](docs/architecture.md) and [canonical landmark specification](docs/landmark-schema.md)
+- [Custom recording and INCLUDE preparation](docs/custom-dataset.md)
+- [Training](docs/training.md), [evaluation](docs/evaluation.md), [audit](docs/audit/repository-audit.md)
+- [Final implementation verification](FINAL_AUDIT.md)
+- [263 shipped labels](docs/vocabulary.md); label availability does not imply reliable recognition
 
-- **Live demo:** not deployed yet; [run locally](docs/installation.md).
-- **GitHub:** [Sanket ISL Translator source repository](https://github.com/ujjwal-tiwari3039/Sanket-ISL-translator).
-- **Documentation:** [technical documentation index](docs/index.md).
-- **Technical details:** [architecture](docs/architecture.md), [model](docs/model.md), [dataset](docs/dataset.md).
-- **Screenshot:** [translator interface with camera disabled](apps/frontend/public/screenshots/translator.png); [demo behavior](docs/how-it-works.md).
-- **Installation:** [setup and usage](docs/installation.md).
+![Sanket translator interface](apps/frontend/public/screenshots/translator.png)
 
-[![React](https://img.shields.io/badge/React-19-149eca)](apps/frontend/package.json)
-[![TensorFlow.js](https://img.shields.io/badge/TensorFlow.js-4-orange)](apps/frontend/package.json)
-[![Python](https://img.shields.io/badge/language-Python-3776ab)](ml/src/training/train_lstm.py)
+The screenshot predates the pipeline corrections and is an interface illustration, not recognition evidence.
 
-![Sanket ISL Translator interface with camera access disabled; no recognition result is shown](apps/frontend/public/screenshots/translator.png)
-
-*Actual local interface capture, 2026-09-20. Camera disabled; this image is not recognition evidence.*
-
-## What is Sanket ISL Translator?
-
-Real-time Indian Sign Language (ISL) to English translation using computer vision and deep learning. Sanket recognizes a restricted vocabulary from temporal pose and hand features, then produces English language output from the accepted label sequence.
-
-## Why Sanket Exists
-
-Sanket provides a practical software project for exploring ISL recognition, browser-based AI and English sentence generation. It is intended for engineering experimentation and research; user benefit and accessibility outcomes have not been independently measured.
-
-## Features
-
-- Live webcam overlays and user-armed gesture capture.
-- Spatial normalization and fixed-length temporal classification.
-- Ranked candidate labels and sequence context.
-- Local Ollama sentence generation with a basic text fallback.
-- Scripted video presentation mode, explicitly separate from live inference.
-
-## How It Works and System Architecture
+## Pipeline
 
 ```mermaid
 flowchart LR
-    A[Webcam] --> B[MediaPipe landmarks]
-    B --> C[258 pose and hand features]
-    C --> D[30-frame sequence]
-    D --> E[TensorFlow.js LSTM]
-    E --> F[Recognized label queue]
-    F --> G[Express and local Ollama]
-    G --> H[English text]
+    A[INCLUDE videos or custom webcam] --> B[Shared MediaPipe extraction]
+    C[Browser webcam] --> D[Equivalent JS feature pipeline]
+    B --> E[258 normalized pose and hand values]
+    D --> E
+    E --> F[30-frame temporal sequence]
+    F --> G[LSTM / TensorFlow.js]
+    G --> H[Accepted gloss context]
+    H --> I[Explicit fingerspelling merger]
+    I --> J[Local Express and Ollama Gemma 2]
+    J --> K[English text or deterministic fallback]
 ```
 
-[Architecture and network boundaries](docs/architecture.md) explain each component. The [processing guide](docs/how-it-works.md) distinguishes recognition from translation.
+Pose contributes 33 × 4 values; each hand contributes 21 × 3. Face is excluded from the classifier. All numeric transforms are versioned, validated and tested between Python and JavaScript. Browser smoothing affects overlays only. Existing 1692-wide NPY data requires explicit legacy conversion or preferably source-video re-extraction; unknown provenance is never silently treated as verified.
 
-## Computer Vision Pipeline and Preprocessing
+## Run locally
 
-MediaPipe estimates pose, hands and face. The classifier uses 132 pose and 126 hand values; face coordinates are removed. x/y coordinates are centered on the nose and scaled by shoulder distance. Live captures are interpolated to 30 frames. Face landmarks also feed a separate question heuristic. See [preprocessing](docs/preprocessing.md).
-
-## Sign Recognition Model and Training
-
-Three LSTM layers (64 → 128 → 64 units), three Dropout layers (0.4), and Dense layers (64 → 32 → 263) form a 245,831-parameter classifier. The trainer configures Adam at 0.0005, categorical cross-entropy, balanced class weights and early stopping. These configuration values are not a record of a fully reproducible training run. See the [precise model specification](docs/model.md).
-
-## Translation Pipeline
-
-Finish & Translate posts labels to local Express on port 3001. Express merges consecutive single-letter entries and streams `gemma2:2b` output from Ollama. Failed model requests use basic capitalization and punctuation. Natural English generation can alter meaning; it does not validate recognition.
-
-## Dataset
-
-Acquisition scripts reference [INCLUDE on Zenodo](https://zenodo.org/records/4010759). Exact training subset and full source provenance are not established. See [dataset source, license and split limitations](docs/dataset.md).
-
-## Supported ISL Vocabulary
-
-The shipped label mapping contains **263 entries**, with no idle class. This is a model-output count, not a validated sign-recognition guarantee. [Read the full vocabulary](docs/vocabulary.md).
-
-## Inference and Real-Time Processing
-
-Recognition runs in TensorFlow.js in the browser. The camera and processing loop are configured for interactive use, but no measured latency or hardware-specific FPS benchmark is published. See [inference](docs/inference.md).
-
-## Performance
-
-The stored [development classification report](models/training/eval/classification_report.txt) reports rounded accuracy 0.98 over 2,944 evaluated samples. It is not independently reproduced or a live benchmark. Augmentation happens before the split and the held-out data is reused for early stopping and final reporting, so related examples may leak across partitions. No signer-independent accuracy claim is justified. See [evaluation limitations](docs/model.md).
-
-## Privacy and Local / Offline Processing
-
-The reviewed camera path processes frames in the browser and sends recognized text to the local assembly service. MediaPipe assets and fonts are fetched externally. The project is not a verified fully offline application, and no blanket privacy guarantee is made. See [network and privacy details](docs/inference.md).
-
-## Technology Stack
-
-| Layer | Technology |
-| --- | --- |
-| Frontend/build | React 19, JavaScript, Vite 8, npm |
-| Browser recognition | MediaPipe Tasks Vision, TensorFlow.js |
-| Sentence service | Node.js, Express 4, local Ollama / Gemma 2 |
-| Training | Python, TensorFlow/Keras, NumPy, scikit-learn |
-| Extraction | Python, OpenCV, MediaPipe |
-| Public documentation | Static HTML generated from Markdown during Vite build |
-
-## Installation and Usage
-
-Use Node.js 22.12 or newer and npm. Start the services in separate terminals:
+Use Node.js 22.12+ and npm. From the repository root, in separate terminals:
 
 ```bash
-# From the repository root
-cd apps/backend
-npm install
-npm start
+npm --prefix apps/backend ci
+npm --prefix apps/backend start
 ```
 
 ```bash
-# From the repository root
-cd apps/frontend
-npm install
-npm run dev
+npm --prefix apps/frontend ci
+npm --prefix apps/frontend run dev
 ```
 
-Run Ollama and acquire `gemma2:2b` for language-model assembly. Open Vite's printed localhost URL, allow camera access, arm capture, perform a selected sign and review the output. See [complete prerequisites and training caveats](docs/installation.md).
+For local model-backed sentence generation:
 
-## Project Structure
-
-```text
-apps/frontend/src/         React live inference and scripted demo
-apps/frontend/public/models/  TensorFlow.js topology, weights and labels
-apps/frontend/scripts/     Static documentation generator and checks
-apps/backend/server.js     Local Express/Ollama sentence endpoint
-ml/src/                    Python landmark extraction, training and inference
-models/                    Python model, landmark assets and evaluation
-data/                      Data manifests and samples (datasets kept local)
-docs/                      Audited technical documentation
-project.json               Shared project identity and repository metadata
+```bash
+ollama serve
+ollama pull gemma2:2b
 ```
 
-## Limitations
+Ollama model acquisition needs a network connection. If Ollama is unavailable, the backend provides basic deterministic formatting. The backend listens on `127.0.0.1:3001`; the browser processes video locally and submits gloss text. MediaPipe assets and fonts still require external downloads, so fully offline operation is not claimed.
 
-Restricted vocabulary, manually stopped gesture capture, camera/signer variation, limited facial grammar, generated-text errors and evaluation leakage constrain the prototype. No complete interpreter replacement or production-readiness claim is made. [Read the limitations](docs/limitations.md).
+## Live and demo behavior
 
-## Future Work and Research Notes
+Grant camera permission and wait for model loading. Arm **Record Next Sign**, perform one complete sign, then stop or let enabled dynamic capture stop after sustained low motion. Short captures are rejected. Review RECOGNIZED or UNCERTAIN status, then **Finish & Translate**. The original .40 confidence threshold remains uncalibrated; higher softmax confidence is not a guarantee of correctness.
 
-Priorities are signer-separated evaluation, source-data lineage, Python/browser preprocessing parity, sentence-fidelity testing and offline dependency packaging. These are proposed work. See [research methodology](docs/research.md) and the [technical article](docs/article.md).
+**Spell Name** submits a typed fingerspelling group. `U → J → J → W → A → L` becomes `Ujjwal`; repeated letters are preserved. This is manual name input, not a claim of validated alphabet recognition. The API also supports explicit acronym groups.
 
-## Citation
+Demo Mode displays scripted words and sentences from local media. **Demo Mode is not live model evaluation.** Switching modes stops the live camera and closes its models. Production builds exclude demo footage. Experimental eyebrow/question detection is off by default.
 
-Cite the repository with the commit SHA used. No project DOI, agreed scholarly author list or tagged release is verified. See [citation guidance](docs/citation.md). The INCLUDE publication DOI belongs to the dataset, not Sanket.
+## Data, training and tests
 
-## License
+Use Python 3.11:
 
-No project license file is present. The former MIT badge was unsupported and has been removed. Public source access does not establish reuse rights. Dataset and dependency licenses are separate.
+```bash
+python -m venv .venv
+.venv/bin/pip install -r ml/requirements-training.txt
+.venv/bin/python -m ml.src.data.data_collection --camera 0 --label hello --samples 100 --signer-id signer-01
+.venv/bin/python -m ml.src.data.process_include --videos /path/to/include --output data/include
+.venv/bin/python -m ml.src.data.validate_dataset data/include data/custom
+.venv/bin/python -m ml.src.training.train_lstm data/include data/custom --output models/candidates/run-01
+```
 
-## Contributors
+Training splits recordings, duplicates and known signers before augmentation, reserves validation and test partitions, and writes a new candidate directory. It does not overwrite shipped models. See [dataset instructions](docs/custom-dataset.md) and [training details](docs/training.md), including source balancing and unknown signer limitations.
 
-Git history records contributions under Sameer Vishwakarma, sameer vishwakarma and samashech; account/name equivalence and scholarly authorship are not inferred. See the [GitHub contributor history](https://github.com/ujjwal-tiwari3039/Sanket-ISL-translator/graphs/contributors).
+```bash
+.venv/bin/python -m unittest discover -s tests/ml -v
+npm --prefix apps/frontend test
+npm --prefix apps/backend test
+npm --prefix apps/frontend run lint
+npm --prefix apps/frontend run build
+npm --prefix apps/frontend run check:discoverability
+```
 
-## Acknowledgements
+The optional real-video test requires `SANKET_VIDEO_TEST=/path/to/sign-video`. The browser lifecycle test uses a separate headless Chromium with synthetic camera; commands and results are in [FINAL_AUDIT.md](FINAL_AUDIT.md).
 
-The project uses MediaPipe, TensorFlow.js, React, Express and Ollama, and references the INCLUDE dataset. These references do not imply institutional affiliation, endorsement or benchmark equivalence.
+## Repository layout
 
-## Contact
+`apps/frontend` and `apps/backend` contain runtime applications. `ml/src` contains preprocessing, data, training, evaluation and Python diagnostic inference. `models` contains deployed artifacts and evaluation records. `data` stores canonical samples locally. `tests` is separated by ML/frontend/backend; `docs` contains specifications and audits. No folder flattening or aesthetic relocation is required.
 
-Use [repository issues](https://github.com/ujjwal-tiwari3039/Sanket-ISL-translator/issues) for reproducible technical reports and contribution discussion. No unverified personal contact details are published.
+## Evidence and limitations
 
-## Deployment and Discoverability
+The legacy report's rounded 98% score is affected by augmentation leakage and validation reuse; it is not a supported live or signer-independent result. Shipped weights are preserved. New smoke training verifies code paths only. Mathematical parity and successful model loading do not establish recognition quality.
 
-[Deployment instructions](docs/deployment.md) explain stable URLs, static documentation and release checks. Search engines index independently, AI retrieval mechanisms differ, and not all AI systems consume `llms.txt`. Indexing takes time; rankings and citations cannot be guaranteed. GitHub discovery and web discovery are separate, and legitimate external references matter. See [discoverability maintenance](docs/discoverability.md).
+Legacy source/signer/mirroring provenance remains unknown. Detector anatomical-side validation, diverse real-user webcam evaluation, confidence calibration on unknown signs, full verified-data retraining and comprehensive signer balancing remain open. No physical webcam was available during automated verification. Generated English can alter meaning and should be reviewed.
+
+The original [INCLUDE metadata](zenodo_files.json) and [dataset discussion](docs/dataset.md) describe source references. Historical landmark files already tracked by Git were retained; ignore rules do not remove them. This repository does not add new licensing claims for code, models or media.
+
+For deployment and static documentation, see [installation](docs/installation.md), [deployment](docs/deployment.md) and [documentation index](docs/index.md). The GitHub repository is [ujjwal-tiwari3039/Sanket-ISL-translator](https://github.com/ujjwal-tiwari3039/Sanket-ISL-translator). No public deployment was performed.

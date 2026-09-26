@@ -7,17 +7,15 @@ import signal
 import urllib.request
 import json
 import subprocess
-import numpy as np
-import cv2
-import mediapipe as mp
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from ml.src.data.process_include import process_video as canonical_process_video
 
 # --- CONFIGURATION ---
-DATA_PATH = 'MP_Data'
+DATA_PATH = 'data/include'
 TEMP_ZIP = 'temp_dataset.zip'
 TEMP_DIR = 'temp_videos'
-PROGRESS_FILE = 'completed_zips.txt'
+PROGRESS_FILE = 'data/include/completed_zips.txt'
 SEQUENCE_LENGTH = 30
 API_URL = "https://zenodo.org/api/records/4010759"
 
@@ -38,77 +36,9 @@ def cleanup(signum=None, frame=None):
 signal.signal(signal.SIGINT, cleanup)
 signal.signal(signal.SIGTERM, cleanup)
 
-# --- INITIALIZE MEDIAPIPE ---
-print("[INIT] Loading MediaPipe Pose and Hand Landmarkers...")
-BaseOptions = mp.tasks.BaseOptions
-PoseLandmarker = mp.tasks.vision.PoseLandmarker
-HandLandmarker = mp.tasks.vision.HandLandmarker
-
-pose_options = vision.PoseLandmarkerOptions(
-    base_options=BaseOptions(model_asset_path='models/pose_landmarker.task')
-)
-pose_landmarker = PoseLandmarker.create_from_options(pose_options)
-
-hand_options = vision.HandLandmarkerOptions(
-    base_options=BaseOptions(model_asset_path='models/hand_landmarker.task'),
-    num_hands=2
-)
-hand_landmarker = HandLandmarker.create_from_options(hand_options)
-
-def extract_keypoints(pose_result, hand_result):
-    # Pose: 33 landmarks * 4 (x, y, z, visibility) = 132
-    pose = np.zeros(33 * 4)
-    if pose_result.pose_landmarks:
-        pose = np.array([[res.x, res.y, res.z, res.visibility] for res in pose_result.pose_landmarks[0]]).flatten()
-
-    # Face: filled with 0s to maintain 1692 compatibility while saving 60% CPU time
-    face = np.zeros(478 * 3)
-
-    # Hands: Left & Right, 21 landmarks * 3 (x, y, z) = 63 each
-    lh = np.zeros(21 * 3)
-    rh = np.zeros(21 * 3)
-    if hand_result.hand_landmarks:
-        for idx, handedness in enumerate(hand_result.handedness):
-            hand_type = handedness[0].category_name
-            landmarks = np.array([[res.x, res.y, res.z] for res in hand_result.hand_landmarks[idx]]).flatten()
-            if hand_type == 'Left':
-                lh = landmarks
-            elif hand_type == 'Right':
-                rh = landmarks
-
-    return np.concatenate([pose, face, lh, rh])
-
 def process_video(video_path, word, seq_num):
-    cap = cv2.VideoCapture(video_path)
-    frames = []
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-        frames.append(frame)
-    cap.release()
-
-    if len(frames) == 0:
-        return False
-
-    out_dir = os.path.join(DATA_PATH, word, str(seq_num))
-    os.makedirs(out_dir, exist_ok=True)
-
-    # Sample exactly 30 frames linearly
-    indices = np.linspace(0, len(frames) - 1, SEQUENCE_LENGTH, dtype=int)
-
-    for i, idx in enumerate(indices):
-        frame = frames[idx]
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
-
-        pose_result = pose_landmarker.detect(mp_image)
-        hand_result = hand_landmarker.detect(mp_image)
-
-        keypoints = extract_keypoints(pose_result, hand_result)
-        npy_path = os.path.join(out_dir, f"{i}.npy")
-        np.save(npy_path, keypoints)
-
+    # seq_num is retained for downloader progress messages; samples use UUIDs.
+    canonical_process_video(video_path, word.split('. ', 1)[-1].strip(), DATA_PATH)
     return True
 
 def get_completed_zips():
@@ -306,7 +236,7 @@ def main():
         print(f"-> Pausing {COOLDOWN}s to respect Zenodo rate limits before next archive...")
         time.sleep(COOLDOWN)
 
-    print("\n[COMPLETE] All INCLUDE dataset archives processed successfully into MP_Data!")
+    print("\n[COMPLETE] INCLUDE extraction run finished; inspect progress and failures above.")
 
 if __name__ == '__main__':
     main()

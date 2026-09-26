@@ -1,27 +1,13 @@
 # Browser inference and local sentence generation
 
-Live recognition runs in the browser using `tf.loadLayersModel('/models/model.json')` and `/models/labels.json`. TensorFlow.js receives a float tensor shaped `[1, 30, 258]`; the output maps to the ordered label dictionary.
+TFJS loads `/models/model.json` and a contiguous, unique label map. Runtime checks require input `[batch,30,258]` and matching output/label width. The deployed model retains 263 labels. Camera processing is gated at 66 ms; this is a scheduling limit, not a latency benchmark.
 
-## Real-time processing
+User arming precedes motion-triggered capture. Minimum/maximum lengths, pre/post padding and optional stop hysteresis are implemented; see [temporal segmentation](temporal-segmentation.md). Classifier inputs use canonical raw detections, while EMA remains in the overlay. Confidence .40 is retained without calibration claims. UNCERTAIN captures add no word; reserved idle/extra/unknown labels are suppressed before any experimental question suffix.
 
-The webcam requests 1280 × 720 input. The inference loop uses requestAnimationFrame and skips processing until 66 milliseconds have elapsed. This is a scheduling gate, not measured frame rate or end-to-end latency. Actual throughput depends on camera, browser, hardware and model execution.
+Live and demo mount separately. Camera tracks, animation loops, models, landmarkers and assembly requests are cleaned up. Model failures and unavailable cameras show ERROR. Sentence completion retains signs appended after a request began; Clear Context cancels the outstanding request.
 
-The active path waits for arming and hand motion at or above 0.030, then records until the user explicitly stops it. After classification it counts down 15 processed frames before returning to idle. Source constants for pre/post padding, minimum capture length and low-velocity stopping are unused in the active loop; they are not implemented behavior. The UI stroke-mode toggle does not select a separate rolling classifier in this loop.
+Express validates bounded gloss/name tokens and streams from local Gemma 2. Its 20-second timeout cancels stalled upstream work. Before output starts, failure uses deterministic formatting; a midstream failure interrupts the response instead of appending a contradictory fallback. Names use explicit fingerspelling boundaries; normal `I` and `A` tokens are not merged as a name.
 
-## English sentence generation
-
-The frontend submits a sequence array to local Express at port 3001. Express merges consecutive single-letter entries and streams `gemma2:2b` output from local Ollama. Its error fallback joins words, capitalizes and adds punctuation; it is not a trained translator. The backend has no explicit request timeout.
-
-## Privacy and connectivity
-
-The reviewed frontend processes webcam images as browser landmarks and does not upload frames in its application request path. Recognized text is sent to the assembly endpoint. External hosts receive asset/font requests, which expose normal network metadata. No blanket privacy guarantee or security certification is established.
-
-Inference computation is local in the supplied localhost setup, but the application is **not a verified offline application**. WASM/task assets and fonts are externally hosted and there is no service-worker offline installation. Self-hosting every dependency and testing with the network disabled would be necessary to claim offline operation.
+The service binds `127.0.0.1`; local browser origins are allowed. Frames stay in the browser application path and gloss text goes to the local API. External assets and fonts are still fetched, so fully offline operation is not verified. A static host alone cannot supply the user's local Ollama service.
 
 See [installation](installation.md), [architecture](architecture.md), [deployment](deployment.md) and [limitations](limitations.md).
-
-## Source evidence
-
-- [frontend/src/App.jsx](../apps/frontend/src/App.jsx)
-- [backend/server.js](../apps/backend/server.js)
-- [frontend/src/index.css](../apps/frontend/src/index.css)

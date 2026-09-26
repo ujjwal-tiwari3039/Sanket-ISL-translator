@@ -8,25 +8,12 @@ The snapshot names Advaith Sridhar, Rohith Gandhi Ganesan, Pratyush Kumar and Mi
 
 The related publication is [INCLUDE, ACM Multimedia 2020](https://doi.org/10.1145/3394171.3413528). This is the dataset publication's DOI, not a Sanket project DOI or a Sanket benchmark.
 
-## What Sanket actually uses
+## Current data pipeline
 
-`scripts/dataset/download_and_extract.py` downloads/extracts source archives and creates landmark sequences. `ml/src/data/process_include.py` reads class directories beneath `islmodel/ProcessedData_vivit`. Other scripts support webcam collection and YouTube search/download. Their existence does not establish the provenance or redistribution rights of every training sample.
+`ml/src/data/process_include.py` re-extracts label-directory videos through the same canonical detector and preprocessing as custom collection. The downloader delegates to it. Each normalized NPZ records source, recording identity, signer (or unknown), timestamps, model hashes and schema versions. See [custom dataset instructions](custom-dataset.md).
 
-The exact training-source inventory, signer demographics, number of original recordings used, resolution and frame-rate distribution are unverified. The shipped model has 263 output labels; that count is not a verified count of the source dataset's signs or Sanket's independently validated vocabulary.
+The local legacy inventory has 3,679 sequences / 263 classes; the historical tracked `MP_Data_old_224` has 1,216 sequences / 77 classes. Legacy NPY shape is valid, but extraction/signer/mirroring provenance is unknown. Historical files are retained. Explicit conversion does not certify them; verified INCLUDE/custom mixing requires one matching extraction profile.
 
-## Preprocessing and augmentation
+The new trainer groups original recordings, duplicates and known signers before augmentation and reserves validation/test partitions. It does not implement the official INCLUDE split automatically. Source-wise metrics are engineering results for the recorded manifest, not official benchmark claims. The old .98 report remains compromised by its legacy split methodology.
 
-Extraction produces 30 sampled frames for each processed sequence. The trainer normalizes x/y relative to the nose and shoulder distance and removes face features. It uses the original sequence plus seven variants: light and heavy jitter, boundary trimming, scaling, temporal warping, mirroring, and combined jitter/scaling.
-
-## Train, validation and test partitions
-
-The current trainer randomly assigns 10% of the augmented examples to a held-out partition, attempting stratification and falling back to an unstratified split. That partition serves both validation and final reporting. It does not load the official dataset train/test CSVs. Augmentation before splitting risks related-example leakage.
-
-Before publishing new results, retain source-video identifiers, split by original recording and signer before augmentation, and reserve an untouched test set. See [preprocessing](preprocessing.md), [model](model.md), [research](research.md) and [limitations](limitations.md).
-
-## Source evidence
-
-- [zenodo_files.json](../zenodo_files.json)
-- [download_and_extract.py](../scripts/dataset/download_and_extract.py)
-- [ml/src/data/process_include.py](../ml/src/data/process_include.py)
-- [phase2_train_lstm.py](../ml/src/training/train_lstm.py)
+See [audit](audit/data-audit.md), [validation](audit/dataset-validation.md), [training](training.md) and [evaluation](evaluation.md).

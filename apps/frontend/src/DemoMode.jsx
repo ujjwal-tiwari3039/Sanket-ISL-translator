@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FilesetResolver, PoseLandmarker, HandLandmarker, FaceLandmarker } from '@mediapipe/tasks-vision';
 
 export default function DemoMode({ onExit }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  
+
   const [manifest, setManifest] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [modelsLoaded, setModelsLoaded] = useState(false);
@@ -14,23 +14,24 @@ export default function DemoMode({ onExit }) {
   const [llmSentence, setLlmSentence] = useState("...");
   const [strokeStatus, setStrokeStatus] = useState("IDLE");
   const [recordingProgress, setRecordingProgress] = useState(0);
-  const [showFaceMesh, setShowFaceMesh] = useState(true);
-  const [debugStr, setDebugStr] = useState("Init...");
+  const showFaceMesh = true;
+  const [, setDebugStr] = useState("Init...");
   const smoothedFaceRef = useRef(null);
   const smoothedHandsRef = useRef([]);
-  
+
   const landmarkersRef = useRef(null);
-  const isCancelledRef = useRef(false);
+  const typingTimerRef = useRef(null);
   const lastVideoTimeRef = useRef(0);
-  
+
   useEffect(() => {
-    isCancelledRef.current = false;
-    
+    let cancelled = false;
+    const resources = [];
+
     fetch('/demo/manifest.json?t=' + Date.now())
       .then(res => res.json())
-      .then(data => setManifest(data))
+      .then(data => {if (!cancelled) setManifest(data);})
       .catch(err => console.error("Could not load demo manifest", err));
-      
+
     const loadModels = async () => {
       try {
         const vision = await FilesetResolver.forVisionTasks(
@@ -40,150 +41,34 @@ export default function DemoMode({ onExit }) {
           baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task" },
           runningMode: "VIDEO"
         });
+        if (cancelled) {pose.close(); return;}
+        resources.push(pose);
         const hand = await HandLandmarker.createFromOptions(vision, {
           baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task" },
           runningMode: "VIDEO", numHands: 2
         });
+        if (cancelled) {hand.close(); return;}
+        resources.push(hand);
         const face = await FaceLandmarker.createFromOptions(vision, {
           baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task" },
           runningMode: "VIDEO"
         });
+        if (cancelled) {face.close(); return;}
+        resources.push(face);
         landmarkersRef.current = { pose, hand, face };
         setModelsLoaded(true);
       } catch(e) {
+        resources.splice(0).forEach(resource => resource.close());
+        if (!cancelled) setCurrentSign("Demo assets unavailable");
         console.error(e);
       }
     };
     loadModels();
-    
-    return () => { isCancelledRef.current = true; };
-  }, []);
-  
-  // Scripted Timeline Logic
-  const processedWordsRef = useRef(new Set());
-  const sentenceTriggeredRef = useRef(false);
-  
-  useEffect(() => {
-    if (!manifest[currentIndex] || !modelsLoaded) return;
-    
-    const entry = manifest[currentIndex];
-    const video = videoRef.current;
-    if (!video) return;
-    
-    video.src = `/demo/videos/${encodeURIComponent(entry.video)}`;
-    video.load();
-    video.play().catch(e => console.error("Video play error:", e));
-    
-    processedWordsRef.current = new Set();
-    sentenceTriggeredRef.current = false;
-    setSentence([]);
-    setLlmSentence("...");
-    setCurrentSign("Waiting...");
-    setStrokeStatus("IDLE");
-    setRecordingProgress(0);
-    setConfidence(0);
-    
-    let animationId;
-    
-    const predictLoop = () => {
-      const time = video.currentTime;
-      
-      setDebugStr(`Time: ${video.currentTime.toFixed(2)} | RS: ${video.readyState} | Ended: ${video.ended} | W: ${video.videoWidth}`);
-      // UI Scripting
-      let activeWord = null;
-      for (let i = 0; i < entry.words.length; i++) {
-        const w = entry.words[i];
-        const duration = video.duration && !isNaN(video.duration) ? video.duration : 2.0;
-        
-        // Evenly space the words across the video duration
-        const timePerWord = duration / entry.words.length;
-        const targetTime = (i + 1) * timePerWord - 0.1; 
-        
-        // Start capturing halfway through the previous word's time slot
-        const start = Math.max(0, targetTime - (timePerWord * 0.8));
-        const end = targetTime;
-        
-        if (time >= start && time < end && !video.ended) {
-          activeWord = w;
-          const progress = Math.min(100, Math.floor(((time - start) / (end - start || 1)) * 100));
-          setStrokeStatus("RECORDING");
-          setRecordingProgress(progress);
-          setCurrentSign("Capturing sign...");
-          break;
-        } else if ((time >= end || video.ended) && !processedWordsRef.current.has(i)) {
-          activeWord = w;
-          setStrokeStatus("COOLDOWN");
-          setRecordingProgress(100);
-          setConfidence(w.confidence * 100);
-          setCurrentSign(w.word.toUpperCase());
-          processedWordsRef.current.add(i);
-          setSentence(prev => {
-             const ns = [...prev, w.word.toUpperCase()];
-             return ns.length > 15 ? ns.slice(ns.length - 15) : ns;
-          });
-          break;
-        } else if (processedWordsRef.current.has(i)) {
-          // We already processed this word. Check if the NEXT word should be starting.
-          // If we are still before the next word's start time, hold the COOLDOWN state.
-          const nextStart = (i + 1 < entry.words.length) ? (Math.max(0, ((i + 2) * timePerWord - 0.1) - (timePerWord * 0.8))) : 999;
-          if (time < nextStart || (video.ended && i === entry.words.length - 1)) {
-            activeWord = w;
-            break;
-          }
-          // Otherwise, continue loop to let the next word take over
-        }
-      }
-      
-      if (!activeWord) {
-        setStrokeStatus("IDLE");
-        setRecordingProgress(0);
-        setCurrentSign(video.ended ? "Idle" : "Waiting...");
-      }
-      
-      if (video.ended && !sentenceTriggeredRef.current && entry.sentence) {
-        sentenceTriggeredRef.current = true;
-        // Simulate typing effect
-        let txt = "";
-        let i = 0;
-        const type = () => {
-          if (i < entry.sentence.length) {
-            txt += entry.sentence.charAt(i);
-            setLlmSentence(txt);
-            i++;
-            setTimeout(type, 30);
-          }
-        };
-        type();
-      }
-      
-      // Skeleton overlay
-      // Force it to draw as long as we have a video frame
-      if (video.videoWidth > 0 && landmarkersRef.current) {
-        // Prevent duplicate timestamp errors by slightly incrementing if paused
-        const now = performance.now();
-        if (video.currentTime !== lastVideoTimeRef.current || video.paused) {
-          lastVideoTimeRef.current = video.currentTime;
-          try {
-            const { pose, hand, face } = landmarkersRef.current;
-            const pRes = pose.detectForVideo(video, now);
-            const hRes = hand.detectForVideo(video, now);
-            const fRes = face ? face.detectForVideo(video, now) : null;
-            drawOverlay(pRes, hRes, fRes);
-          } catch (e) {
-            // Ignore temporary MediaPipe errors (like frame not ready yet)
-          }
-        }
-      }
-      animationId = requestAnimationFrame(predictLoop);
-    };
-    
-    // Start loop immediately, it will safely wait for readyState >= 2
-    animationId = requestAnimationFrame(predictLoop);
-    
-    return () => cancelAnimationFrame(animationId);
-  }, [currentIndex, manifest, modelsLoaded]);
 
-    const drawOverlay = (poseRes, handRes, faceRes) => {
+    return () => { cancelled = true; clearTimeout(typingTimerRef.current); resources.splice(0).forEach(resource => resource.close()); };
+  }, []);
+
+    const drawOverlay = useCallback((poseRes, handRes, faceRes) => {
       const video = videoRef.current;
       if (!canvasRef.current || !video) return;
       const canvas = canvasRef.current;
@@ -194,7 +79,7 @@ export default function DemoMode({ onExit }) {
         canvas.width = w;
         canvas.height = h;
       }
-      
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const alpha = 0.65; // Temporal exponential moving average factor
 
@@ -233,7 +118,7 @@ export default function DemoMode({ onExit }) {
           }
         }
       }
-      
+
       // 2. Face Mesh & Key Facial Anchors
       if (faceRes && faceRes.faceLandmarks && faceRes.faceLandmarks.length > 0) {
         const rawFace = faceRes.faceLandmarks[0];
@@ -276,7 +161,7 @@ export default function DemoMode({ onExit }) {
       } else {
         smoothedFaceRef.current = null;
       }
-      
+
       // 3. Dual-Hand Temporal Smoothing + Priority 1 Grace Period
       const prevHands = smoothedHandsRef.current || [];
       const nextHands = [];
@@ -343,7 +228,7 @@ export default function DemoMode({ onExit }) {
         palm: '#9ca3af',
         thumb: '#ef4444',
         index: '#f59e0b',
-        middle: '#10b981', 
+        middle: '#10b981',
         ring: '#3b82f6',
         pinky: '#8b5cf6'
       };
@@ -351,9 +236,9 @@ export default function DemoMode({ onExit }) {
       nextHands.forEach(handData => {
         const landmarks = handData.landmarks;
         const opacity = Math.max(0.2, 1 - (handData.missedFrames * 0.3));
-        
+
         ctx.globalAlpha = opacity;
-        
+
         // Draw connections
         ctx.lineWidth = 2.5;
         for (const [part, color] of Object.entries(colors)) {
@@ -380,7 +265,7 @@ export default function DemoMode({ onExit }) {
                 ctx.beginPath();
                 ctx.arc(p.x * w, p.y * h, 3, 0, 2 * Math.PI);
                 ctx.fill();
-                
+
                 // Color ring around points
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 1.5;
@@ -393,11 +278,136 @@ export default function DemoMode({ onExit }) {
         }
         ctx.globalAlpha = 1.0; // Reset
       });
+    }, []);
+
+
+  // Scripted Timeline Logic
+  const processedWordsRef = useRef(new Set());
+  const sentenceTriggeredRef = useRef(false);
+
+  useEffect(() => {
+    if (!manifest[currentIndex] || !modelsLoaded) return;
+
+    const entry = manifest[currentIndex];
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.src = `/demo/videos/${encodeURIComponent(entry.video)}`;
+    video.load();
+    video.play().catch(e => console.error("Video play error:", e));
+
+    processedWordsRef.current = new Set();
+    sentenceTriggeredRef.current = false;
+    setSentence([]);
+    setLlmSentence("...");
+    setCurrentSign("Waiting...");
+    setStrokeStatus("IDLE");
+    setRecordingProgress(0);
+    setConfidence(0);
+
+    let animationId;
+
+    const predictLoop = () => {
+      const time = video.currentTime;
+
+      setDebugStr(`Time: ${video.currentTime.toFixed(2)} | RS: ${video.readyState} | Ended: ${video.ended} | W: ${video.videoWidth}`);
+      // UI Scripting
+      let activeWord = null;
+      for (let i = 0; i < entry.words.length; i++) {
+        const w = entry.words[i];
+        const duration = video.duration && !isNaN(video.duration) ? video.duration : 2.0;
+
+        // Evenly space the words across the video duration
+        const timePerWord = duration / entry.words.length;
+        const targetTime = (i + 1) * timePerWord - 0.1;
+
+        // Start capturing halfway through the previous word's time slot
+        const start = Math.max(0, targetTime - (timePerWord * 0.8));
+        const end = targetTime;
+
+        if (time >= start && time < end && !video.ended) {
+          activeWord = w;
+          const progress = Math.min(100, Math.floor(((time - start) / (end - start || 1)) * 100));
+          setStrokeStatus("RECORDING");
+          setRecordingProgress(progress);
+          setCurrentSign("Capturing sign...");
+          break;
+        } else if ((time >= end || video.ended) && !processedWordsRef.current.has(i)) {
+          activeWord = w;
+          setStrokeStatus("COOLDOWN");
+          setRecordingProgress(100);
+          setConfidence(w.confidence * 100);
+          setCurrentSign(w.word.toUpperCase());
+          processedWordsRef.current.add(i);
+          setSentence(prev => {
+             const ns = [...prev, w.word.toUpperCase()];
+             return ns.length > 15 ? ns.slice(ns.length - 15) : ns;
+          });
+          break;
+        } else if (processedWordsRef.current.has(i)) {
+          // We already processed this word. Check if the NEXT word should be starting.
+          // If we are still before the next word's start time, hold the COOLDOWN state.
+          const nextStart = (i + 1 < entry.words.length) ? (Math.max(0, ((i + 2) * timePerWord - 0.1) - (timePerWord * 0.8))) : 999;
+          if (time < nextStart || (video.ended && i === entry.words.length - 1)) {
+            activeWord = w;
+            break;
+          }
+          // Otherwise, continue loop to let the next word take over
+        }
+      }
+
+      if (!activeWord) {
+        setStrokeStatus("IDLE");
+        setRecordingProgress(0);
+        setCurrentSign(video.ended ? "Idle" : "Waiting...");
+      }
+
+      if (video.ended && !sentenceTriggeredRef.current && entry.sentence) {
+        sentenceTriggeredRef.current = true;
+        // Simulate typing effect
+        let txt = "";
+        let i = 0;
+        const type = () => {
+          if (i < entry.sentence.length) {
+            txt += entry.sentence.charAt(i);
+            setLlmSentence(txt);
+            i++;
+            typingTimerRef.current = setTimeout(type, 30);
+          }
+        };
+        type();
+      }
+
+      // Skeleton overlay
+      // Force it to draw as long as we have a video frame
+      if (video.videoWidth > 0 && landmarkersRef.current) {
+        // Prevent duplicate timestamp errors by slightly incrementing if paused
+        const now = performance.now();
+        if (video.currentTime !== lastVideoTimeRef.current || video.paused) {
+          lastVideoTimeRef.current = video.currentTime;
+          try {
+            const { pose, hand, face } = landmarkersRef.current;
+            const pRes = pose.detectForVideo(video, now);
+            const hRes = hand.detectForVideo(video, now);
+            const fRes = face ? face.detectForVideo(video, now) : null;
+            drawOverlay(pRes, hRes, fRes);
+          } catch {
+            // Ignore temporary MediaPipe errors (like frame not ready yet)
+          }
+        }
+      }
+      animationId = requestAnimationFrame(predictLoop);
     };
 
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % manifest.length);
-  };
+    // Start loop immediately, it will safely wait for readyState >= 2
+    animationId = requestAnimationFrame(predictLoop);
+
+    return () => { cancelAnimationFrame(animationId); clearTimeout(typingTimerRef.current); };
+  }, [currentIndex, manifest, modelsLoaded, drawOverlay]);
+
+  const handleNext = useCallback(() => {
+    if (manifest.length) setCurrentIndex((prev) => (prev + 1) % manifest.length);
+  }, [manifest.length]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -405,11 +415,12 @@ export default function DemoMode({ onExit }) {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [manifest.length]);
+  }, [handleNext]);
 
   const handleReplay = () => {
     const video = videoRef.current;
     if (video) {
+      clearTimeout(typingTimerRef.current);
       video.currentTime = 0;
       video.play();
       processedWordsRef.current = new Set();
@@ -436,7 +447,7 @@ export default function DemoMode({ onExit }) {
       <main className="main-content">
         <section className="video-panel">
           <div className="video-container">
-            <video 
+            <video
               ref={videoRef}
               className="video-feed"
               autoPlay
@@ -449,6 +460,7 @@ export default function DemoMode({ onExit }) {
           </div>
           <div className="info-text" style={{ visibility: 'hidden', height: '0', padding: '0' }}>
             <button id="nextDemoBtn" onClick={handleNext}>Next</button>
+            <button onClick={handleReplay}>Replay</button>
           </div>
         </section>
 
@@ -456,9 +468,9 @@ export default function DemoMode({ onExit }) {
           <div className="data-panel">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3>Sign Detection</h3>
-              <span style={{ 
-                fontSize: '0.75rem', fontFamily: 'JetBrains Mono', 
-                color: strokeStatus === 'RECORDING' ? '#ef4444' : strokeStatus === 'COOLDOWN' ? '#10b981' : 'var(--text-muted)' 
+              <span style={{
+                fontSize: '0.75rem', fontFamily: 'JetBrains Mono',
+                color: strokeStatus === 'RECORDING' ? '#ef4444' : strokeStatus === 'COOLDOWN' ? '#10b981' : 'var(--text-muted)'
               }}>
                 {strokeStatus === 'RECORDING' ? `CAPTURING (${recordingProgress}%)` : strokeStatus === 'COOLDOWN' ? 'EVALUATED' : 'READY'}
               </span>
@@ -473,7 +485,7 @@ export default function DemoMode({ onExit }) {
               <div className="confidence-bar" style={{ width: `${confidence}%` }}></div>
             </div>
             <div className="conf-label">
-              CONFIDENCE: {confidence.toFixed(1)}%
+              SCRIPTED OUTPUT · NOT A MODEL SCORE
             </div>
           </div>
 

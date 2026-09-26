@@ -1,8 +1,8 @@
-import fs from 'fs';
-import path from 'path';
+const fs = require('fs');
+const path = require('path');
 
-const videosDir = path.join(process.cwd(), 'public', 'demo', 'videos');
-const manifestPath = path.join(process.cwd(), 'public', 'demo', 'manifest.json');
+const videosDir = path.join(__dirname, '../../apps/frontend/public', 'demo', 'videos');
+const manifestPath = path.join(__dirname, '../../apps/frontend/public', 'demo', 'manifest.json');
 
 if (!fs.existsSync(videosDir)) {
   console.log('Creating demo videos directory...');
@@ -84,7 +84,8 @@ for (const file of files) {
     wordsObjects.push({
       word: wordsList[i],
       timestamp: currentTimestamp,
-      confidence: 0.94 + (Math.random() * 0.05) // realistic random confidence between 94% and 99%
+      confidence: null, // Scripted words have no classifier confidence.
+      origin: 'scripted'
     });
     currentTimestamp += 1.2;
   }

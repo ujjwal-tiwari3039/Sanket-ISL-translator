@@ -1,75 +1,55 @@
-import cv2
-import numpy as np
-import os
-import glob
-import mediapipe as mp
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
-from phase1_5_data_collection import extract_keypoints, pose_landmarker, hand_landmarker, face_landmarker
+"""Re-extract labeled source videos through the canonical VIDEO-mode pipeline."""
+import argparse
+import hashlib
+from pathlib import Path
+from ml.src.preprocessing.keypoint_extractor import LandmarkExtractor
+from .dataset import save_sample
 
-DATA_PATH = os.path.join('MP_Data')
-INCLUDE_PATH = os.path.join('islmodel', 'ProcessedData_vivit')
-SEQUENCE_LENGTH = 30
 
-def process_video(video_path, word, seq_num):
-    cap = cv2.VideoCapture(video_path)
-    frames = []
-    while True:
-        ret, frame = cap.read()
-        if not ret: break
-        frames.append(frame)
-    cap.release()
-    
-    if len(frames) == 0:
-        return False
-        
-    out_dir = os.path.join(DATA_PATH, word, str(seq_num))
-    os.makedirs(out_dir, exist_ok=True)
-    
-    # Select exactly SEQUENCE_LENGTH frames
-    # Simple strategy: linearly space indices
-    indices = np.linspace(0, len(frames)-1, SEQUENCE_LENGTH, dtype=int)
-    
-    for i, idx in enumerate(indices):
-        frame = frames[idx]
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
-        
-        pose_result = pose_landmarker.detect(mp_image)
-        hand_result = hand_landmarker.detect(mp_image)
-        face_result = face_landmarker.detect(mp_image)
-        
-        keypoints = extract_keypoints(pose_result, hand_result, face_result)
-        npy_path = os.path.join(out_dir, f"{i}.npy")
-        np.save(npy_path, keypoints)
-        
-    return True
+def process_video(video_path, label, output, *, source='include', signer_id=None):
+    import cv2
+    path = Path(video_path)
+    cap = cv2.VideoCapture(str(path))
+    frames, timestamps = [], []
+    try:
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        if not cap.isOpened() or not (0 < fps < 1000):
+            raise ValueError(f'Cannot decode video/fps: {path}')
+        with LandmarkExtractor() as extractor:
+            index = 0
+            while True:
+                ok, frame = cap.read()
+                if not ok:
+                    break
+                timestamp = round(index * 1000 / fps)
+                index += 1
+                if timestamps and timestamp - timestamps[-1] < 66:
+                    continue
+                frames.append(extractor.extract(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), timestamp))
+                timestamps.append(timestamp)
+            if len(frames) < 20:
+                raise ValueError(f'Too short: {path} has {len(frames)} sampled frames; need 20')
+            return save_sample(output, frames, label=label, source=source,
+                               recording_id=hashlib.sha256(path.read_bytes()).hexdigest(),
+                               signer_id=signer_id, extraction=extractor.metadata, timestamps_ms=timestamps)
+    finally:
+        cap.release()
+
 
 def main():
-    words = os.listdir(INCLUDE_PATH)
-    total_processed = 0
-    for word in words:
-        word_path = os.path.join(INCLUDE_PATH, word)
-        if not os.path.isdir(word_path): continue
-        
-        videos = glob.glob(os.path.join(word_path, '*.MOV')) + glob.glob(os.path.join(word_path, '*.mp4'))
-        videos.sort()
-        
-        # Determine starting sequence number for this word in MP_Data
-        word_out_path = os.path.join(DATA_PATH, word)
-        seq_num = 0
-        if os.path.exists(word_out_path):
-            existing_seqs = [int(s) for s in os.listdir(word_out_path) if s.isdigit()]
-            if existing_seqs:
-                seq_num = max(existing_seqs) + 1
-                
-        for video in videos:
-            print(f"Processing {word} - {video} -> seq {seq_num}")
-            if process_video(video, word, seq_num):
-                seq_num += 1
-                total_processed += 1
-                
-    print(f"Total videos processed: {total_processed}")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--videos', type=Path, required=True, help='Directory with class subdirectories')
+    parser.add_argument('--output', type=Path, default=Path('data/include'))
+    parser.add_argument('--signer-id', help='Use only when all input clips share this known signer')
+    parser.add_argument('--source', default='include')
+    args = parser.parse_args()
+    videos = sorted(p for p in args.videos.rglob('*') if p.suffix.lower() in ('.mov', '.mp4', '.webm'))
+    if not videos:
+        parser.error('No videos found')
+    for video in videos:
+        label = video.parent.name.split('. ', 1)[-1].strip().lower()
+        print(process_video(video, label, args.output, source=args.source, signer_id=args.signer_id))
+
 
 if __name__ == '__main__':
     main()

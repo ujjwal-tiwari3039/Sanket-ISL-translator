@@ -12,7 +12,7 @@ The repository includes source, label maps, model topology/weights and a develop
 
 ## Recommended next experiments
 
-Split original recordings by signer before augmentation; preserve an untouched test set. Record data checksums, split identifiers, dependency versions and seeds. Compare Python/browser feature tensors and predictions on the same fixtures. Measure per-class recognition errors, rejection behavior and sentence fidelity separately, then measure end-to-end latency on documented hardware. Test complete offline operation only after self-hosting all required assets.
+The implementation now splits original recording/duplicate/known-signer groups before augmentation, records manifests and compares Python/browser tensors and model predictions. Apply that tooling to newly verified source data; unknown legacy signer IDs still prevent signer-independent claims. Measure per-class recognition errors, rejection behavior and sentence fidelity separately, then measure end-to-end latency on documented hardware. Test complete offline operation only after self-hosting all required assets.
 
 ## Future work
 
