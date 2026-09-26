@@ -1,38 +1,40 @@
-import os
-import numpy as np
-import tensorflow as tf
-from tensorflow.keras.models import load_model
-
-model = load_model('models/action.h5')
-# find a valid sequence
-DATA_PATH = 'MP_Data'
-class_name = os.listdir(DATA_PATH)[0]
-seq_name = os.listdir(os.path.join(DATA_PATH, class_name))[0]
-seq_path = os.path.join(DATA_PATH, class_name, seq_name)
-
-window = []
-for i in range(30):
-    res = np.load(os.path.join(seq_path, f"{i}.npy"))
-    # Apply the same normalization as training
-    if res[0] != 0 or res[1] != 0:
-        nose_x, nose_y = res[0], res[1]
-        for j in range(0, 132, 4):
-            if res[j] != 0 or res[j+1] != 0: res[j] -= nose_x; res[j+1] -= nose_y
-        for j in range(132, 1566, 3):
-            if res[j] != 0 or res[j+1] != 0: res[j] -= nose_x; res[j+1] -= nose_y
-        for j in range(1566, 1692, 3):
-            if res[j] != 0 or res[j+1] != 0: res[j] -= nose_x; res[j+1] -= nose_y
-    window.append(res)
-
-window = np.array([window])
-preds = model.predict(window)
-print("Python Predictions top 5:")
-top5_idx = np.argsort(preds[0])[-5:][::-1]
-for idx in top5_idx:
-    print(f"{idx}: {preds[0][idx]}")
-
-# save window to json so we can test with JS
+"""Actual shipped Keras/TFJS prediction parity, not a stale raw-input demo."""
 import json
-with open('test_sequence.json', 'w') as f:
-    json.dump(window.tolist(), f)
-print(f"Tested class: {class_name}")
+from pathlib import Path
+import subprocess
+import tempfile
+import unittest
+import numpy as np
+from ml.src.preprocessing import build_raw_features,normalize_keypoints,resample_sequence
+
+ROOT=Path(__file__).resolve().parents[2]
+
+
+class ModelParityTests(unittest.TestCase):
+    def test_new_export_predictions(self):
+        from tensorflow.keras.models import load_model
+        from ml.src.training.train_lstm import export_tfjs
+        model=load_model(ROOT/'models/training/action.h5',compile=False)
+        mapping=json.loads((ROOT/'models/labels.json').read_text())
+        features=np.random.default_rng(42).normal(0,.1,(1,30,258)).astype(np.float32)
+        expected=np.asarray(model(features,training=False)).ravel()
+        with tempfile.TemporaryDirectory() as directory:
+            output=Path(directory)/'tfjs'
+            export_tfjs(model,[mapping[str(i)] for i in range(len(mapping))],output)
+            actual=json.loads(subprocess.check_output(['node','tests/frontend/model-parity.mjs',str(output)],cwd=ROOT,input=json.dumps(features.tolist()).encode()))
+        np.testing.assert_allclose(expected,actual,atol=1e-5,rtol=1e-4)
+
+    def test_shipped_predictions_labels_and_shapes(self):
+        from tensorflow.keras.models import load_model
+        fixture=json.loads((ROOT/'tests/fixtures/landmarks.json').read_text())
+        features=resample_sequence([normalize_keypoints(build_raw_features(f['pose'],f['hands'])) for f in fixture['frames']])[None]
+        model=load_model(ROOT/'models/training/action.h5',compile=False)
+        labels=json.loads((ROOT/'models/labels.json').read_text())
+        self.assertEqual(labels,json.loads((ROOT/'apps/frontend/public/models/labels.json').read_text()))
+        self.assertEqual(model.input_shape,(None,30,258));self.assertEqual(model.output_shape[-1],len(labels))
+        scores=np.asarray(model(features,training=False)).ravel()
+        js=json.loads(subprocess.check_output(['node','tests/frontend/model-parity.mjs'],cwd=ROOT,input=json.dumps(features.tolist()).encode()))
+        np.testing.assert_allclose(scores,js,atol=1e-5,rtol=1e-4)
+
+
+if __name__=='__main__':unittest.main()

@@ -1,21 +1,20 @@
-import cv2
-import mediapipe as mp
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
+"""Optional real-video extractor smoke check; unit discovery never opens a camera."""
+import os
+from pathlib import Path
+import unittest
 
-base_options = python.BaseOptions(model_asset_path='models/hand_landmarker.task')
-options = vision.HandLandmarkerOptions(base_options=base_options, num_hands=2)
-detector = vision.HandLandmarker.create_from_options(options)
 
-cap = cv2.VideoCapture("frontend/public/test_videos/deaf_MVI_9851.MOV")
-total, hands = 0, 0
-while True:
-    ret, frame = cap.read()
-    if not ret: break
-    total += 1
-    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
-    res = detector.detect(mp_image)
-    if res.hand_landmarks: hands += 1
+class MediaPipeTests(unittest.TestCase):
+    @unittest.skipUnless(os.environ.get('SANKET_VIDEO_TEST'), 'Set SANKET_VIDEO_TEST to a readable sign video')
+    def test_video_extraction(self):
+        import tempfile
+        from ml.src.data.process_include import process_video
+        from ml.src.data.dataset import load_sample
+        with tempfile.TemporaryDirectory() as output:
+            path=process_video(Path(os.environ['SANKET_VIDEO_TEST']),'reference',output,source='test')
+            features,metadata=load_sample(path)
+            self.assertEqual(features.shape,(30,258))
+            self.assertEqual(metadata['extraction']['mirrored'],False)
 
-print(f"Total: {total}, With hands: {hands}")
+
+if __name__=='__main__':unittest.main()

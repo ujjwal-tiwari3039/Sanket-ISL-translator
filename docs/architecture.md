@@ -1,47 +1,38 @@
 # System architecture
 
-Sanket ISL Translator separates browser recognition from sentence assembly. The browser uses React 19, MediaPipe Tasks Vision and TensorFlow.js. A Node.js Express 4 service forwards recognized text to local Ollama.
-
-## Live processing path
+Sanket separates gesture recognition from language generation. Folder boundaries remain `apps/`, `ml/`, `models/`, `data/`, `docs/` and `tests/`.
 
 ```mermaid
 flowchart TD
-    A[Webcam video] --> B[MediaPipe pose, hands and face]
-    B --> C[Hand smoothing and landmark features]
-    C --> D[Nose-relative x/y and shoulder scaling]
-    D --> E[258 pose and hand features]
-    E --> F[Armed capture and 30-frame resampling]
-    F --> G[TensorFlow.js stacked LSTM]
-    G --> H[Selected label and confidence]
-    H --> I[Sequence context]
-    I --> J[Express POST /api/assemble]
-    J --> K[Ollama gemma2:2b]
-    K --> L[Streamed English text]
-    J --> M[Basic fallback on fetch failure]
-    M --> L
-    B --> N[Eyebrow-distance question heuristic]
-    N --> I
+    A[INCLUDE source video] --> P[Python LandmarkExtractor: VIDEO mode]
+    B[Custom webcam: unmirrored RGB] --> P
+    P --> F[Canonical raw 258 features]
+    F --> N[Nose XY and shoulder normalization]
+    N --> S[Linear resampling to 30 x 258]
+    S --> DATA[NPZ features and provenance metadata]
+    DATA --> SPLIT[Group original recordings / duplicates / known signers]
+    SPLIT --> TRAIN[Train-only augmentation and weighted LSTM fit]
+    SPLIT --> VAL[Validation: early stopping and threshold analysis]
+    SPLIT --> TEST[Untouched test: metrics and confusion matrix]
+    TRAIN --> EXPORT[Candidate Keras / TFJS / labels / metadata]
+    C[Browser webcam] --> MP[Matching Tasks assets and settings]
+    MP --> JS[Equivalent JS packing and normalization]
+    MP --> DRAW[Display-only smoothing and face overlay]
+    JS --> CAP[Arm / motion / bounded capture / hysteresis]
+    CAP --> RS[Same 30-frame interpolation]
+    RS --> MODEL[Deployed TFJS model]
+    MODEL --> ACCEPT[Confidence and unknown decision]
+    ACCEPT --> CONTEXT[Gloss context and explicit fingerspelling]
+    CONTEXT --> API[Loopback Express API]
+    API --> OLLAMA[Local Gemma 2 stream]
+    API --> FALLBACK[Deterministic fallback before output starts]
+    DEMO[Scripted demo manifest] --> PRESENT[Separate presentation component]
 ```
 
-The same path in text: webcam → landmarks → spatial normalization → fixed-length temporal sequence → LSTM class probabilities → label queue → sentence generation → English text. Face coordinates are excluded from classifier input; a separate facial heuristic can add a question marker.
+Python numeric preprocessing is import-safe under `ml/src/preprocessing`. Dataset metadata prevents silent profile mixing. Browser `App.jsx` imports the tested pure utilities; it no longer maintains duplicate normalization/resampling code. App mounts either live or demo so camera/model ownership is explicit. Face data never enters the LSTM; the separate question heuristic requires an experimental opt-in.
 
-## Component boundaries
+The candidate exporter never replaces deployed files automatically. Both shipped and candidate export predictions were compared across Keras and TFJS. The shipped model still has legacy training provenance; it is not retroactively certified by the new pipeline.
 
-- `frontend/src/App.jsx`: camera lifecycle, MediaPipe loading, feature extraction, capture state, classification and sentence display.
-- `frontend/src/DemoMode.jsx`: presentation playback. Words, confidence values and final sentences come from the demo manifest, not live classification.
-- `apps/backend/server.js`: `POST /api/assemble`, letter merging, Ollama streaming and fallback formatting.
-- `ml/src/preprocessing/keypoint_extractor.py` and collection scripts: Python landmark extraction.
-- `ml/src/training/train_lstm.py`: augmentation, fitting, artifact export and evaluation.
-- `frontend/public/models/`: deployed classifier topology, weights and ordered labels.
+The browser sends only text tokens to `http://127.0.0.1:3001/api/assemble`. Express binds loopback and calls local `gemma2:2b` at port 11434 with timeout/cancellation. External MediaPipe assets/fonts prevent a verified offline claim. Demo overlays can use MediaPipe, but words and final sentences come from the manifest.
 
-## Network boundaries
-
-The frontend currently posts text to `http://localhost:3001/api/assemble`; this means the visitor's machine when the site is public. The backend calls `http://127.0.0.1:11434/api/generate`. MediaPipe WASM and task models load from jsDelivr and Google Storage. Google Fonts is also requested by application CSS. A static deployment alone does not provide a hosted sentence-generation backend.
-
-See [preprocessing](preprocessing.md), [model](model.md), [inference](inference.md) and [deployment](deployment.md).
-
-## Source evidence
-
-- [frontend/src/App.jsx](../apps/frontend/src/App.jsx)
-- [frontend/src/DemoMode.jsx](../apps/frontend/src/DemoMode.jsx)
-- [backend/server.js](../apps/backend/server.js)
+See [schema](landmark-schema.md), [capture](temporal-segmentation.md), [data](custom-dataset.md), [training](training.md), and [evaluation](evaluation.md).

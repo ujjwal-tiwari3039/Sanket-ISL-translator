@@ -20,7 +20,7 @@ models/
 
 ## Training Artifacts (`training/`)
 
-`action.h5` is the Keras source checkpoint. The TensorFlow.js browser runtime is exported separately into `apps/frontend/public/models/` during training via `ml/src/training/train_lstm.py`.
+`action.h5` is the Keras source checkpoint. The TensorFlow.js browser runtime is exported separately into `apps/frontend/public/models/` from the historical training run. Current `ml/src/training/train_lstm.py` writes isolated candidates instead of overwriting deployment.
 
 The classification report is a development artifact. See [evaluation limitations](../docs/limitations.md) before citing these numbers.
 

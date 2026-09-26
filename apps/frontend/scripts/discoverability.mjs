@@ -17,6 +17,11 @@ export const pages = [
   ['model', 'Sign recognition model', 'Verified Sanket LSTM layers, 30 × 258 input, 263 output labels, training configuration and evaluation limitations.'],
   ['dataset', 'Dataset and provenance', 'INCLUDE dataset references, source licensing, training provenance gaps and split methodology used by Sanket.'],
   ['preprocessing', 'Landmark preprocessing', 'How Sanket normalizes pose and hand coordinates, removes face features and resamples temporal sign sequences.'],
+  ['landmark-schema', 'Canonical landmark schema', 'Versioned landmark indices, side slots, missingness, normalization and tensor layout shared by Python and JavaScript.'],
+  ['custom-dataset', 'Collect and prepare sign data', 'Record custom signs and re-extract INCLUDE videos into validated metadata-bearing canonical samples.'],
+  ['training', 'Train candidate models', 'Reproducible recording-group splits, train-only augmentation, source weighting and isolated candidate exports.'],
+  ['evaluation', 'Evaluate models and parity', 'Held-out metrics, source-wise reporting, threshold analysis and cross-runtime preprocessing and prediction checks.'],
+  ['temporal-segmentation', 'Temporal gesture capture', 'Arming, motion thresholds, capture bounds, stop hysteresis and shared thirty-frame temporal resampling.'],
   ['inference', 'Browser inference', 'TensorFlow.js sign classification, local Ollama sentence generation, privacy boundaries and connectivity requirements.'],
   ['installation', 'Installation and usage', 'Run Sanket ISL Translator locally with React, Vite, Express and Ollama; learn camera and training requirements.'],
   ['vocabulary', 'Shipped recognition vocabulary', 'The complete ordered list of 263 labels in Sanket’s shipped model, with no implied recognition accuracy guarantee.'],
@@ -106,9 +111,9 @@ ${origin ? `<meta property="og:url" content="${escape(url(route))}">` : ''}
       let target;
       if (filename === 'index.md') target = '/docs/';
       else if (filename === 'about.md') target = '/about/';
-      else if (filename.startsWith('../frontend/public/screenshots/')) target = filename.replace('../frontend/public', '');
+      else if (filename.startsWith('../apps/frontend/public/screenshots/')) target = filename.replace('../apps/frontend/public', '');
       else if (published.has(filename.replace(/\.md$/, ''))) target = `/docs/${filename.replace(/\.md$/, '')}/`;
-      else target = `${sourceURL}${filename.replace(/^\.\.\//, '')}`;
+      else target = `${sourceURL}${filename.startsWith('../') ? filename.slice(3) : 'docs/' + filename}`;
       if (absolute && target.startsWith('/')) target = url(target);
       return `](${target}${hash ? '#' + hash : ''})`;
     });

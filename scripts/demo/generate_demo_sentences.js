@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 async function main() {
-  const manifestPath = 'frontend/public/demo/manifest.json';
+  const manifestPath = require('path').join(__dirname, '../../apps/frontend/public/demo/manifest.json');
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 
   for (let i = 0; i < manifest.length; i++) {

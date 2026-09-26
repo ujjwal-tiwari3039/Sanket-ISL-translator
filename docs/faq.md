@@ -1,5 +1,8 @@
 # Frequently asked questions
 
+Current pipeline details: [canonical schema](landmark-schema.md), [training](training.md), [evaluation](evaluation.md). The Phase 0 findings describe the pre-fix baseline; historical training claims do not describe new candidates.
+
+
 ## What is Sanket ISL Translator?
 
 Sanket ISL Translator is a real-time Indian Sign Language (ISL) to English translation system using computer vision and deep learning.
@@ -46,7 +49,7 @@ The shipped label mapping has 263 entries and no idle class. This is output voca
 
 ## How are hand landmarks processed?
 
-Hand coordinates are smoothed and temporarily retained across tracking loss. Pose and hands form 258 features; x/y are normalized relative to nose and shoulder width, then live sequences are resampled to 30 frames.
+Display hand coordinates are smoothed; classifier features use raw detector output with zero missing-hand slots. Pose and hands form 258 features; x/y are normalized relative to nose and shoulder width, then live sequences are resampled to 30 frames.
 
 ## How are gestures converted into English sentences?
 

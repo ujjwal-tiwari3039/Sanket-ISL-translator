@@ -1,29 +1,11 @@
 # Landmark preprocessing
 
-Sanket ISL Translator represents video as sequences of landmarks rather than raw image tensors for its LSTM.
+The canonical classifier frame contains **258** float32 values: pose 33 × `(x,y,z,visibility)`, Left hand 21 × `(x,y,z)`, Right hand 21 × `(x,y,z)`. Slots follow detector category on unmirrored pixels, independent of detection order. Unknown/ambiguous hands never shift slots. Missing pose zeros the normalized frame in both languages; absent hands remain zero.
 
-## Feature layout
+`ml/src/preprocessing` and imported browser utilities implement the same nose-relative XY transformation, shoulder-width fallback and 30-frame interpolation. Depth and visibility remain unchanged. App display smoothing is not a classifier input. Full index tables, equations, version IDs, model hashes and limitations are in the [landmark schema](landmark-schema.md).
 
-The Python extractor concatenates 33 pose points with x/y/z/visibility (132 values), 478 face points with x/y/z (1,434 values), and two sets of 21 hand points with x/y/z (126 values): 1,692 values before trimming. Missing detections are zero-filled.
+Legacy NPY data is 1692-wide and includes face placeholders; explicit conversion removes those channels. Conversion is not proof of historical extraction compatibility. New collection and INCLUDE video extraction use the same VIDEO-mode detector and versioned normalized NPZ format. Training consumes those samples without a second normalization and augments only after group splitting.
 
-The trainer removes face coordinates, leaving 132 pose plus 63 left-hand plus 63 right-hand values: **258 features per frame**. Pose z and visibility and hand z are retained. Only x/y receive nose translation and shoulder-width normalization. It would be inaccurate to call this full 3D scale invariance.
+Python/browser fixture parity passes at tolerance 1e-6. Keras/TFJS model prediction parity is separately tested. These establish mathematical agreement, not recognition accuracy or identical detector outputs across every runtime.
 
-## Spatial transformation
-
-For nonzero x/y pairs, subtract nose x/y and divide by the Euclidean x/y distance between pose shoulders 11 and 12. If shoulder width is at most 0.01, the scale falls back to 1.0. The trainer returns 258 zeros when the nose x and y are both zero; browser missing-pose handling is not identical. Training/inference parity needs further validation.
-
-## Temporal transformation
-
-Python extraction uses 30 linearly spaced frame indices. The browser uses linear interpolation of a variable-length live capture to 30 frames, with repeated padding for fewer than two frames. These operations are related but not identical. Browser hands use an exponential moving average with alpha 0.65 and a brief missed-frame grace period; these measures cannot guarantee robust occlusion handling.
-
-## Training augmentation
-
-The trainer uses Gaussian jitter (0.005 and 0.012 standard deviations), random scaling from 0.85 to 1.15, piecewise temporal warping, up to four-frame trimming at each boundary with resampling, x mirroring with hand-buffer swapping, and combined scaling/jitter (0.008). Augmentation may alter linguistic distinctions; no semantic validation of mirrored samples is recorded.
-
-See [dataset provenance](dataset.md), [LSTM model](model.md) and [live inference](inference.md).
-
-## Source evidence
-
-- [ml/src/preprocessing/keypoint_extractor.py](../ml/src/preprocessing/keypoint_extractor.py)
-- [ml/src/training/train_lstm.py](../ml/src/training/train_lstm.py)
-- [frontend/src/App.jsx](../apps/frontend/src/App.jsx)
+See [custom data](custom-dataset.md), [training](training.md), [model](model.md) and [evaluation](evaluation.md).

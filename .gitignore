@@ -67,3 +67,7 @@ node_modules/
 !**/.env.example
 .netlify/
 .vercel/
+
+# Locally collected canonical sample arrays
+data/**/*.npz
+.venv/

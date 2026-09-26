@@ -3,12 +3,35 @@ import * as tf from '@tensorflow/tfjs';
 import { FilesetResolver, PoseLandmarker, HandLandmarker, FaceLandmarker } from '@mediapipe/tasks-vision';
 import DemoMode from './DemoMode';
 import './index.css';
+import { extractKeypoints } from './utils/features.js';
+import { resampleSequence } from './utils/resampling.js';
+import { CAPTURE, captureStopDecision, decidePrediction, validateLabels } from './utils/recognition.js';
+import {createTrial, UNKNOWN_TRIAL} from './utils/validationRecorder.js';
+const LANDMARK_DEBUG = new URLSearchParams(window.location.search).has('landmarkDebug');
+const EXPERIMENTAL_QUESTIONS = import.meta.env.VITE_EXPERIMENTAL_QUESTIONS === 'true';
+const formatToken = token => typeof token === 'string' ? token : token.letters.join('');
 
-function App() {
+  const PRE_PAD_FRAMES = CAPTURE.preFrames;            // Prepend 5 rolling frames to capture motion wind-up
+  const POST_PAD_FRAMES = CAPTURE.postFrames;           // Retain 4 frames after stop condition for wind-down
+  const MIN_STROKE_FRAMES = CAPTURE.minFrames;        // Minimum gesture duration before hysteresis stop allowed
+
+
+function LiveTranslator({ onEnterDemo }) {
   const videoRef = useRef(null);
+  const diagnosticRef = useRef(null);
+  const trialSettingsRef = useRef({target:'',notes:''});
+  const captureSettingsRef = useRef(null);
+  const observationsRef = useRef(new WeakMap());
+  const [trials,setTrials] = useState([]);
+  const [trialMessage,setTrialMessage] = useState('');
+  const exportTrials = () => {
+    const blob = new Blob([JSON.stringify({format:'sanket-validation-v1',purpose:'manual validation; not training data',labels:actionsList,model:'deployed browser model; artifact hash not recorded',trials},null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob), link=document.createElement('a');
+    link.href=url;link.download=`sanket-validation-${Date.now()}.json`;link.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  };
   const [isStreaming, setIsStreaming] = useState(false);
   const [modelsLoaded, setModelsLoaded] = useState(false);
-  const [isDemoMode, setIsDemoMode] = useState(false);
   
   // State for our dynamic translation
   const [currentSign, setCurrentSign] = useState("Waiting...");
@@ -26,14 +49,13 @@ function App() {
   const [isStrokeMode, setIsStrokeMode] = useState(true);
   const [recordingProgress, setRecordingProgress] = useState(0);
   const [strokeStatus, setStrokeStatus] = useState("IDLE"); // IDLE, RECORDING, EVALUATING, COOLDOWN
-  const [isStrokeCapturing, setIsStrokeCapturing] = useState(false);
   const [fingerspellInput, setFingerspellInput] = useState("");
 
   const handleAddFingerspell = () => {
     if (!fingerspellInput.trim()) return;
     const cleanLetters = fingerspellInput.trim().toUpperCase().replace(/[^A-Z]/g, '').split('');
     if (cleanLetters.length === 0) return;
-    const updated = [...sentenceRef.current, ...cleanLetters];
+    const updated = [...sentenceRef.current, {type:'fingerspell', kind:'name', letters:cleanLetters}];
     sentenceRef.current = updated;
     setSentence(updated);
     setFingerspellInput("");
@@ -41,7 +63,6 @@ function App() {
 
   // Refs for logic loop & stroke engine
   const canvasRef = useRef(null);
-  const sequenceRef = useRef([]);
   const sentenceRef = useRef([]);
   const tfModelRef = useRef(null);
   const landmarkersRef = useRef(null);
@@ -58,49 +79,6 @@ function App() {
   const evaluateStrokeRef = useRef(null);
   const preStrokeBufferRef = useRef([]);
   const postPadFramesRemainingRef = useRef(0);
-
-  // Tuned stroke capture parameters matching training distribution & mitigating boundary crop
-  const PRE_PAD_FRAMES = 5;            // Prepend 5 rolling frames to capture motion wind-up
-  const POST_PAD_FRAMES = 4;           // Retain 4 frames after stop condition for wind-down
-  const MIN_STROKE_FRAMES = 20;        // Minimum gesture duration before hysteresis stop allowed
-  const STOP_LOW_VELOCITY_FRAMES = 10; // Consecutive low-velocity frames (~0.66s) required to stop
-
-  // Time-normalized resampling of variable-length capture (e.g. 15 to 60 frames)
-  // to the fixed 30-frame sequence expected by the LSTM model, matching training linspace
-  const resampleSequence = (frames, targetLength = 30) => {
-    const N = frames.length;
-    if (N === targetLength) {
-      return frames;
-    }
-    if (N < 2) {
-      const padded = [...frames];
-      while (padded.length < targetLength) {
-        padded.push(frames[frames.length - 1] || new Array(258).fill(0));
-      }
-      return padded;
-    }
-
-    const resampled = [];
-    for (let t = 0; t < targetLength; t++) {
-      const pos = (t * (N - 1)) / (targetLength - 1);
-      const i0 = Math.floor(pos);
-      const i1 = Math.min(i0 + 1, N - 1);
-      const alpha = pos - i0;
-
-      if (alpha === 0 || i0 === i1) {
-        resampled.push(frames[i0]);
-      } else {
-        const f0 = frames[i0];
-        const f1 = frames[i1];
-        const interpolated = new Float32Array(258);
-        for (let k = 0; k < 258; k++) {
-          interpolated[k] = (1 - alpha) * f0[k] + alpha * f1[k];
-        }
-        resampled.push(Array.from(interpolated));
-      }
-    }
-    return resampled;
-  };
 
   const isArmedRef = useRef(false);
   const [isArmed, setIsArmed] = useState(false);
@@ -120,38 +98,51 @@ function App() {
       setIsArmed(false);
       strokeStateRef.current = "IDLE";
       setStrokeStatus("IDLE");
-      setUiState("IDLE");
+      setUiState("WAITING");
       setCurrentSign("Waiting...");
     }
   };
 
-  const triggerAssembly = () => {
-    if (sentenceRef.current.length === 0) return;
-    setUiState("ASSEMBLING");
-    setLlmSentence("");
-    fetch('http://localhost:3001/api/assemble', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sequence: sentenceRef.current })
-    }).then(async response => {
-      if (!response.body) return;
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let assembled = "";
+  const assemblyRef = useRef(null);
+  const faceMeshRef = useRef(false);
+  faceMeshRef.current = showFaceMesh;
+  const triggerAssembly = async () => {
+    if (!sentenceRef.current.length || assemblyRef.current) return;
+    const snapshot = [...sentenceRef.current];
+    const controller = new AbortController();
+    assemblyRef.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 25000);
+    setUiState('ASSEMBLING'); setLlmSentence('');
+    try {
+      const response = await fetch('http://127.0.0.1:3001/api/assemble', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({sequence:snapshot}), signal:controller.signal,
+      });
+      if (!response.ok || !response.body) throw new Error('Sentence service rejected the request');
+      const reader = response.body.getReader(), decoder = new TextDecoder();
+      let assembled = '';
       while (true) {
-        const { done, value } = await reader.read();
+        const {done,value} = await reader.read();
         if (done) break;
-        assembled += decoder.decode(value, { stream: true });
-        setLlmSentence(assembled);
+        assembled += decoder.decode(value,{stream:true});
+        if (assemblyRef.current === controller) setLlmSentence(assembled);
       }
-      setUiState("IDLE");
-      setSentence([]);
-      sentenceRef.current = [];
-    }).catch(err => {
-      console.error("LLM Error:", err);
-      setLlmSentence("Error generating sentence.");
-      setUiState("ERROR");
-    });
+      assembled += decoder.decode();
+      if (!assembled.trim()) throw new Error('Empty sentence response');
+      if (assemblyRef.current !== controller) return;
+      setLlmSentence(assembled); setUiState('WAITING');
+      // Retain signs added after this request began.
+      sentenceRef.current = sentenceRef.current.slice(snapshot.length);
+      setSentence([...sentenceRef.current]);
+    } catch (error) {
+      if (assemblyRef.current === controller) {
+        setLlmSentence('Sentence service unavailable or interrupted. Your signs are retained.');
+        setUiState('ERROR'); console.error(error);
+      }
+    } finally {
+      clearTimeout(timeout);
+      if (assemblyRef.current === controller) assemblyRef.current = null;
+    }
   };
 
   useEffect(() => {
@@ -168,6 +159,7 @@ function App() {
   useEffect(() => {
     let activeStream = null;
     let isCancelled = false;
+    const resources = [];
 
     // Start Webcam
     const startWebcam = async () => {
@@ -197,40 +189,36 @@ function App() {
           }
         }
       } catch (err) {
+        if (!isCancelled) { setUiState("ERROR"); setCurrentSign("Camera unavailable. Check permission and connection."); }
         console.error("Error accessing webcam:", err);
       }
     };
 
     const loadModels = async () => {
       try {
-        console.log("Loading labels...");
-        try {
-          const labelsRes = await fetch('/models/labels.json');
-          if (labelsRes.ok) {
-            const labelsMap = await labelsRes.json();
-            const numLabels = Object.keys(labelsMap).length;
-            const loadedActions = Array.from({length: numLabels}, (_, i) => labelsMap[i]);
-            setActionsList(loadedActions);
-          } else {
-            console.warn("Could not load labels.json");
-          }
-        } catch (e) {
-          console.warn("Could not load labels.json", e);
-        }
+        const labelsRes = await fetch('/models/labels.json');
+        if (!labelsRes.ok) throw new Error('Cannot load label map');
+        const labelsMap = await labelsRes.json();
+        const model = await tf.loadLayersModel('/models/model.json');
+        if (isCancelled) { model.dispose(); return; }
+        resources.push(() => model.dispose());
+        if (model.inputs[0].shape[1] !== 30 || model.inputs[0].shape[2] !== 258) throw new Error('Model input must be 30 × 258');
+        setActionsList(validateLabels(labelsMap, model.outputs[0].shape[1]));
+        tfModelRef.current = model;
 
-        console.log("Loading TFJS model...");
-        tfModelRef.current = await tf.loadLayersModel('/models/model.json');
-        
         console.log("Loading MediaPipe tasks...");
         const vision = await FilesetResolver.forVisionTasks(
           "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
         );
         
+        if (isCancelled) return;
         const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
           baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task" },
           runningMode: "VIDEO"
         });
         
+        if (isCancelled) { poseLandmarker.close(); return; }
+        resources.push(() => poseLandmarker.close());
         const handLandmarker = await HandLandmarker.createFromOptions(vision, {
           baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task" },
           runningMode: "VIDEO",
@@ -240,15 +228,21 @@ function App() {
           minTrackingConfidence: 0.4
         });
         
+        if (isCancelled) { handLandmarker.close(); return; }
+        resources.push(() => handLandmarker.close());
         const faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
           baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task" },
           runningMode: "VIDEO"
         });
 
+        if (isCancelled) { faceLandmarker.close(); return; }
+        resources.push(() => faceLandmarker.close());
         landmarkersRef.current = { pose: poseLandmarker, hand: handLandmarker, face: faceLandmarker };
         setModelsLoaded(true);
         console.log("All models loaded successfully.");
       } catch(err) {
+        resources.splice(0).reverse().forEach(close => close());
+        if (!isCancelled) { setUiState("ERROR"); setCurrentSign("Model loading failed. Reload to retry."); }
         console.error("Error loading models:", err);
       }
     };
@@ -258,98 +252,21 @@ function App() {
 
     return () => {
       isCancelled = true;
+      assemblyRef.current?.abort(); assemblyRef.current = null;
+      resources.splice(0).reverse().forEach(close => close());
       if (activeStream) {
         activeStream.getTracks().forEach(t => t.stop());
       }
     };
   }, []);
 
-  const extractKeypoints = (poseResult, activeHands, faceResult) => {
-    const pose = new Float32Array(33 * 4);
-    if (poseResult && poseResult.landmarks && poseResult.landmarks.length > 0) {
-        poseResult.landmarks[0].forEach((res, i) => {
-            pose[i*4] = res.x; pose[i*4+1] = res.y; pose[i*4+2] = res.z; pose[i*4+3] = res.visibility || 0;
-        });
-    }
-
-    const face = new Float32Array(478 * 3);
-    if (faceResult && faceResult.faceLandmarks && faceResult.faceLandmarks.length > 0) {
-        faceResult.faceLandmarks[0].forEach((res, i) => {
-            face[i*3] = res.x; face[i*3+1] = res.y; face[i*3+2] = res.z;
-        });
-    }
-
-    const lh = new Float32Array(21 * 3);
-    const rh = new Float32Array(21 * 3);
-    if (activeHands && activeHands.length > 0) {
-        activeHands.forEach((hand) => {
-            const handType = hand.label;
-            const target = handType === 'Left' ? lh : rh; 
-            hand.landmarks.forEach((res, i) => {
-                target[i*3] = res.x; target[i*3+1] = res.y; target[i*3+2] = res.z;
-            });
-        });
-    }
-
-    const result = new Float32Array(1692);
-    result.set(pose, 0);
-    result.set(face, pose.length);
-    result.set(lh, pose.length + face.length);
-    result.set(rh, pose.length + face.length + lh.length);
-    
-    // Normalize coordinates relative to nose and scale by shoulder width
-    if (result[0] !== 0 || result[1] !== 0) {
-      const noseX = result[0];
-      const noseY = result[1];
-      
-      const lShoulderX = result[11 * 4];
-      const lShoulderY = result[11 * 4 + 1];
-      const rShoulderX = result[12 * 4];
-      const rShoulderY = result[12 * 4 + 1];
-      
-      const shoulderWidth = Math.sqrt(Math.pow(lShoulderX - rShoulderX, 2) + Math.pow(lShoulderY - rShoulderY, 2));
-      const scale = shoulderWidth > 0.01 ? shoulderWidth : 1.0;
-      
-      // Pose
-      for (let i = 0; i < 132; i += 4) {
-        if (result[i] !== 0 || result[i+1] !== 0) {
-          result[i] = (result[i] - noseX) / scale;
-          result[i+1] = (result[i+1] - noseY) / scale;
-        }
-      }
-      
-      // Face
-      for (let i = 132; i < 1566; i += 3) {
-        if (result[i] !== 0 || result[i+1] !== 0) {
-          result[i] = (result[i] - noseX) / scale;
-          result[i+1] = (result[i+1] - noseY) / scale;
-        }
-      }
-      
-      // Hands
-      for (let i = 1566; i < 1692; i += 3) {
-        if (result[i] !== 0 || result[i+1] !== 0) {
-          result[i] = (result[i] - noseX) / scale;
-          result[i+1] = (result[i+1] - noseY) / scale;
-        }
-      }
-    }
-    
-    // Trim out Face landmarks (1434 features) to prevent LSTM from keying on facial noise
-    // Pose: 0-132, Hands: 1566-1692 -> Total 258 features
-    const finalResult = new Float32Array(258);
-    finalResult.set(result.slice(0, 132), 0);
-    finalResult.set(result.slice(1566, 1692), 132);
-    
-    return Array.from(finalResult); // Convert to JS array for TF tensor creation
-  };
-
-  const [uiState, setUiState] = useState("IDLE"); // IDLE, DETECTING, ASSEMBLING, ERROR
-  const predictionsBufferRef = useRef([]);
+  const [uiState, setUiState] = useState("WAITING"); // WAITING, CAPTURING, PROCESSING, RECOGNIZED, UNCERTAIN, ERROR
 
   useEffect(() => {
     if (!isStreaming || !modelsLoaded) return;
     
+    let cancelled = false;
+    let evaluating = false;
     let animationFrameId;
     let lastVideoTime = -1;
     let lastFrameTimeMs = 0;
@@ -436,7 +353,7 @@ function App() {
         }
 
         // Full Face Mesh (if enabled)
-        if (showFaceMesh) {
+        if (faceMeshRef.current) {
           ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
           ctx.beginPath();
           for (let i = 0; i < smoothedFaceRef.current.length; i += 2) {
@@ -574,64 +491,71 @@ function App() {
 
         ctx.fillStyle = "#ffffff";
         ctx.font = "bold 13px 'JetBrains Mono', monospace";
-        ctx.fillText("SIGN RECOGNIZED", 45, 33);
+        ctx.fillText("CAPTURE COMPLETE", 45, 33);
         ctx.restore();
       }
     };
 
     const evaluateStroke = async () => {
-      if (strokeFramesRef.current.length === 0) return;
-      strokeStateRef.current = "EVALUATING";
-      setStrokeStatus("EVALUATING");
-      setRecordingProgress(100);
-      setUiState("DETECTING");
-
-      const rawFrames = strokeFramesRef.current;
-      // Resample variable-length capture across time to the fixed 30-frame sequence
-      const normalizedSequence = resampleSequence(rawFrames, sequenceLength);
-
-      const inputTensor = tf.tensor3d([normalizedSequence], [1, sequenceLength, 258]);
-      const prediction = tfModelRef.current.predict(inputTensor);
-      const scores = await prediction.data();
-      inputTensor.dispose();
-      prediction.dispose();
-
-      // Rank top predictions
-      const indexedScores = Array.from(scores).map((score, index) => ({ score, action: actionsList[index] || "unknown" }));
-      indexedScores.sort((a, b) => b.score - a.score);
-      const top1 = indexedScores[0];
-      const top3Str = indexedScores.slice(0, 3).map(c => `${c.action}: ${(c.score * 100).toFixed(1)}%`).join(' | ');
-
-      let recognizedAction = top1.action;
-      if (strokeQuestionRef.current) recognizedAction += "?";
-
-      setConfidence(top1.score * 100);
-      setDebugInfo(`Top candidates: ${top3Str}`);
-
-      if (top1.score > 0.40 && recognizedAction !== "idle") {
-        setCurrentSign(recognizedAction);
-
-        let curSentence = [...sentenceRef.current];
-        curSentence.push(recognizedAction);
-        sentenceRef.current = curSentence;
-        setSentence(curSentence);
-        setUiState("IDLE");
-      } else {
-        setCurrentSign(top1.score > 0.30 ? top1.action : "No sign detected");
+      if (evaluating || cancelled) return;
+      if (strokeFramesRef.current.length < MIN_STROKE_FRAMES) {
+        setCurrentSign('Capture too short — keep signing before stopping.');
+        return;
       }
-
-      strokeStateRef.current = "COOLDOWN";
-      setStrokeStatus("COOLDOWN");
-      strokeCooldownRef.current = 15; // ~1 second cooldown
+      evaluating = true;
+      strokeStateRef.current = 'EVALUATING'; setStrokeStatus('PROCESSING'); setUiState('PROCESSING');
+      let inputTensor, prediction;
+      try {
+        const normalizedSequence = resampleSequence(strokeFramesRef.current, sequenceLength);
+        if (LANDMARK_DEBUG) {
+          window.sanketDiagnosticSequence = {shape:[normalizedSequence.length, normalizedSequence[0].length], finite:normalizedSequence.every(f=>f.every(Number.isFinite)), capturedAt:new Date().toISOString()};
+        }
+        inputTensor = tf.tensor3d([normalizedSequence], [1,sequenceLength,258]);
+        prediction = tfModelRef.current.predict(inputTensor);
+        const scores = await prediction.data();
+        if (cancelled) return;
+        const {top,ranked,accepted} = decidePrediction(scores, actionsList);
+        if (LANDMARK_DEBUG) {
+          window.sanketDiagnosticSequence.prediction = {
+            top3:ranked.slice(0,3).map(({action,score})=>({label:action,confidence:score})),
+            margin:ranked[0].score-(ranked[1]?.score ?? 0), accepted,
+            completedAt:new Date().toISOString()
+          };
+        }
+        if (LANDMARK_DEBUG && captureSettingsRef.current?.target) {
+          try {
+            const trial=createTrial({...captureSettingsRef.current,sequence:normalizedSequence,
+              frames:strokeFramesRef.current,observations:strokeFramesRef.current.map(f=>observationsRef.current.get(f)),
+              scores,labels:actionsList});
+            setTrials(previous=>previous.length < 100 ? [...previous,trial] : previous);
+            setTrialMessage('Capture processed. Maximum 100 saved trials per session; export before leaving.');
+          } catch(error) { setTrialMessage(`Trial not saved: ${error.message}`); }
+        }
+        setConfidence(top.score*100);
+        setDebugInfo(ranked.slice(0,3).map(c=>`${c.action}: ${(c.score*100).toFixed(1)}%`).join(' | '));
+        if (accepted) {
+          const action = top.action + (EXPERIMENTAL_QUESTIONS && strokeQuestionRef.current ? '?' : '');
+          sentenceRef.current = [...sentenceRef.current, action];
+          setSentence([...sentenceRef.current]); setCurrentSign(action); setUiState('RECOGNIZED');
+        } else { setCurrentSign('Uncertain — try again'); setUiState('UNCERTAIN'); }
+      } catch (error) {
+        if (!cancelled) {setUiState('ERROR');setCurrentSign('Recognition failed; please retry.');console.error(error);}
+      } finally {
+        inputTensor?.dispose(); prediction?.dispose(); evaluating = false;
+        if (!cancelled) {
+          strokeFramesRef.current = []; strokeStateRef.current = 'COOLDOWN';
+          setStrokeStatus('COOLDOWN'); strokeCooldownRef.current = 15;
+        }
+      }
     };
 
     evaluateStrokeRef.current = evaluateStroke;
 
     const detectAndPredict = async () => {
-      if (isPredictingRef.current) return;
+      if (cancelled || isPredictingRef.current) return;
       
       const now = performance.now();
-      if (now - lastFrameTimeMs < 66) {
+      if (now - lastFrameTimeMs < CAPTURE.sampleIntervalMs) {
          animationFrameId = requestAnimationFrame(detectAndPredict);
          return;
       }
@@ -651,7 +575,7 @@ function App() {
           const faceRes = l.face.detectForVideo(video, startTimeMs);
           
           let questionFlag = false;
-          if (faceRes.faceLandmarks && faceRes.faceLandmarks.length > 0) {
+          if (EXPERIMENTAL_QUESTIONS && faceRes.faceLandmarks && faceRes.faceLandmarks.length > 0) {
             const fLm = faceRes.faceLandmarks[0];
             const rightDist = Math.abs(fLm[105].y - fLm[159].y);
             const leftDist = Math.abs(fLm[334].y - fLm[386].y);
@@ -667,9 +591,32 @@ function App() {
 
           const rawHandCount = (handRes && handRes.landmarks) ? handRes.landmarks.length : 0;
           const handScores = (handRes.handednesses || []).map((h, i) => `${h[0]?.categoryName || 'H' + (i+1)}: ${(h[0]?.score * 100).toFixed(0)}%`).join(', ');
-          const activeHandCount = smoothedHandsRef.current.filter(h => h.missedFrames < 3).length;
           
-          const keypoints = extractKeypoints(poseRes, smoothedHandsRef.current, faceRes);
+          const keypoints = extractKeypoints(poseRes, handRes);
+          if (LANDMARK_DEBUG) {
+            const sides=(handRes.handednesses || []).map(h=>h[0]?.categoryName);
+            observationsRef.current.set(keypoints,{time:startTimeMs,pose:!!poseRes.landmarks?.[0]?.length,
+              left:sides.filter(s=>s==='Left').length===1,right:sides.filter(s=>s==='Right').length===1});
+          }
+          if (LANDMARK_DEBUG) {
+            const report = {time:new Date().toISOString(), pose:poseRes.landmarks?.[0]?.length ?? 0,
+              hands:(handRes.landmarks || []).map((points,i)=>({category:handRes.handednesses[i]?.[0]?.categoryName, count:points.length})),
+              features:keypoints.length, finite:keypoints.every(Number.isFinite),
+              leftSlotNonzero:keypoints.slice(132,195).some(v=>v!==0), rightSlotNonzero:keypoints.slice(195,258).some(v=>v!==0),
+              inputMirrored:false, previewMirrored:true, sequence:window.sanketDiagnosticSequence ?? null};
+            if (diagnosticRef.current) diagnosticRef.current.textContent = JSON.stringify(report,null,2);
+            const ctx = canvasRef.current.getContext('2d');
+            const annotate = (points,prefix,color) => points.forEach((p,i)=>{
+              ctx.save(); ctx.translate(p.x*canvasRef.current.width,p.y*canvasRef.current.height);
+              ctx.scale(-1,1); ctx.font='12px monospace'; ctx.fillStyle=color;
+              ctx.fillText(`${prefix}${i}`,0,0); ctx.restore();
+            });
+            annotate(poseRes.landmarks?.[0] || [],'P','#fff');
+            (handRes.landmarks || []).forEach((points,i)=>{
+              const side=handRes.handednesses[i]?.[0]?.categoryName;
+              annotate(points,side==='Left'?'L':side==='Right'?'R':'?' ,side==='Left'?'#00ffff':'#ff9900');
+            });
+          }
 
           // Calculate Hand Velocity across frames matching persistent handedness labels
           let handVelocity = 0;
@@ -683,9 +630,6 @@ function App() {
               currentHands.forEach((curr, cIdx) => {
                 const label = currentHandedness[cIdx]?.[0]?.categoryName || `Hand_${cIdx}`;
                 let prevMatch = prevHandsData.find(p => p.label === label);
-                if (!prevMatch && prevHandsData[cIdx]) {
-                  prevMatch = prevHandsData[cIdx];
-                }
 
                 if (prevMatch && prevMatch.landmarks) {
                   const prev = prevMatch.landmarks;
@@ -713,37 +657,50 @@ function App() {
           // =========================================================
           // STRICT MANUAL WORKFLOW (NO AUTO-GUESSING)
           // =========================================================
-          const activeHands = smoothedHandsRef.current.filter(h => h.missedFrames < 3);
+          const activeHands = handRes.landmarks || [];
 
           if (strokeStateRef.current === "COOLDOWN") {
             strokeCooldownRef.current -= 1;
             if (strokeCooldownRef.current <= 0) {
               strokeStateRef.current = "IDLE";
               setStrokeStatus("IDLE");
-              setIsStrokeCapturing(false);
               setRecordingProgress(0);
-              setUiState("IDLE");
+              setUiState("WAITING");
               preStrokeBufferRef.current = [];
               isArmedRef.current = false;
               setIsArmed(false);
             }
           } else if (strokeStateRef.current === "ARMED") {
             // Wait for user to move to start recording
-            if (activeHands.length > 0 && handVelocity >= 0.030) {
+            if (activeHands.length > 0 && handVelocity >= CAPTURE.startMotion) {
+              captureSettingsRef.current = {...trialSettingsRef.current};
               strokeStateRef.current = "RECORDING";
-              strokeFramesRef.current = [];
+              strokeFramesRef.current = [...preStrokeBufferRef.current, keypoints];
+              lowVelocityFramesRef.current = 0;
               strokeQuestionRef.current = questionFlag;
               setStrokeStatus("RECORDING");
-              setIsStrokeCapturing(true);
               setCurrentSign("Capturing sign...");
-              setUiState("RECORDING");
+              setUiState("CAPTURING");
             }
           } else if (strokeStateRef.current === "RECORDING") {
-            // Keep capturing indefinitely until user clicks Stop
+            // Manual stop always works; optional dynamic mode adds hysteresis.
             strokeFramesRef.current.push(keypoints);
             if (questionFlag) strokeQuestionRef.current = true;
             setRecordingProgress(strokeFramesRef.current.length);
+            const stop = captureStopDecision(strokeFramesRef.current.length, handVelocity, lowVelocityFramesRef.current, isStrokeModeRef.current);
+            lowVelocityFramesRef.current = stop.lowFrames;
+            if (stop.evaluate) {
+              await evaluateStroke();
+            } else if (stop.postRecord) {
+              strokeStateRef.current = 'POST_RECORDING';
+              postPadFramesRemainingRef.current = POST_PAD_FRAMES;
+            }
+          } else if (strokeStateRef.current === 'POST_RECORDING') {
+            strokeFramesRef.current.push(keypoints);
+            if (--postPadFramesRemainingRef.current <= 0) await evaluateStroke();
+
           }
+          preStrokeBufferRef.current = [...preStrokeBufferRef.current, keypoints].slice(-PRE_PAD_FRAMES);
         } catch (e) {
           console.error(e);
           setUiState("ERROR");
@@ -754,12 +711,9 @@ function App() {
     };
 
     detectAndPredict();
-    return () => cancelAnimationFrame(animationFrameId);
+    return () => { cancelled = true; evaluateStrokeRef.current = null; cancelAnimationFrame(animationFrameId); };
   }, [isStreaming, modelsLoaded, actionsList]);
 
-  if (isDemoMode) {
-    return <DemoMode onExit={() => setIsDemoMode(false)} />;
-  }
 
   return (
     <div className="app-container">
@@ -772,7 +726,7 @@ function App() {
           <div className="ui-state-indicator"></div>
           {uiState}
         </div>
-        <button className="btn" disabled={import.meta.env.PROD} title={import.meta.env.PROD ? "Demo footage is available only in local development pending redistribution review." : "Scripted presentation with prerecorded outputs"} onClick={() => setIsDemoMode(true)} style={{ marginLeft: 'auto' }}>
+        <button className="btn" disabled={import.meta.env.PROD} title={import.meta.env.PROD ? "Demo footage is available only in local development pending redistribution review." : "Scripted presentation with prerecorded outputs"} onClick={onEnterDemo} style={{ marginLeft: 'auto' }}>
           {import.meta.env.PROD ? "Demo: local setup required" : "Enter Demo Mode"}
         </button>
       </header>
@@ -793,6 +747,22 @@ function App() {
             <canvas ref={canvasRef} className="canvas-overlay" />
           </div>
           
+          {LANDMARK_DEBUG && <fieldset>
+            <legend>Validation recorder — local session only</legend>
+            <label>Intended sign <select defaultValue="" onChange={e=>{trialSettingsRef.current.target=e.target.value;}}>
+              <option value="">Recording trials off</option>
+              <option value={UNKNOWN_TRIAL}>Random / no known sign</option>
+              {actionsList.map(label=><option key={label} value={label}>{label}</option>)}
+            </select></label>
+            <label>Conditions / signer alias <input maxLength={200} onChange={e=>{trialSettingsRef.current.notes=e.target.value;}} placeholder="signer-01, bright, 1 metre" /></label>
+            <p>Select before recording. Label and notes are frozen at motion onset. No camera images are saved.
+              Export before refreshing or entering demo; trials are held in memory only.</p>
+            <button disabled={!trials.length} onClick={exportTrials}>Export {trials.length} trials (JSON)</button>
+            <p role="status">{trialMessage}</p>
+            {trials.slice(-5).map(t=><p key={t.id}>{t.intendedLabel} → {t.top3[0].action} ({(100*t.top3[0].score).toFixed(1)}%);
+              {t.accepted?' accepted':' uncertain'}; {t.correct?'match':'mismatch'}</p>)}
+          </fieldset>}
+          {LANDMARK_DEBUG && <pre ref={diagnosticRef} aria-live="off" style={{whiteSpace:"pre-wrap"}}>Waiting for physical camera landmarks…</pre>}
           <div className="info-text">
             <span>[DEBUG] {debugInfo}</span>
             <span>FEAT: 258</span>
@@ -816,7 +786,7 @@ function App() {
                 fontFamily: 'JetBrains Mono', 
                 color: strokeStatus === 'RECORDING' ? '#ef4444' : strokeStatus === 'COOLDOWN' ? '#10b981' : 'var(--text-muted)' 
               }}>
-                {strokeStatus === 'RECORDING' ? `CAPTURING (${recordingProgress}%)` : strokeStatus === 'COOLDOWN' ? 'LOCKED' : 'READY'}
+                {strokeStatus === 'RECORDING' ? `CAPTURING (${recordingProgress}f)` : strokeStatus === 'COOLDOWN' ? 'LOCKED' : 'READY'}
               </span>
             </div>
 
@@ -828,7 +798,7 @@ function App() {
             <div className="gesture-progress-container">
               <div 
                 className={`gesture-progress-bar ${strokeStatus === 'RECORDING' ? 'recording' : ''}`}
-                style={{ width: `${recordingProgress}%` }}
+                style={{ width: `${Math.min(100, recordingProgress / CAPTURE.maxFrames * 100)}%` }}
               ></div>
             </div>
 
@@ -879,7 +849,7 @@ function App() {
 
             {isQuestion && (
               <div className="question-indicator">
-                NMF: Eyebrow Raise (?)
+                Experimental: eyebrow heuristic (?)
               </div>
             )}
           </div>
@@ -887,7 +857,7 @@ function App() {
           <div className="data-panel">
              <h3>Sequence Context</h3>
              <div className="sequence-text">
-               {sentence.length > 0 ? sentence.join(" → ") : "..."}
+               {sentence.length > 0 ? sentence.map(formatToken).join(" → ") : "..."}
              </div>
              <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.6rem' }}>
                <input
@@ -930,10 +900,11 @@ function App() {
           </div>
           
           <button className="btn" onClick={() => {
+              assemblyRef.current?.abort(); assemblyRef.current = null;
               setSentence([]);
               sentenceRef.current = [];
               setCurrentSign("Waiting...");
-              setUiState("IDLE");
+              setUiState("WAITING");
           }}>
             [ Clear Context ]
           </button>
@@ -943,4 +914,7 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  const [demo, setDemo] = useState(false);
+  return demo ? <DemoMode onExit={() => setDemo(false)} /> : <LiveTranslator onEnterDemo={() => setDemo(true)} />;
+}
