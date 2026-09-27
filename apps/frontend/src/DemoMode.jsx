@@ -444,12 +444,13 @@ export default function DemoMode({ onExit }) {
         <button className="btn" onClick={onExit} style={{ marginLeft: 'auto' }}>Exit demo</button>
       </header>
 
-      <main className="main-content">
+      <div className="main-content">
         <section className="video-panel">
           <div className="video-container">
             <video
               ref={videoRef}
               className="video-feed"
+              onLoadedMetadata={e=>{e.currentTarget.parentElement.style.aspectRatio=`${e.currentTarget.videoWidth} / ${e.currentTarget.videoHeight}`;}}
               autoPlay
               playsInline
               muted
@@ -497,13 +498,13 @@ export default function DemoMode({ onExit }) {
           </div>
 
           <div className="data-panel llm-output">
-            <h3>LLM Assembly</h3>
+            <h3>English sentence</h3>
             <div className="llm-text">
               {llmSentence}
             </div>
           </div>
         </section>
-      </main>
+      </div>
     </div>
   );
 }

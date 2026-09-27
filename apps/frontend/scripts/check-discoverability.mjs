@@ -53,7 +53,7 @@ for (const [route, file] of known) {
     assert(!canonical && html.includes('noindex, follow'), 'Unpublished preview must not invent canonical URLs');
   }
   for (const match of html.matchAll(/(?:href|src)="([^"]+)"/g)) checkLink(match[1], route);
-  if (route !== '/') assert(!html.includes('type="module"'), 'Docs must be independent of the app bundle');
+  if (route !== '/translate/') assert(!html.includes('type="module"'), 'Docs must be independent of the app bundle');
 }
 const sitemap = [...read('sitemap.xml').matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
 assert.deepEqual(sitemap, origin ? routes.map(route => origin + route) : []);
@@ -130,3 +130,6 @@ if (urlFlag !== -1) {
   }
   console.log('PASS: 19 HTML routes and 6 crawler/Markdown/image endpoints served over HTTP.');
 }
+
+assert(!read('index.html').includes('id="root"'), 'Landing must not mount the translator');
+assert(read('translate/index.html').includes('id="root"'), 'Translator needs its own entry');

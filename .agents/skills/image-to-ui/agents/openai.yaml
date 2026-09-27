@@ -1,0 +1,6 @@
+interface:
+  display_name: "Image To Ui"
+  short_description: "Project-specific image to ui workflow"
+  default_prompt: "Use $image-to-ui for this Sanket design task."
+policy:
+  allow_implicit_invocation: true

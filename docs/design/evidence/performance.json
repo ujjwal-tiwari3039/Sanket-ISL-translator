@@ -1,0 +1,112 @@
+[
+  {
+    "width": 1440,
+    "overflow": false,
+    "cls": 0,
+    "lcp": 52,
+    "h1": 1,
+    "buttons": [
+      "Start live translation ↗"
+    ],
+    "resources": [
+      {
+        "name": "http://127.0.0.1:4173/discovery.css",
+        "bytes": 2796
+      },
+      {
+        "name": "http://127.0.0.1:4173/assets/index-lLAeXnVJ.js",
+        "bytes": 61084
+      },
+      {
+        "name": "http://127.0.0.1:4173/assets/index-B1WG2awA.css",
+        "bytes": 2613
+      }
+    ],
+    "load": 47.6999999997206
+  },
+  {
+    "idleFrameTiming": {
+      "frames": 60,
+      "averageMs": 16.666666666666668
+    }
+  },
+  {
+    "width": 768,
+    "overflow": false,
+    "cls": 0,
+    "lcp": 32,
+    "h1": 1,
+    "buttons": [
+      "Start live translation ↗"
+    ],
+    "resources": [
+      {
+        "name": "http://127.0.0.1:4173/discovery.css",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:4173/assets/index-lLAeXnVJ.js",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:4173/assets/index-B1WG2awA.css",
+        "bytes": 300
+      }
+    ],
+    "load": 16.100000000093132
+  },
+  {
+    "width": 390,
+    "overflow": false,
+    "cls": 0,
+    "lcp": 36,
+    "h1": 1,
+    "buttons": [
+      "Start live translation ↗"
+    ],
+    "resources": [
+      {
+        "name": "http://127.0.0.1:4173/discovery.css",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:4173/assets/index-lLAeXnVJ.js",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:4173/assets/index-B1WG2awA.css",
+        "bytes": 300
+      }
+    ],
+    "load": 18.5
+  },
+  {
+    "width": 320,
+    "overflow": false,
+    "cls": 0,
+    "lcp": 36,
+    "h1": 1,
+    "buttons": [
+      "Start live translation ↗"
+    ],
+    "resources": [
+      {
+        "name": "http://127.0.0.1:4173/discovery.css",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:4173/assets/index-lLAeXnVJ.js",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:4173/assets/index-B1WG2awA.css",
+        "bytes": 300
+      }
+    ],
+    "load": 14.199999999720603
+  },
+  {
+    "reducedMotion": true,
+    "errors": []
+  }
+]

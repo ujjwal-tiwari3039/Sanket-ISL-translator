@@ -14,7 +14,10 @@ const evaluate=async expression=>(await send('Runtime.evaluate',{expression,awai
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 await send('Runtime.enable');await send('Page.enable');
 await send('Page.addScriptToEvaluateOnNewDocument',{source:`window.auditStreams=[];const original=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);navigator.mediaDevices.getUserMedia=async (...args)=>{const stream=await original(...args);window.auditStreams.push(stream);return stream;};`});
-await send('Page.navigate',{url:'http://127.0.0.1:5173/'});
+await send('Page.navigate',{url:'http://127.0.0.1:5173/translate/?landmarkDebug'});
+await pause(1000);
+assert.equal(await evaluate('window.auditStreams.length'),0,'Landing opened camera without user action');
+await evaluate(`Array.from(document.querySelectorAll('button')).find(b=>b.textContent.includes('Start live translation')).click()`);
 let ready=false;
 for(let i=0;i<60;i++){
  ready=await evaluate(`Array.from(document.querySelectorAll('button')).some(b=>b.textContent.includes('Record Next Sign')&&!b.disabled)`);
@@ -24,7 +27,9 @@ console.log('Live ready:',ready);
 if(!ready)console.log(await evaluate('document.body.innerText'));
 assert(ready,'Model initialization failed');
 assert.equal(await evaluate(`document.querySelector('video').srcObject.getVideoTracks()[0].readyState`),'live');
-await evaluate(`Array.from(document.querySelectorAll('button')).find(b=>b.textContent.includes('Enter Demo')).click()`);
+await evaluate(`Array.from(document.querySelectorAll('button')).find(b=>b.textContent.includes('Enter Demo')).focus()`);
+await send('Input.dispatchKeyEvent',{type:'keyDown',key:' ',code:'Space',windowsVirtualKeyCode:32});
+await send('Input.dispatchKeyEvent',{type:'keyUp',key:' ',code:'Space',windowsVirtualKeyCode:32});
 await pause(1500);
 assert(await evaluate(`document.body.innerText.includes('Scripted presentation')`));
 assert(await evaluate(`window.auditStreams.every(s=>s.getTracks().every(t=>t.readyState==='ended'))`),'Live camera survived demo switch');
@@ -37,5 +42,8 @@ for(let i=0;i<60;i++){
 assert(ready,'Live restart failed');
 assert.equal(await evaluate(`document.querySelector('video').srcObject.getVideoTracks()[0].readyState`),'live');
 assert.deepEqual(errors,[]);
-console.log('PASS: model loading, synthetic camera, demo isolation, live camera restart, no uncaught exceptions');
+await evaluate(`Array.from(document.querySelectorAll('button')).find(b=>b.textContent.includes('Close workspace')).click()`);
+await pause(500);
+assert(await evaluate(`window.auditStreams.every(s=>s.getTracks().every(t=>t.readyState==='ended'))`),'Camera survived workspace close');
+console.log('PASS: explicit camera launch, model loading, synthetic camera, demo isolation, live restart, workspace cleanup, no uncaught exceptions');
 ws.close();

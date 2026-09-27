@@ -1,0 +1,6 @@
+interface:
+  display_name: "Anti Slop Ui"
+  short_description: "Project-specific anti slop ui workflow"
+  default_prompt: "Use $anti-slop-ui for this Sanket design task."
+policy:
+  allow_implicit_invocation: true

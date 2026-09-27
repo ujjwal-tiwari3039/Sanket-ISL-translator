@@ -232,3 +232,27 @@ Limitations: export before refresh/demo; recordings after the 100-trial cap are
 not saved; motionless no-hand trials cannot start through existing motion gating;
 model artifact hashes are not embedded. Exports are validation evidence, not
 training samples or an automatically independent evaluation split.
+
+## Frontend design follow-up — 2026-09-27
+
+Paused physical validation trials as requested. Audited the existing frontend and
+sampled the supplied uploads/ui.mp4 reference before redesign. Added DESIGN.md,
+durable AGENTS.md guidance and seven focused repository-local Codex design skills.
+All seven validate structurally; fresh read-only Codex sessions verified explicit
+invocation and the 14-case implicit routing evaluation.
+
+Reworked the public introduction into an original editorial landing page and
+aligned documentation/live/demo styling. Added responsive layouts, visible focus,
+reduced-motion behavior, labeled spelling input, keyboard shortcut exclusions and
+source-aspect-ratio video presentation. The workspace launch boundary defers ML
+loading and camera access until requested, while retaining existing inference and
+cleanup logic. No dependency added, backend changed, threshold adjusted, weights
+replaced or physical trials resumed.
+
+Frontend tests, lint, build, 24-page/537-link publication checks and synthetic
+camera lifecycle pass. Production initial JS is approximately 194 KB versus
+1,232 KB before; the ML chunk remains deferred and large. Four viewport sizes
+show no horizontal overflow; local production initial-load samples recorded CLS 0.
+These measurements are local and do not establish field performance or cross-browser
+accessibility conformance. Full decisions, screenshots, commands, activation proofs
+and limitations are in docs/design/audit.md and docs/design/qa.md.

@@ -1,3 +1,4 @@
+import { landing } from './landing.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -57,8 +58,9 @@ export function createSite() {
   const url = pathname => origin ? `${origin}${pathname}` : pathname;
   const assets = new Map();
   const put = (name, content) => assets.set(name.replace(/^\//, ''), content);
-  const nav = `<nav aria-label="Project"><a href="/">Sanket ISL Translator</a><a href="/about/">About</a><a href="/docs/">Documentation</a><a href="/docs/faq/">FAQ</a><a href="${project.repository}">GitHub source</a></nav>`;
-  const footer = `<footer class="discovery-footer"><p>${escape(project.description)}</p><p><a href="/docs/limitations/">Limitations</a> · <a href="/docs/citation/">Citation</a> · <a href="/llms.txt">AI documentation index</a></p></footer>`;
+  const nav = `<a class="skip-link" href="/translate/#translator">Skip to translator</a><nav aria-label="Project"><a class="wordmark" href="/" aria-label="Sanket home"><span aria-hidden="true">⌁</span> sanket<span class="wordmark-dot">.</span></a><div class="nav-links"><a href="/about/">The project</a><a href="/docs/">Documentation</a><a href="${project.repository}">Source ↗</a><button class="theme-toggle" data-theme-toggle type="button" aria-label="Switch color theme">Theme</button></div></nav>`;
+  const footer = `<footer class="discovery-footer"><div><a class="wordmark" href="/">sanket.</a><p>Human expression.<br>Thoughtful engineering.</p></div><div><p class="eyebrow">KEEP EXPLORING</p><a href="/docs/installation/">Run locally ↗</a><a href="/docs/limitations/">Known limitations ↗</a><a href="/docs/citation/">Citation & attribution ↗</a><a href="/llms.txt">AI documentation index ↗</a></div><p class="footer-note">Indian Sign Language → English<br>A research prototype. An open process.</p></footer>`;
+
   const sourceEntity = {
     '@type': 'SoftwareSourceCode', '@id': url('/#source'), name: project.name,
     codeRepository: project.repository, programmingLanguage: project.programmingLanguage,
@@ -97,6 +99,7 @@ ${origin ? `<meta property="og:url" content="${escape(url(route))}">` : ''}
 <meta name="twitter:image" content="${escape(url('/social-preview.png'))}">
 <meta name="twitter:image:alt" content="Sanket — Indian Sign Language to English — Real-Time AI Translator">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script src="/theme.js"></script>
 <link rel="stylesheet" href="/discovery.css">
 <link rel="describedby" href="/llms.txt" type="text/plain">
 <link rel="alternate" type="text/markdown" href="${markdownRoute}">
@@ -124,7 +127,7 @@ ${origin ? `<meta property="og:url" content="${escape(url(route))}">` : ''}
   function page(route, title, description, markdown, crumbs) {
     const markdownRoute = `${route}index.md`;
     const bread = `<nav aria-label="Breadcrumb">${crumbs.map(([label, href]) => `<a href="${href}">${escape(label)}</a>`).join(' <span aria-hidden="true">/</span> ')}</nav>`;
-    const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${head(`${title} | ${project.name}`, description, route, markdownRoute, crumbs)}</head><body class="documentation">${nav}<main class="discovery-document">${bread}${render(markdown)}<p class="source-link"><a href="${markdownRoute}">Read this page as Markdown</a></p></main>${footer}</body></html>`;
+    const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${head(`${title} | ${project.name}`, description, route, markdownRoute, crumbs)}</head><body class="documentation">${nav.replace('/translate/#translator', '#document-content')}<main id="document-content" class="discovery-document">${bread}${render(markdown)}<p class="source-link"><a href="${markdownRoute}">Read this page as Markdown</a></p></main>${footer}</body></html>`;
     put(`${route}index.html`, html);
     put(markdownRoute, rewriteMarkdown(markdown, true));
   }
@@ -137,16 +140,19 @@ ${origin ? `<meta property="og:url" content="${escape(url(route))}">` : ''}
 
   const homeMarkdown = `# Sanket ISL Translator\n\n${project.name} is a real-time Indian Sign Language (ISL) to English translation system using computer vision and deep learning.\n\nMediaPipe extracts pose and hand landmarks, a TensorFlow.js LSTM recognizes selected ISL signs, and local Express/Ollama services generate English text from the label sequence.\n\nThis research prototype has a fixed vocabulary. Presentation mode uses scripted words and sentences. MediaPipe assets require external downloads; fully offline operation is not established.\n\n- [Architecture](/docs/architecture/)\n- [Installation](/docs/installation/)\n- [FAQ](/docs/faq/)\n- [Limitations](/docs/limitations/)\n- [GitHub source](${project.repository})\n`;
   put('index.md', homeMarkdown);
-  const home = `${nav}<section class="discovery-home" aria-labelledby="project-title"><p class="discovery-eyebrow">COMPUTER VISION · BROWSER INFERENCE</p><h1 id="project-title">Sanket ISL Translator — Indian Sign Language to English</h1><p>${project.name} is a real-time Indian Sign Language (ISL) to English translation system using computer vision and deep learning.</p><p>MediaPipe extracts pose and hand landmarks; a TensorFlow.js LSTM recognizes selected signs. Local Express and Ollama services generate English text from recognized labels.</p><div class="discovery-links"><a href="#translator">Open translator ↓</a><a href="/docs/installation/">Run locally</a><a href="/docs/architecture/">Recognition architecture</a><a href="/docs/model/">Model</a><a href="/docs/dataset/">Dataset</a></div><p class="discovery-note">Research prototype with a fixed vocabulary. Sentence generation needs the local service. Presentation mode uses scripted outputs. <a href="/docs/limitations/">Read limitations</a>.</p></section>`;
+  const home = `${nav}${landing()}`;
   const homeDescription = `${project.name} is a real-time Indian Sign Language (ISL) to English translation system using computer vision and deep learning.`;
   const homeHead = head('Sanket ISL Translator — Real-Time Indian Sign Language to English', homeDescription, '/', '/index.md');
 
+  const translateHead = head('Translation workspace | Sanket ISL Translator', 'Recognize selected Indian Sign Language signs in the browser and build an English sentence with local services.', '/translate/', '/translate/index.md');
+  const translateIntro = `${nav}<section class="studio-intro"><div><p class="eyebrow">SANKET / TRANSLATION WORKSPACE</p><h1>Translation workspace</h1></div><p>Keep your hands and shoulders in frame. Record one sign at a time.<br><a class="text-link" href="/">← Back to the project</a></p></section>`;
+  put('translate/index.md', '# Translation workspace\n\nOpen the browser workspace at /translate/. Camera access starts after Start live translation. Add ?landmarkDebug for optional diagnostics.\n');
   let llms = `# ${project.name}\n\n> ${project.description}\n\nSelected webcam signs are classified in the browser. English generation uses local Express and Ollama. Demo outputs are scripted. External MediaPipe assets are required. Read limitations before interpreting results.\n\n## Project\n\n- [Homepage](${url('/')}): Project description and interactive application; sentence generation requires local services.\n- [Homepage Markdown](${url('/index.md')}): Plain-text overview.\n- [About the project](${url('/about/index.md')}): Purpose, audience and project source.\n- [GitHub repository](${project.repository}): Source code and contribution history.\n\n## Documentation\n\n`;
   llms += pages.map(([slug, title, description]) => `- [${title}](${url(`/docs/${slug}/index.md`)}): ${description}`).join('\n');
   llms += `\n\n## Optional\n\n- [Full technical documentation](${url('/llms-full.txt')}): Consolidated technical pages.\n`;
   put('llms.txt', llms);
   put('llms-full.txt', `# ${project.name}: full technical documentation\n\n${project.description}\n\n${pages.map(([slug]) => `Source: ${url(`/docs/${slug}/`)}\n\n${rewriteMarkdown(contents.get(slug), true)}`).join('\n\n---\n\n')}`);
-  const routes = ['/', '/about/', '/docs/', ...pages.map(([slug]) => `/docs/${slug}/`)];
+  const routes = ['/', '/translate/', '/about/', '/docs/', ...pages.map(([slug]) => `/docs/${slug}/`)];
   put('_redirects', routes.map(route => `${route}index.html ${route} 301!`).join('\n') + '\n');
   put('robots.txt', `User-agent: *\nAllow: /\n${origin ? `\nSitemap: ${url('/sitemap.xml')}\n` : '\n# Unpublished build: HTML pages carry noindex; configure SITE_URL for production.\n'}`);
   put('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${origin ? routes.map(route => `  <url><loc>${escape(url(route))}</loc></url>`).join('\n') : ''}\n</urlset>\n`);
@@ -154,7 +160,7 @@ ${origin ? `<meta property="og:url" content="${escape(url(route))}">` : ''}
   put('404.html', '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Page not found | Sanket ISL Translator</title><meta name="robots" content="noindex"></head><body><h1>Page not found</h1><p>Visit <a href="/">Sanket ISL Translator</a> or the <a href="/docs/">documentation</a>.</p></body></html>');
 
   const model = JSON.parse(fs.readFileSync(path.join(publicRoot, 'models/model.json'), 'utf8'));
-  const publicFiles = ['favicon.svg', 'social-preview.svg', 'social-preview.png', 'screenshots/translator.png', 'discovery.css', 'models/model.json', 'models/labels.json'];
+  const publicFiles = ['favicon.svg', 'social-preview.svg', 'social-preview.png', 'screenshots/translator.png', 'discovery.css', 'theme.js', 'models/model.json', 'models/labels.json'];
   for (const group of model.weightsManifest) for (const shard of group.paths) {
     if (path.basename(shard) !== shard) throw new Error('Unexpected model shard path');
     publicFiles.push(`models/${shard}`);
@@ -162,17 +168,17 @@ ${origin ? `<meta property="og:url" content="${escape(url(route))}">` : ''}
   for (const filename of publicFiles) put(filename, fs.readFileSync(path.join(publicRoot, filename)));
   // Presentation footage has no verified redistribution license. Keep local dev footage local.
   put('demo/manifest.json', '[]\n');
-  return { origin, assets, routes, home, homeHead, footer };
+  return { origin, assets, routes, home, homeHead, translateHead, translateIntro, footer };
 }
 
 export function discoverabilityPlugin() {
   let site;
-  const contentType = filename => ({ '.html': 'text/html; charset=utf-8', '.md': 'text/markdown; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml', '.json': 'application/json', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png' }[path.extname(filename)] || 'application/octet-stream');
+  const contentType = filename => ({ '.html': 'text/html; charset=utf-8', '.md': 'text/markdown; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml', '.json': 'application/json', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png' }[path.extname(filename)] || 'application/octet-stream');
   return {
     name: 'sanket-static-documentation',
     configResolved() { site = createSite(); },
     transformIndexHtml(html) {
-      return html.replace('<!-- sanket:head -->', site.homeHead).replace('<!-- sanket:overview -->', site.home).replace('<!-- sanket:footer -->', site.footer);
+      return html.replace('<!-- sanket:translate-head -->', site.translateHead).replace('<!-- sanket:translate-intro -->', site.translateIntro).replace('<!-- sanket:head -->', site.homeHead).replace('<!-- sanket:overview -->', site.home).replace('<!-- sanket:footer -->', site.footer);
     },
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
