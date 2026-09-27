@@ -1,0 +1,6 @@
+interface:
+  display_name: "Visual Qa"
+  short_description: "Project-specific visual qa workflow"
+  default_prompt: "Use $visual-qa for this Sanket design task."
+policy:
+  allow_implicit_invocation: true

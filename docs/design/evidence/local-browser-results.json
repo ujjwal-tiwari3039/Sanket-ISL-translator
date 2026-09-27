@@ -1,0 +1,281 @@
+[
+  {
+    "width": 1440,
+    "overflow": false,
+    "cls": 0.007524175007694677,
+    "lcp": 48,
+    "h1": 1,
+    "buttons": [
+      "Start live translation ↗",
+      "Explore demo →"
+    ],
+    "resources": [
+      {
+        "name": "http://127.0.0.1:5173/discovery.css",
+        "bytes": 8671
+      },
+      {
+        "name": "http://127.0.0.1:5173/@vite/client",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/src/main.jsx?t=1790448157510",
+        "bytes": 2035
+      },
+      {
+        "name": "http://127.0.0.1:5173/@react-refresh",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/react.js?v=84980871",
+        "bytes": 0
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=84980871",
+        "bytes": 0
+      },
+      {
+        "name": "http://127.0.0.1:5173/src/Workspace.jsx?t=1790448157510",
+        "bytes": 11943
+      },
+      {
+        "name": "http://127.0.0.1:5173/src/index.css?t=1790448018072",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=84980871",
+        "bytes": 0
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/vite/dist/client/env.mjs",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/rolldown-runtime-DC62tzP2.js?v=84980871",
+        "bytes": 0
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/react-dom.js?v=84980871",
+        "bytes": 0
+      }
+    ],
+    "load": 48.799999999813735
+  },
+  {
+    "idleFrameTiming": {
+      "frames": 60,
+      "averageMs": 16.665733333333336
+    }
+  },
+  {
+    "width": 768,
+    "overflow": false,
+    "cls": 0.01257227440239044,
+    "lcp": 32,
+    "h1": 1,
+    "buttons": [
+      "Start live translation ↗",
+      "Explore demo →"
+    ],
+    "resources": [
+      {
+        "name": "http://127.0.0.1:5173/@vite/client",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/discovery.css",
+        "bytes": 8671
+      },
+      {
+        "name": "http://127.0.0.1:5173/src/main.jsx?t=1790448157510",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/@react-refresh",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/vite/dist/client/env.mjs",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/react.js?v=84980871",
+        "bytes": 0
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=84980871",
+        "bytes": 0
+      },
+      {
+        "name": "http://127.0.0.1:5173/src/Workspace.jsx?t=1790448157510",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/src/index.css?t=1790448018072",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=84980871",
+        "bytes": 0
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/rolldown-runtime-DC62tzP2.js?v=84980871",
+        "bytes": 0
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/react-dom.js?v=84980871",
+        "bytes": 0
+      }
+    ],
+    "load": 23.700000000186265
+  },
+  {
+    "width": 390,
+    "overflow": false,
+    "cls": 0,
+    "lcp": 40,
+    "h1": 1,
+    "buttons": [
+      "Start live translation ↗",
+      "Explore demo →"
+    ],
+    "resources": [
+      {
+        "name": "http://127.0.0.1:5173/@vite/client",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/discovery.css",
+        "bytes": 8671
+      },
+      {
+        "name": "http://127.0.0.1:5173/src/main.jsx?t=1790448157510",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/@react-refresh",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/vite/dist/client/env.mjs",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/react.js?v=84980871",
+        "bytes": 0
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=84980871",
+        "bytes": 0
+      },
+      {
+        "name": "http://127.0.0.1:5173/src/Workspace.jsx?t=1790448157510",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/src/index.css?t=1790448018072",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=84980871",
+        "bytes": 0
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/rolldown-runtime-DC62tzP2.js?v=84980871",
+        "bytes": 0
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/react-dom.js?v=84980871",
+        "bytes": 0
+      }
+    ],
+    "load": 21.399999999441206
+  },
+  {
+    "width": 320,
+    "overflow": false,
+    "cls": 0.013854013114754097,
+    "lcp": 28,
+    "h1": 1,
+    "buttons": [
+      "Start live translation ↗",
+      "Explore demo →"
+    ],
+    "resources": [
+      {
+        "name": "http://127.0.0.1:5173/@vite/client",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/discovery.css",
+        "bytes": 8671
+      },
+      {
+        "name": "http://127.0.0.1:5173/src/main.jsx?t=1790448157510",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/@react-refresh",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/react.js?v=84980871",
+        "bytes": 0
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/vite/dist/client/env.mjs",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=84980871",
+        "bytes": 0
+      },
+      {
+        "name": "http://127.0.0.1:5173/src/Workspace.jsx?t=1790448157510",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=84980871",
+        "bytes": 0
+      },
+      {
+        "name": "http://127.0.0.1:5173/src/index.css?t=1790448018072",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/rolldown-runtime-DC62tzP2.js?v=84980871",
+        "bytes": 0
+      },
+      {
+        "name": "http://127.0.0.1:5173/node_modules/.vite/deps/react-dom.js?v=84980871",
+        "bytes": 0
+      }
+    ],
+    "load": 20.09999999962747
+  },
+  {
+    "reducedMotion": true,
+    "errors": []
+  },
+  {
+    "keyboardFocus": "skip-link"
+  },
+  {
+    "liveReady": true
+  },
+  {
+    "nameAdded": true
+  },
+  {
+    "liveMobileOverflow": false
+  },
+  {
+    "demoLabel": true
+  },
+  {
+    "cameraError": true
+  },
+  {
+    "docsOverflow": false
+  }
+]

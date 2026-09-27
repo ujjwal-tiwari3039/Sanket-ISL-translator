@@ -100,3 +100,12 @@ Legacy source/signer/mirroring provenance remains unknown. Detector anatomical-s
 The original [INCLUDE metadata](zenodo_files.json) and [dataset discussion](docs/dataset.md) describe source references. Historical landmark files already tracked by Git were retained; ignore rules do not remove them. This repository does not add new licensing claims for code, models or media.
 
 For deployment and static documentation, see [installation](docs/installation.md), [deployment](docs/deployment.md) and [documentation index](docs/index.md). The GitHub repository is [ujjwal-tiwari3039/Sanket-ISL-translator](https://github.com/ujjwal-tiwari3039/Sanket-ISL-translator). No public deployment was performed.
+
+Design work follows [DESIGN.md](DESIGN.md). Repository-local Codex skills live in
+`.agents/skills/`; routing cases and visual verification are documented in
+[design QA](docs/design/qa.md). The landing page loads the recognition workspace
+only after **Start live translation**. Physical validation trials remain a
+separate, opt-in debug workflow.
+
+The landing page is `/`; the standalone workspace is `/translate/`. Optional
+landmark diagnostics and validation recording remain at `/translate/?landmarkDebug`.

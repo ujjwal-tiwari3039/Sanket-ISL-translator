@@ -147,7 +147,7 @@ function LiveTranslator({ onEnterDemo }) {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+      if (e.code === 'Space' && !e.repeat && tfModelRef.current && !e.target.closest('button, input, textarea, select, a, [contenteditable]')) {
         e.preventDefault();
         toggleRecording();
       }
@@ -730,8 +730,9 @@ function LiveTranslator({ onEnterDemo }) {
           {import.meta.env.PROD ? "Demo: local setup required" : "Enter Demo Mode"}
         </button>
       </header>
+      {!modelsLoaded && uiState !== 'ERROR' && <p className="model-loading" role="status">Loading recognition models… The recording control will become available when ready.</p>}
 
-      <main className="main-content">
+      <div className="main-content">
         <section className="video-section">
           <div className="video-container">
             <video 
@@ -742,6 +743,7 @@ function LiveTranslator({ onEnterDemo }) {
               onLoadedMetadata={(e) => {
                 e.target.width = e.target.videoWidth;
                 e.target.height = e.target.videoHeight;
+                e.target.parentElement.style.aspectRatio = `${e.target.videoWidth} / ${e.target.videoHeight}`;
               }}
             />
             <canvas ref={canvasRef} className="canvas-overlay" />
@@ -790,7 +792,7 @@ function LiveTranslator({ onEnterDemo }) {
               </span>
             </div>
 
-            <div className="translation-text" style={{ color: strokeStatus === 'RECORDING' ? '#f59e0b' : 'var(--text-main)' }}>
+            <div role="status" className="translation-text" style={{ color: strokeStatus === 'RECORDING' ? '#f59e0b' : 'var(--text-main)' }}>
               {currentSign.toUpperCase()}
             </div>
             
@@ -827,7 +829,7 @@ function LiveTranslator({ onEnterDemo }) {
                 className="btn-record"
                 onClick={triggerAssembly}
                 disabled={sentence.length === 0}
-                style={{ flex: 1, backgroundColor: '#3b82f6' }}
+                style={{ flex: 1, backgroundColor: '#c8d4c5' }}
               >
                 ◼ Finish & Translate
               </button>
@@ -843,7 +845,7 @@ function LiveTranslator({ onEnterDemo }) {
                     isStrokeModeRef.current = e.target.checked;
                   }} 
                 />
-                Dynamic Stroke Capture (Anti-Fluctuation)
+                Stop automatically after the gesture
               </label>
             </div>
 
@@ -862,6 +864,7 @@ function LiveTranslator({ onEnterDemo }) {
              <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.6rem' }}>
                <input
                  type="text"
+                 aria-label="Letters or name to add to the sequence"
                  placeholder="Spell letters / Name (e.g. Ujjwal)..."
                  value={fingerspellInput}
                  onChange={(e) => setFingerspellInput(e.target.value)}
@@ -885,7 +888,7 @@ function LiveTranslator({ onEnterDemo }) {
                <button 
                  className="btn" 
                  onClick={handleAddFingerspell}
-                 style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem', background: '#3b82f6', color: '#fff', whiteSpace: 'nowrap' }}
+                 style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem', background: '#c8d4c5', color: '#14221d', whiteSpace: 'nowrap' }}
                >
                  + Spell Name
                </button>
@@ -893,8 +896,8 @@ function LiveTranslator({ onEnterDemo }) {
           </div>
 
           <div className="data-panel llm-output">
-            <h3>LLM Assembly</h3>
-            <div className="llm-text">
+            <h3>English sentence</h3>
+            <div className="llm-text" aria-live="polite">
               {llmSentence || "Waiting for context..."}
             </div>
           </div>
@@ -909,12 +912,12 @@ function LiveTranslator({ onEnterDemo }) {
             [ Clear Context ]
           </button>
         </section>
-      </main>
+      </div>
     </div>
   );
 }
 
-export default function App() {
-  const [demo, setDemo] = useState(false);
+export default function App({initialDemo = false}) {
+  const [demo, setDemo] = useState(initialDemo);
   return demo ? <DemoMode onExit={() => setDemo(false)} /> : <LiveTranslator onEnterDemo={() => setDemo(true)} />;
 }

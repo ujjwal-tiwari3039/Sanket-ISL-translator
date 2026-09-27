@@ -1,0 +1,6 @@
+interface:
+  display_name: "Frontend Art Direction"
+  short_description: "Project-specific frontend art direction workflow"
+  default_prompt: "Use $frontend-art-direction for this Sanket design task."
+policy:
+  allow_implicit_invocation: true

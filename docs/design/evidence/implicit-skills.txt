@@ -1,0 +1,20 @@
+Available repository-local skills: `anti-slop-ui`, `design-system`, `frontend-art-direction`, `image-to-ui`, `motion-design`, `visual-qa`, `web-design-guidelines`.
+
+| # | Request | Best skill |
+|---|---|---|
+| 1 | Establish landing page visual direction | `frontend-art-direction` |
+| 2 | Add database migration | NONE |
+| 3 | Make landing page less generic | `anti-slop-ui` |
+| 4 | Fix Python tensor shape | NONE |
+| 5 | Review keyboard and form interactions | `web-design-guidelines` |
+| 6 | Choose model architecture | NONE |
+| 7 | Define shared color and spacing tokens | `design-system` |
+| 8 | Correct sentence typo | NONE |
+| 9 | Check rendered contrast and mobile overflow | `visual-qa` |
+| 10 | Run only backend unit tests | NONE |
+| 11 | Reinterpret supplied poster for Sanket | `image-to-ui` |
+| 12 | Update API timeout handling | NONE |
+| 13 | Create reusable motion system | `motion-design` |
+| 14 | Change label spelling | NONE |
+
+Read descriptions only; no files changed or workflows run.

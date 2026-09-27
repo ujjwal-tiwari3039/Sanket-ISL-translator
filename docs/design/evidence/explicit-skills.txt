@@ -1,0 +1,13 @@
+Invoked and read all seven repository skills for routing only. No files edited, servers started, or workflows executed.
+
+Exact paths and routing examples:
+
+| SKILL.md path | Applicable action | Excluded task |
+|---|---|---|
+| /home/samashech/Documents/Sign-language-translator/Ai_sign_language_translator-/.agents/skills/frontend-art-direction/SKILL.md | Propose a new Sanket landing-page composition. | Routine component fixes. |
+| /home/samashech/Documents/Sign-language-translator/Ai_sign_language_translator-/.agents/skills/anti-slop-ui/SKILL.md | Critique repetitive cards and propose stronger hierarchy. | Backend bug fixes. |
+| /home/samashech/Documents/Sign-language-translator/Ai_sign_language_translator-/.agents/skills/web-design-guidelines/SKILL.md | Review form states and keyboard focus against the checklist. | Choosing a new brand direction. |
+| /home/samashech/Documents/Sign-language-translator/Ai_sign_language_translator-/.agents/skills/design-system/SKILL.md | Define shared design tokens and map them to CSS. | Isolated copy changes. |
+| /home/samashech/Documents/Sign-language-translator/Ai_sign_language_translator-/.agents/skills/visual-qa/SKILL.md | Inspect rendered layouts at desktop, tablet, and mobile widths. | Database work. |
+| /home/samashech/Documents/Sign-language-translator/Ai_sign_language_translator-/.agents/skills/image-to-ui/SKILL.md | Reinterpret a supplied reference’s visual principles for Sanket. | Literal cloning. |
+| /home/samashech/Documents/Sign-language-translator/Ai_sign_language_translator-/.agents/skills/motion-design/SKILL.md | Define purposeful transitions with reduced-motion alternatives. | Arbitrary decorative animation. |

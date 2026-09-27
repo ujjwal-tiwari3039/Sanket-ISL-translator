@@ -1,11 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-
 :root {
-  --bg-color: #000000;
-  --surface-color: #111111;
-  --border-color: #333333;
-  --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
+  --bg-color: #14221d;
+  --surface-color: #1c2d25;
+  --border-color: #43564a;
+  --text-main: #f3f0e8;
+  --text-muted: #b6c3b9;
   --accent-ready: #10b981;
   --accent-detect: #3b82f6;
   --accent-assemble: #f59e0b;
@@ -18,26 +16,18 @@
   padding: 0;
 }
 
-body {
-  background: var(--bg-color);
-  color: var(--text-main);
-  font-family: 'Inter', sans-serif;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
 
 .app-container {
-  max-width: 1400px;
+  max-width: 1280px;
   margin: 0 auto;
   width: 100%;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+
 }
 
 /* Header */
-header {
+.app-container > header {
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--border-color);
   display: flex;
@@ -50,22 +40,22 @@ header {
   font-size: 1.2rem;
   font-weight: 600;
   letter-spacing: -0.02em;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, monospace;
   text-transform: none;
 }
 
 .logo-container p {
   color: var(--text-muted);
   font-size: 0.8rem;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, monospace;
 }
 
 .ui-state-badge {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, monospace;
   font-size: 0.75rem;
   padding: 0.25rem 0.75rem;
   border: 1px solid var(--border-color);
-  border-radius: 9999px;
+  border-radius: 2px;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -117,13 +107,12 @@ header {
   overflow: hidden;
 }
 
-video {
+.app-container video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transform: scaleX(-1);
-  opacity: 0.9;
-  filter: grayscale(20%) contrast(110%);
+
 }
 
 .canvas-overlay {
@@ -138,7 +127,7 @@ video {
 
 .info-text {
   padding: 1rem 1.5rem;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, monospace;
   font-size: 0.75rem;
   color: var(--text-muted);
   background: var(--bg-color);
@@ -159,7 +148,7 @@ video {
 }
 
 .data-panel h3 {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, monospace;
   font-size: 0.75rem;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -172,14 +161,14 @@ video {
   color: var(--text-main);
   line-height: 1.2;
   min-height: 2.4rem;
-  font-family: 'Inter', sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   letter-spacing: -0.02em;
 }
 
 .sequence-text {
   font-size: 1.2rem;
   color: var(--text-muted);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, monospace;
 }
 
 .llm-output {
@@ -210,7 +199,7 @@ video {
 }
 
 .conf-label {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, monospace;
   font-size: 0.7rem;
   color: var(--text-muted);
   margin-top: 0.4rem;
@@ -225,7 +214,7 @@ video {
   padding: 0.25rem 0.5rem;
   background: var(--surface-color);
   color: var(--text-main);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, monospace;
   font-size: 0.75rem;
   border: 1px solid var(--border-color);
 }
@@ -237,7 +226,7 @@ video {
   padding: 1rem;
   font-size: 0.9rem;
   font-weight: 500;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, monospace;
   cursor: pointer;
   text-transform: uppercase;
   width: 100%;
@@ -265,10 +254,10 @@ video {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, monospace;
   font-size: 0.8rem;
   text-transform: uppercase;
-  transition: all 0.2s ease;
+  transition: background var(--fast), color var(--fast);
 }
 
 .btn-record:hover {
@@ -293,12 +282,12 @@ video {
 
 .gesture-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #38bdf8, #10b981);
+  background: #b6d997;
   transition: width 0.06s linear;
 }
 
 .gesture-progress-bar.recording {
-  background: linear-gradient(90deg, #f59e0b, #ef4444);
+  background: #ffd180;
 }
 
 .mode-toggle-group {
@@ -306,7 +295,7 @@ video {
   align-items: center;
   justify-content: space-between;
   margin-top: 0.75rem;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, monospace;
   font-size: 0.75rem;
   color: var(--text-muted);
 }
@@ -323,3 +312,71 @@ video {
 .app-container > header { flex-wrap: wrap; gap: 1rem; }
 .app-container > header .btn { width: auto; }
 .logo-container { flex-shrink: 0; }
+
+/* Public workspace entry; ML is loaded only after a deliberate launch. */
+#translator{max-width:1184px;margin:0 auto;color:var(--text-main)}
+.workspace-launch{background:var(--bg-color);padding:56px;display:grid;grid-template-columns:1.4fr 1fr;gap:64px;align-items:center}
+.workspace-launch h2{font:500 clamp(40px,4.5vw,64px)/1.05 Arial,sans-serif;letter-spacing:-.045em;margin:24px 0}
+.workspace-launch p{color:var(--text-muted);font-size:15px;max-width:43ch;line-height:1.7}
+.workspace-launch .action-primary{background:#d5e6be;color:#14221d;border-color:#d5e6be}
+.action-secondary{background:none;border:0;border-bottom:1px solid #b6c3b9;color:var(--text-main);padding:12px 0;cursor:pointer;font-size:14px}
+.launch-instructions{border-left:1px solid var(--border-color);padding-left:32px;font-size:14px}
+.launch-instructions>span{font:11px ui-monospace,monospace;letter-spacing:.1em;color:var(--text-muted)}
+.launch-instructions ol{padding-left:18px;margin:24px 0}.launch-instructions li{padding:8px 0}.launch-instructions a{font-size:12px}
+.workspace-launch .launch-note{font:10px/1.7 ui-monospace,monospace;margin-top:24px}
+.workspace-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#0e1914;padding:16px 24px;font:10px ui-monospace,monospace;letter-spacing:.06em}
+.workspace-toolbar button{background:none;border:1px solid var(--border-color);color:var(--text-main);padding:10px 12px;font:12px Arial,sans-serif;cursor:pointer;min-height:44px}
+.workspace-loading{padding:64px 24px;background:var(--bg-color);min-height:360px}
+.app-container{background:var(--bg-color);color:var(--text-main);border:1px solid var(--border-color)}
+.app-container .main-content{grid-template-columns:minmax(0,3fr) minmax(320px,2fr)}
+.app-container .info-text{flex-wrap:wrap;gap:12px;font-size:10px;overflow-wrap:anywhere}
+.app-container .controls-panel{min-width:0}.app-container .translation-text{font-size:30px;overflow-wrap:anywhere}
+.app-container .btn-record{font:600 12px/1.5 Arial,sans-serif;min-height:48px;text-transform:none;border-radius:2px;background:#b6d997}
+.app-container .btn{font:500 12px/1.5 Arial,sans-serif;min-height:44px;text-transform:none;border-radius:2px}
+.app-container button:disabled{opacity:.45;cursor:not-allowed}.app-container button:disabled:hover{transform:none}
+.app-container .data-panel{padding:24px}.app-container .data-panel h3{font-size:10px;letter-spacing:.12em}
+.app-container input[type=text]{min-width:0;min-height:44px;font-size:16px!important}
+.app-container input[type=checkbox]{width:18px;height:18px;accent-color:#b6d997;flex-shrink:0}
+.app-container .mode-toggle-group label{min-height:44px;line-height:1.5}.app-container .sequence-text{overflow-wrap:anywhere;font-size:16px}
+.app-container fieldset{padding:20px;min-width:0;border:1px solid var(--border-color);font-size:13px}
+.app-container fieldset label{display:block;margin:12px 0}.app-container fieldset input,.app-container fieldset select{max-width:100%;background:var(--surface-color);color:var(--text-main);border:1px solid var(--border-color);min-height:44px;padding:8px}
+.app-container pre{overflow:auto;max-width:100%;padding:20px;font:11px/1.6 ui-monospace,monospace}
+.app-container :focus-visible,#translator :focus-visible{outline-color:#d5e6be}.app-container .video-section,.app-container .video-panel{min-width:0}
+.ui-state-badge.error{border-color:#ffb4a3}.ui-state-badge.error .ui-state-indicator{background:#ffb4a3}
+.ui-state-badge.capturing .ui-state-indicator{background:#ffd180}.ui-state-badge.recognized .ui-state-indicator{background:#b6d997}
+@media(max-width:1000px){#translator{margin:0 24px}.workspace-launch{padding:32px;gap:32px}.app-container .main-content{grid-template-columns:1fr}.video-section{border-right:0}.app-container .controls-panel{display:grid;grid-template-columns:1fr 1fr}.app-container .controls-panel>.data-panel:first-child{grid-column:1/-1}.app-container .controls-panel>.btn{grid-column:1/-1}}
+@media(max-width:640px){#translator{margin:0 20px}.workspace-launch{display:block;padding:28px 20px}.launch-instructions{border-left:0;border-top:1px solid var(--border-color);padding:28px 0 0;margin-top:32px}.app-container .controls-panel{display:flex}.app-container .data-panel{padding:20px}.app-container>header{padding:20px}.logo-container{flex-shrink:1}.workspace-toolbar{padding:12px;flex-wrap:wrap}.app-container .info-text{padding:16px}.app-container .btn-record{padding:10px 8px}.app-container .llm-text{font-size:22px}}
+/* Preserve space for text entry beside the compact spelling action. */
+.app-container .data-panel input[type=text]{width:0;flex:1 1 0!important}
+.app-container .data-panel input[type=text]+.btn{width:auto;flex:0 0 auto}
+
+.model-loading { padding: 16px 24px; color: var(--text-muted); font-size: 13px; border-bottom: 1px solid var(--border-color); }
+
+/* Standalone translator: generous work area, with a visible page margin. */
+.translation-page #translator {
+  width: calc(100% - 32px);
+  max-width: 1920px;
+  margin: 0 auto;
+}
+.translation-page .app-container { max-width: none; }
+.translation-page .app-container .main-content {
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+.translation-page .workspace-launch { min-height: 420px; padding: 40px 48px; }
+@media (max-width: 1000px) {
+  .translation-page #translator { width: calc(100% - 40px); }
+  .translation-page .app-container .main-content { grid-template-columns: 1fr; }
+  .translation-page .workspace-launch { padding: 32px; }
+}
+@media (max-width: 640px) {
+  .translation-page #translator { width: calc(100% - 24px); }
+  .translation-page .workspace-launch { padding: 24px 20px; min-height: 0; }
+}
+
+.translation-page .workspace-toolbar { padding: 6px 16px; }
+.translation-page .app-container > header { padding: 10px 16px; gap: 12px; }
+.translation-page .app-container .logo-container p { display: none; }
+.translation-page .app-container .info-text { padding: 10px 16px; }
+@media (min-width: 1001px) {
+  .translation-page .workspace-launch { min-height: min(680px, calc(100svh - 160px)); }
+}

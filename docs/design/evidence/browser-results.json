@@ -1,0 +1,127 @@
+[
+  {
+    "width": 1440,
+    "overflow": false,
+    "cls": 0,
+    "h1": 1,
+    "buttons": [
+      "Start live translation ↗"
+    ],
+    "resources": [
+      {
+        "name": "http://127.0.0.1:4173/discovery.css",
+        "bytes": 2711
+      },
+      {
+        "name": "http://127.0.0.1:4173/assets/index-lLAeXnVJ.js",
+        "bytes": 61084
+      },
+      {
+        "name": "http://127.0.0.1:4173/assets/index-B1WG2awA.css",
+        "bytes": 2613
+      },
+      {
+        "name": "http://127.0.0.1:4173/favicon.svg",
+        "bytes": 582
+      }
+    ],
+    "load": 28.5
+  },
+  {
+    "width": 768,
+    "overflow": false,
+    "cls": 0,
+    "h1": 1,
+    "buttons": [
+      "Start live translation ↗"
+    ],
+    "resources": [
+      {
+        "name": "http://127.0.0.1:4173/discovery.css",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:4173/assets/index-lLAeXnVJ.js",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:4173/assets/index-B1WG2awA.css",
+        "bytes": 300
+      }
+    ],
+    "load": 21.100000000093132
+  },
+  {
+    "width": 390,
+    "overflow": false,
+    "cls": 0,
+    "h1": 1,
+    "buttons": [
+      "Start live translation ↗"
+    ],
+    "resources": [
+      {
+        "name": "http://127.0.0.1:4173/discovery.css",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:4173/assets/index-B1WG2awA.css",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:4173/assets/index-lLAeXnVJ.js",
+        "bytes": 300
+      }
+    ],
+    "load": 17.100000000093132
+  },
+  {
+    "width": 320,
+    "overflow": false,
+    "cls": 0,
+    "h1": 1,
+    "buttons": [
+      "Start live translation ↗"
+    ],
+    "resources": [
+      {
+        "name": "http://127.0.0.1:4173/discovery.css",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:4173/assets/index-lLAeXnVJ.js",
+        "bytes": 300
+      },
+      {
+        "name": "http://127.0.0.1:4173/assets/index-B1WG2awA.css",
+        "bytes": 300
+      }
+    ],
+    "load": 15.100000000093132
+  },
+  {
+    "reducedMotion": true,
+    "errors": []
+  },
+  {
+    "keyboardFocus": "skip-link"
+  },
+  {
+    "liveReady": true
+  },
+  {
+    "nameAdded": true
+  },
+  {
+    "liveMobileOverflow": false
+  },
+  {
+    "productionDemo": "local setup only, by publication policy"
+  },
+  {
+    "cameraError": true
+  },
+  {
+    "docsOverflow": false
+  }
+]
