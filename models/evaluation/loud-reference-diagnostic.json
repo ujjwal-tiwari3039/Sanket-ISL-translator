@@ -1,0 +1,609 @@
+{
+  "duration": 5.13161,
+  "width": 480,
+  "height": 360,
+  "frames": 77,
+  "coverage": [
+    {
+      "time": 0.001,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 0.06766666666666667,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 0.13433333333333333,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 0.201,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 0.26766666666666666,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 0.3343333333333333,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 0.40099999999999997,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 0.4676666666666666,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 0.5343333333333333,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 0.601,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 0.6676666666666666,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 0.7343333333333333,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 0.8009999999999999,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 0.8676666666666666,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 0.9343333333333332,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 1.001,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 1.0676666666666665,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 1.1343333333333332,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 1.2009999999999998,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 1.2676666666666665,
+      "pose": 1,
+      "hands": [
+        "Right",
+        "Left"
+      ]
+    },
+    {
+      "time": 1.3343333333333331,
+      "pose": 1,
+      "hands": [
+        "Right",
+        "Left"
+      ]
+    },
+    {
+      "time": 1.4009999999999998,
+      "pose": 1,
+      "hands": [
+        "Right",
+        "Left"
+      ]
+    },
+    {
+      "time": 1.4676666666666665,
+      "pose": 1,
+      "hands": [
+        "Right",
+        "Left"
+      ]
+    },
+    {
+      "time": 1.534333333333333,
+      "pose": 1,
+      "hands": [
+        "Right",
+        "Left"
+      ]
+    },
+    {
+      "time": 1.6009999999999998,
+      "pose": 1,
+      "hands": [
+        "Right",
+        "Left"
+      ]
+    },
+    {
+      "time": 1.6676666666666664,
+      "pose": 1,
+      "hands": [
+        "Right",
+        "Left"
+      ]
+    },
+    {
+      "time": 1.734333333333333,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 1.8009999999999997,
+      "pose": 1,
+      "hands": [
+        "Right"
+      ]
+    },
+    {
+      "time": 1.8676666666666664,
+      "pose": 1,
+      "hands": [
+        "Right"
+      ]
+    },
+    {
+      "time": 1.934333333333333,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 2.001,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 2.0676666666666668,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 2.1343333333333336,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 2.2010000000000005,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 2.2676666666666674,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 2.3343333333333343,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 2.401000000000001,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 2.467666666666668,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 2.534333333333335,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 2.6010000000000018,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 2.6676666666666686,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 2.7343333333333355,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 2.8010000000000024,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 2.8676666666666693,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 2.934333333333336,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 3.001000000000003,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 3.06766666666667,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 3.1343333333333367,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 3.2010000000000036,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 3.2676666666666705,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 3.3343333333333374,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 3.4010000000000042,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 3.467666666666671,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 3.534333333333338,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 3.601000000000005,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 3.6676666666666717,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 3.7343333333333386,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 3.8010000000000055,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 3.8676666666666724,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 3.9343333333333392,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 4.001000000000006,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 4.067666666666672,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 4.1343333333333385,
+      "pose": 1,
+      "hands": [
+        "Left",
+        "Right"
+      ]
+    },
+    {
+      "time": 4.201000000000005,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 4.267666666666671,
+      "pose": 1,
+      "hands": [
+        "Right",
+        "Left"
+      ]
+    },
+    {
+      "time": 4.334333333333338,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 4.401000000000004,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 4.467666666666671,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 4.534333333333337,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 4.6010000000000035,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 4.66766666666667,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 4.734333333333336,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 4.801000000000003,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 4.867666666666669,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 4.934333333333336,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 5.001000000000002,
+      "pose": 1,
+      "hands": []
+    },
+    {
+      "time": 5.0676666666666685,
+      "pose": 1,
+      "hands": []
+    }
+  ],
+  "windows": [
+    {
+      "start": 0,
+      "end": 5.13161,
+      "frames": 77,
+      "top5": [
+        {
+          "label": "big large",
+          "score": 0.9495940208435059
+        },
+        {
+          "label": "cold",
+          "score": 0.025455506518483162
+        },
+        {
+          "label": "healthy",
+          "score": 0.012156629003584385
+        },
+        {
+          "label": "loud",
+          "score": 0.009546604007482529
+        },
+        {
+          "label": "happy",
+          "score": 0.0019430025713518262
+        }
+      ],
+      "loudRank": 4,
+      "loudScore": 0.009546604007482529
+    },
+    {
+      "start": 0.5,
+      "end": 4.5,
+      "frames": 60,
+      "top5": [
+        {
+          "label": "big large",
+          "score": 0.8831456303596497
+        },
+        {
+          "label": "cold",
+          "score": 0.07200554013252258
+        },
+        {
+          "label": "loud",
+          "score": 0.029083294793963432
+        },
+        {
+          "label": "healthy",
+          "score": 0.011254712007939816
+        },
+        {
+          "label": "crowd",
+          "score": 0.0010357092833146453
+        }
+      ],
+      "loudRank": 3,
+      "loudScore": 0.029083294793963432
+    },
+    {
+      "start": 1,
+      "end": 4,
+      "frames": 45,
+      "top5": [
+        {
+          "label": "big large",
+          "score": 0.6586427092552185
+        },
+        {
+          "label": "cold",
+          "score": 0.22967153787612915
+        },
+        {
+          "label": "crowd",
+          "score": 0.047228921204805374
+        },
+        {
+          "label": "loud",
+          "score": 0.021981295198202133
+        },
+        {
+          "label": "wide",
+          "score": 0.01540385652333498
+        }
+      ],
+      "loudRank": 4,
+      "loudScore": 0.021981295198202133
+    },
+    {
+      "start": 1.5,
+      "end": 3.5,
+      "frames": 30,
+      "top5": [
+        {
+          "label": "big large",
+          "score": 0.7735164761543274
+        },
+        {
+          "label": "cold",
+          "score": 0.13241158425807953
+        },
+        {
+          "label": "crowd",
+          "score": 0.03802328184247017
+        },
+        {
+          "label": "wide",
+          "score": 0.01946665532886982
+        },
+        {
+          "label": "loud",
+          "score": 0.018189022317528725
+        }
+      ],
+      "loudRank": 5,
+      "loudScore": 0.018189022317528725
+    }
+  ],
+  "source": "https://www.youtube.com/watch?v=gFyDUuy1_88",
+  "method": "Isolated Chromium; existing browser extractKeypoints/resampleSequence and deployed TFJS weights; VIDEO detectors with live configuration; unmirrored 480x360 video sampled at 15 Hz; diagnostic fixed windows, not live motion gating or verified gesture boundaries.",
+  "video_sha256": "dffe0377ce6e9fcf4580a956ecc13d24265b62a20cb119d9e2456a1db2fac1f1",
+  "limits": "Single reference clip, not generalization evaluation; detector misses, sign variants and training provenance remain unresolved. No threshold or weights changed."
+}

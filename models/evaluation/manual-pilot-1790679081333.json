@@ -1,0 +1,131 @@
+{
+  "source": "sanket-validation-1790679081333.json",
+  "scope": "Single-session pilot; intended labels supplied by operator; signing not independently verified; no unknown trials; model artifact hash not recorded. Not generalization accuracy or a threshold selection dataset.",
+  "trials": 47,
+  "validation_errors": [],
+  "top1_matches": 0,
+  "top3_matches": 0,
+  "accepted": 42,
+  "mean_top1_confidence": 0.7392107184897078,
+  "mean_margin": 0.5864933825436542,
+  "confidence_above_90": 20,
+  "exact_duplicate_sequences": 0,
+  "per_sign": {
+    "loud": {
+      "n": 6,
+      "predictions": {
+        "crowd": 5,
+        "science": 1
+      },
+      "mean_frame_coverage": {
+        "pose": 1,
+        "left": 0.7068636558448421,
+        "right": 0.8105662381989023
+      }
+    },
+    "energy": {
+      "n": 6,
+      "predictions": {
+        "tall": 3,
+        "warm": 2,
+        "they": 1
+      },
+      "mean_frame_coverage": {
+        "pose": 1,
+        "left": 0.019838969404186793,
+        "right": 0.8831665516448125
+      }
+    },
+    "rich": {
+      "n": 6,
+      "predictions": {
+        "hospital": 1,
+        "exercise": 1,
+        "dry": 2,
+        "dog": 1,
+        "how are you": 1
+      },
+      "mean_frame_coverage": {
+        "pose": 1,
+        "left": 0.7329767269107145,
+        "right": 0.8435606980656044
+      }
+    },
+    "thick": {
+      "n": 5,
+      "predictions": {
+        "healthy": 1,
+        "loose": 3,
+        "t-shirt": 1
+      },
+      "mean_frame_coverage": {
+        "pose": 1,
+        "left": 0.5925927632725765,
+        "right": 0.9722648083623693
+      }
+    },
+    "expensive": {
+      "n": 9,
+      "predictions": {
+        "it": 2,
+        "good": 1,
+        "court": 3,
+        "extra": 1,
+        "nice": 1,
+        "player": 1
+      },
+      "mean_frame_coverage": {
+        "pose": 1,
+        "left": 0.004115226337448559,
+        "right": 0.8227383955702411
+      }
+    },
+    "newspaper": {
+      "n": 4,
+      "predictions": {
+        "happy": 3,
+        "healthy": 1
+      },
+      "mean_frame_coverage": {
+        "pose": 1,
+        "left": 0.7368354412472059,
+        "right": 0.7977216138980845
+      }
+    },
+    "gun": {
+      "n": 5,
+      "predictions": {
+        "grandfather": 1,
+        "court": 1,
+        "store or shop": 2,
+        "short": 1
+      },
+      "mean_frame_coverage": {
+        "pose": 1,
+        "left": 0.6256621323675509,
+        "right": 0.7533878435838092
+      }
+    },
+    "train ticket": {
+      "n": 6,
+      "predictions": {
+        "pant": 2,
+        "it": 3,
+        "court": 1
+      },
+      "mean_frame_coverage": {
+        "pose": 1,
+        "left": 0.06650526064084171,
+        "right": 0.4659854959555288
+      }
+    }
+  },
+  "threshold_sweep": {
+    "0.4": 42,
+    "0.6": 32,
+    "0.8": 22,
+    "0.9": 20,
+    "0.95": 11,
+    "0.99": 5
+  }
+}

@@ -1,0 +1,282 @@
+{
+  "MP_Data": {
+    "loud": {
+      "n": 21,
+      "matches": 21,
+      "predictions": {
+        "loud": 21
+      },
+      "coverage": {
+        "left": 0.746031746031746,
+        "right": 0.7492063492063492
+      }
+    },
+    "energy": {
+      "n": 7,
+      "matches": 7,
+      "predictions": {
+        "energy": 7
+      },
+      "coverage": {
+        "left": 0.4142857142857143,
+        "right": 0.6523809523809524
+      }
+    },
+    "rich": {
+      "n": 8,
+      "matches": 8,
+      "predictions": {
+        "rich": 8
+      },
+      "coverage": {
+        "left": 0.75,
+        "right": 0.7541666666666667
+      }
+    },
+    "thick": {
+      "n": 8,
+      "matches": 8,
+      "predictions": {
+        "thick": 8
+      },
+      "coverage": {
+        "left": 1.0,
+        "right": 0.75
+      }
+    },
+    "expensive": {
+      "n": 8,
+      "matches": 8,
+      "predictions": {
+        "expensive": 8
+      },
+      "coverage": {
+        "left": 1.0,
+        "right": 0.6166666666666667
+      }
+    },
+    "newspaper": {
+      "n": 7,
+      "matches": 7,
+      "predictions": {
+        "newspaper": 7
+      },
+      "coverage": {
+        "left": 0.5619047619047619,
+        "right": 0.7238095238095238
+      }
+    },
+    "gun": {
+      "n": 7,
+      "matches": 7,
+      "predictions": {
+        "gun": 7
+      },
+      "coverage": {
+        "left": 0.7285714285714285,
+        "right": 0.6523809523809524
+      }
+    },
+    "train ticket": {
+      "n": 19,
+      "matches": 19,
+      "predictions": {
+        "train ticket": 19
+      },
+      "coverage": {
+        "left": 0.6175438596491228,
+        "right": 0.5596491228070175
+      }
+    },
+    "big large": {
+      "n": 21,
+      "matches": 21,
+      "predictions": {
+        "big large": 21
+      },
+      "coverage": {
+        "left": 0.6174603174603175,
+        "right": 0.6095238095238096
+      }
+    },
+    "crowd": {
+      "n": 19,
+      "matches": 19,
+      "predictions": {
+        "crowd": 19
+      },
+      "coverage": {
+        "left": 0.6877192982456141,
+        "right": 0.6912280701754386
+      }
+    }
+  },
+  "MP_Data_old_224": {
+    "expensive": {
+      "n": 8,
+      "matches": 0,
+      "predictions": {
+        "pant": 2,
+        "extra": 3,
+        "court": 1,
+        "store or shop": 2
+      },
+      "coverage": {
+        "left": 0.004166666666666667,
+        "right": 0.020833333333333332
+      }
+    },
+    "loud": {
+      "n": 21,
+      "matches": 0,
+      "predictions": {
+        "narrow": 7,
+        "extra": 6,
+        "dress": 1,
+        "street or road": 3,
+        "crowd": 1,
+        "market": 1,
+        "hot": 2
+      },
+      "coverage": {
+        "left": 0.06031746031746032,
+        "right": 0.08253968253968254
+      }
+    }
+  },
+  "keras_vs_recorded": {
+    "max_abs_error": 4.105269908905029e-06,
+    "same_top1": 47
+  },
+  "diagnostic_hand_slot_swap": {
+    "matches": 0,
+    "warning": "counterfactual diagnostic only, not a proposed schema change"
+  },
+  "scope": "Diagnostic reconstruction of legacy samples, NOT held-out evaluation; sample/checkpoint training membership unknown. MP_Data_old_224 interpreted using legacy 1692 schema, provenance unverified.",
+  "model_sha256": "2b5f7ea32b565dc65ec5d8d8faa856dd335a5491ff7367c71100be9ed31389f0",
+  "labels_sha256": "adf125340e803a30c54af07b18e8d0a23bf1ff6188e0d4624412bb0a24d94483",
+  "reference_single_repetition_windows": [
+    {
+      "start": 0.4,
+      "end": 2.1,
+      "frames": 26,
+      "top5": [
+        {
+          "label": "big large",
+          "score": 0.9405531287193298
+        },
+        {
+          "label": "cold",
+          "score": 0.027459049597382545
+        },
+        {
+          "label": "healthy",
+          "score": 0.015277404338121414
+        },
+        {
+          "label": "loud",
+          "score": 0.012629563920199871
+        },
+        {
+          "label": "wide",
+          "score": 0.0021233530715107918
+        }
+      ],
+      "loudRank": 4,
+      "loudScore": 0.012629563920199871
+    },
+    {
+      "start": 2.6,
+      "end": 4.4,
+      "frames": 27,
+      "top5": [
+        {
+          "label": "big large",
+          "score": 0.9135379791259766
+        },
+        {
+          "label": "loud",
+          "score": 0.03128264099359512
+        },
+        {
+          "label": "healthy",
+          "score": 0.029324285686016083
+        },
+        {
+          "label": "cold",
+          "score": 0.017666557803750038
+        },
+        {
+          "label": "wide",
+          "score": 0.004458751063793898
+        }
+      ],
+      "loudRank": 2,
+      "loudScore": 0.03128264099359512
+    },
+    {
+      "start": 0.6,
+      "end": 1.8,
+      "frames": 18,
+      "top5": [
+        {
+          "label": "big large",
+          "score": 0.6890913844108582
+        },
+        {
+          "label": "healthy",
+          "score": 0.14570100605487823
+        },
+        {
+          "label": "cold",
+          "score": 0.08872941136360168
+        },
+        {
+          "label": "loud",
+          "score": 0.035943444818258286
+        },
+        {
+          "label": "happy",
+          "score": 0.014053691178560257
+        }
+      ],
+      "loudRank": 4,
+      "loudScore": 0.035943444818258286
+    },
+    {
+      "start": 2.9,
+      "end": 4.1,
+      "frames": 18,
+      "top5": [
+        {
+          "label": "loud",
+          "score": 0.6106684803962708
+        },
+        {
+          "label": "healthy",
+          "score": 0.3487676680088043
+        },
+        {
+          "label": "big large",
+          "score": 0.03268527239561081
+        },
+        {
+          "label": "cold",
+          "score": 0.004693490453064442
+        },
+        {
+          "label": "soft",
+          "score": 0.002507101045921445
+        }
+      ],
+      "loudRank": 1,
+      "loudScore": 0.6106684803962708
+    }
+  ],
+  "window_caveat": "Visual exploratory cropping after inspecting failures; not a selected deployment rule. The two 18-frame windows are below canonical collection minimum 20 and bypass live capture gating.",
+  "reference_coverage": {
+    "pose": 1.0,
+    "Left": 0.38961038961038963,
+    "Right": 0.4155844155844156
+  }
+}

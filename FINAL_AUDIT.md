@@ -256,3 +256,34 @@ show no horizontal overflow; local production initial-load samples recorded CLS 
 These measurements are local and do not establish field performance or cross-browser
 accessibility conformance. Full decisions, screenshots, commands, activation proofs
 and limitations are in docs/design/audit.md and docs/design/qa.md.
+
+## LOUD reference diagnostic — 2026-09-29
+
+The operator identified indiansignlanguage.org and @isldictionary as the reference for the 47-trial pilot. Retrieved YouTube clip gFyDUuy1_88 (5.132 s, 480x360). Ran existing browser feature extraction, normalization, 30-frame resampling and deployed TensorFlow.js model in isolated Chromium at 15 sampled frames/s (77 frames). Four exploratory windows (whole clip, 0.5–4.5 s, 1–4 s, 1.5–3.5 s) all predicted `big large` (94.96%, 88.31%, 65.86%, 77.35%). LOUD ranked 4, 3, 4 and 5 respectively. These windows are not independently verified gesture boundaries and bypass live motion gating. The result demonstrates failure on this reference under the tested pipeline, not the root cause or generalization accuracy. Hand detections were intermittent; video identity, per-frame coverage and scores are saved in `models/evaluation/loud-reference-diagnostic.json`. The 47-trial pilot had no intended-label top-1/top-3 matches and 42 accepted errors; see `models/evaluation/manual-pilot-1790679081333.json`. No calibration threshold selected, training started, or deployed weights changed. Next: compare reference/training sign variants and inspect detector coverage and legacy model provenance before collecting more large batches.
+
+## Follow-up: legacy reconstruction and temporal sensitivity
+
+See `docs/audit/loud-reference-investigation.md` and `models/evaluation/legacy-reference-comparison.json`. The deployed Keras model recognized 125/125 selected active legacy samples across ten labels, including LOUD 21/21; these are reconstruction results, not held-out accuracy. All 47 saved browser top-1 predictions reproduced in Keras, max score difference 4.106e-6. Diagnostic hand-slot swapping yielded 0/47 matches. Visual inspection identified two repetitions in the LOUD reference. Wider individual-repetition crops predicted BIG LARGE; a tighter 2.9–4.1 s crop predicted LOUD at 61.1%, but contains only 18 frames, below the canonical collector minimum. This qualifies the earlier reference failure: predictions depend on temporal boundaries. No deployment thresholds were selected or changed. Root cause remains unresolved; identified legacy source videos and independently defined gesture boundaries are needed to separate variants, detector differences and model overfitting.
+
+## Completed fresh INCLUDE diagnostic — 2026-09-29
+
+Downloaded three LOUD members from the official INCLUDE archive by byte range;
+validated member CRC32/size and recorded SHA256, source paths and unknown signer/split
+in `data/manifests/include-loud-diagnostic.json`. Canonical VIDEO re-extraction produced
+finite [30,258] samples from 28,32,29 input frames. Unchanged deployed Keras model:
+MVI_5177 LOUD 99.943%, MVI_9290 LOUD 95.557%, MVI_9536 LOUD 99.990%.
+This is a diagnostic source-domain result, not independent held-out performance.
+Reports: `models/evaluation/include-loud-diagnostic/report.json`.
+
+All three source clips visibly use spread fingers, unlike the extended-index-finger
+dictionary example. This supports a reference/training handshape difference for LOUD,
+not a judgment of linguistic correctness or an explanation for all 47 failures.
+A predeclared pose-based boundary probe produced two valid 23-frame dictionary
+segments, both BIG LARGE (~92%); trimming alone did not fix this case.
+
+Added `ml/src/evaluation/reference_diagnostic.py`, reusing canonical extraction and
+validation. Added visual evidence and reproduction instructions in
+`docs/audit/loud-reference-investigation.md`. Live UI, weights and thresholds unchanged.
+Ran `SANKET_VIDEO_TEST=data/include/diagnostic-loud/videos/MVI_9536.MOV venv/bin/python -m unittest discover -s tests/ml -v`: 17 tests passed, zero skipped.
+Initial pytest command was unavailable; the repository tests use unittest.
+No verified retraining, confidence calibration or signer-independent evaluation claimed.
