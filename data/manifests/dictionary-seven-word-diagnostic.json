@@ -1,0 +1,61 @@
+{
+  "scope": "Channel candidates, not independently verified as the exact clips used by the operator; train ticket unresolved",
+  "videos": [
+    {
+      "word": "energy",
+      "title": "Energy",
+      "id": "BPXMuyXJai8",
+      "exit_code": 0,
+      "operator_reference_confirmed": false
+    },
+    {
+      "word": "rich",
+      "title": "rich",
+      "id": "z4vokrd75OM",
+      "exit_code": 0,
+      "operator_reference_confirmed": false
+    },
+    {
+      "word": "thick",
+      "title": "thick",
+      "id": "oAbVUktjGi0",
+      "exit_code": 0,
+      "operator_reference_confirmed": false
+    },
+    {
+      "word": "expensive",
+      "title": "expensive-1",
+      "id": "CNIlm20ulSs",
+      "exit_code": 0,
+      "operator_reference_confirmed": false
+    },
+    {
+      "word": "expensive",
+      "title": "expensive-2",
+      "id": "nH3nl9uTYc8",
+      "exit_code": 0,
+      "operator_reference_confirmed": false
+    },
+    {
+      "word": "newspaper",
+      "title": "newspaper",
+      "id": "FEGl-ICREeE",
+      "exit_code": 0,
+      "operator_reference_confirmed": false
+    },
+    {
+      "word": "newspaper",
+      "title": "newspaper",
+      "id": "mny-_WVQmTM",
+      "exit_code": 0,
+      "operator_reference_confirmed": false
+    },
+    {
+      "word": "gun",
+      "title": "gun",
+      "id": "lDeEBmTDzIY",
+      "exit_code": 0,
+      "operator_reference_confirmed": false
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "scope": "Three source-identified diagnostic clips, not held-out generalization evaluation; no training or deployment changes",
+  "results": [
+    {
+      "video": "data/include/diagnostic-loud/videos/MVI_9536.MOV",
+      "sample": "data/include/diagnostic-loud/canonical/3d204b156d824ca7bf677cdcea0f7774.npz",
+      "recording_sha256": "5c908b7752480188c549571e5072ad4aa439bf6af1aee507fceacb61c2c9486a",
+      "input_frames": 29,
+      "top3": [
+        {
+          "label": "loud",
+          "score": 0.999901294708252
+        },
+        {
+          "label": "soft",
+          "score": 5.953284562565386e-05
+        },
+        {
+          "label": "dog",
+          "score": 2.7677950129145756e-05
+        }
+      ],
+      "shape": [
+        30,
+        258
+      ],
+      "finite": true
+    }
+  ]
+}

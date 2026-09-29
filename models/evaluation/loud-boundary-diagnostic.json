@@ -1,0 +1,45 @@
+{
+  "rule": "Either pose wrist above mean(shoulder midpoint, hip midpoint); each contiguous run padded two frames. No score-based selection; no live logic changed. Exploratory on previously inspected clip, not independent validation.",
+  "segments": [
+    {
+      "start": 0.4676666666666666,
+      "end": 1.934333333333333,
+      "frames": 23,
+      "meets_20_frame_minimum": true,
+      "top3": [
+        {
+          "label": "big large",
+          "score": 0.926920473575592
+        },
+        {
+          "label": "cold",
+          "score": 0.035565443336963654
+        },
+        {
+          "label": "healthy",
+          "score": 0.019624702632427216
+        }
+      ]
+    },
+    {
+      "start": 3.001000000000003,
+      "end": 4.467666666666671,
+      "frames": 23,
+      "meets_20_frame_minimum": true,
+      "top3": [
+        {
+          "label": "big large",
+          "score": 0.9227486252784729
+        },
+        {
+          "label": "cold",
+          "score": 0.048075199127197266
+        },
+        {
+          "label": "loud",
+          "score": 0.026711758226156235
+        }
+      ]
+    }
+  ]
+}

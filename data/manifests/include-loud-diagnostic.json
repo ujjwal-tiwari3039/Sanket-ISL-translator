@@ -1,0 +1,69 @@
+{
+  "source": "https://zenodo.org/records/4010759",
+  "title": "INCLUDE: A Large Scale Dataset for Indian Sign Language Recognition",
+  "creators": [
+    {
+      "name": "Sridhar, Advaith",
+      "affiliation": "IIT Madras, AI4Bharat"
+    },
+    {
+      "name": "Ganesan, Rohith Gandhi",
+      "affiliation": "IIT Madras, AI4Bharat"
+    },
+    {
+      "name": "Kumar, Pratyush",
+      "affiliation": "IIT Madras, AI4Bharat"
+    },
+    {
+      "name": "Khapra, Mitesh",
+      "affiliation": "IIT Madras, AI4Bharat"
+    }
+  ],
+  "license": {
+    "id": "cc-by-4.0"
+  },
+  "archive": "Adjectives_1of8.zip",
+  "archive_checksum": "md5:aaa8281b31454aab89ea73ac2536d87f",
+  "archive_bytes": 1303983457,
+  "download_url": "https://zenodo.org/api/records/4010759/files/Adjectives_1of8.zip/content",
+  "integrity_note": "Partial retrieval; archive checksum recorded but full archive not downloaded or verified. Each selected member checked against ZIP CRC32 and uncompressed size; extracted SHA256 recorded in diagnostic report.",
+  "selection": "First, middle and last of 21 LOUD member names, chosen before model scoring. Not signer-independent or held-out.",
+  "members": [
+    {
+      "member": "Adjectives/1. loud/MVI_5177.MOV",
+      "zip_crc32": "fadfb21d",
+      "uncompressed_bytes": 12440256,
+      "compressed_bytes": 12257459,
+      "local_header_offset": 90,
+      "signer_id": null,
+      "official_split": "not yet retrieved",
+      "local_path": "data/include/diagnostic-loud/videos/MVI_5177.MOV",
+      "sha256": "f0009305f7b3947040e24124b3cd5c1915fc4f77df841f58a71bb48f396cdf30",
+      "crc32_verified": true
+    },
+    {
+      "member": "Adjectives/1. loud/MVI_9290.MOV",
+      "zip_crc32": "7285246e",
+      "uncompressed_bytes": 14436544,
+      "compressed_bytes": 14005087,
+      "local_header_offset": 123068486,
+      "signer_id": null,
+      "official_split": "not yet retrieved",
+      "local_path": "data/include/diagnostic-loud/videos/MVI_9290.MOV",
+      "sha256": "3a16b18a8d11724409808657328c4856f7496ca9dbb91933ee2d6d8b0f4de072",
+      "crc32_verified": true
+    },
+    {
+      "member": "Adjectives/1. loud/MVI_9536.MOV",
+      "zip_crc32": "6812a8b4",
+      "uncompressed_bytes": 12661860,
+      "compressed_bytes": 12264420,
+      "local_header_offset": 238676459,
+      "signer_id": null,
+      "official_split": "not yet retrieved",
+      "local_path": "data/include/diagnostic-loud/videos/MVI_9536.MOV",
+      "sha256": "5c908b7752480188c549571e5072ad4aa439bf6af1aee507fceacb61c2c9486a",
+      "crc32_verified": true
+    }
+  ]
+}
